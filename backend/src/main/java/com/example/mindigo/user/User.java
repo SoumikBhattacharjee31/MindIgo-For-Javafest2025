@@ -49,6 +49,8 @@ public class User implements UserDetails {
         return List.of(new SimpleGrantedAuthority(role.name()));
     }
 
+    public boolean getValid() { return true; }
+
     @Override
     public String getPassword() {
         return password ;
