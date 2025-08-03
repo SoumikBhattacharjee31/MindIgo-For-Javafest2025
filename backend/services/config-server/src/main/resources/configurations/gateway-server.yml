@@ -1,11 +1,26 @@
+#spring:
+#  cloud:
+#    gateway:
+#      server:
+#        webflux:
+#          discovery:
+#            locator:
+#              enabled: true
+#      routes:
+#        - id: assessment-service
+#          uri: lb://assessment-service
+#          predicates:
+#            - Path=/api/v1/assessment/**
+#server:
+#  port: 8080
+
 spring:
   cloud:
     gateway:
-      server:
-        webflux:
-          discovery:
-            locator:
-              enabled: true
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
       routes:
         - id: assessment-service
           uri: lb://assessment-service
