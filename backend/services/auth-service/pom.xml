@@ -9,10 +9,10 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.mindigo</groupId>
-	<artifactId>assessment-service</artifactId>
+	<artifactId>auth-service</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>assessment-service</name>
-	<description>Quizzes, surveys, screening tools for Mindigo</description>
+	<name>auth-service</name>
+	<description>User login, registration and authentication for Mindigo</description>
 	<url/>
 	<licenses>
 		<license/>
