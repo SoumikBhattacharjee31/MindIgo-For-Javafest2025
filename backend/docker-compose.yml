@@ -96,6 +96,29 @@ services:
       timeout: 10s
       retries: 10
     restart: unless-stopped
+  
+  mail-service:
+    build: ./services/mail-service
+    container_name: mail-service
+    ports:
+      - "8083:8083"
+    networks:
+      - microservices-net
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+    environment:
+      - CONFIG_SERVER_URL=http://config-server:8888
+      - EUREKA_SERVER_URL=http://eureka-server:8761/eureka/
+      - EUREKA_HOSTNAME=mail-service
+    env_file:
+      - ./services/mail-service/.env
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8083/actuator/health" ]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+    restart: unless-stopped
 
   gateway-server:
     build: ./services/gateway-server
@@ -108,6 +131,8 @@ services:
       auth-service:
         condition: service_healthy
       assessment-service:
+        condition: service_healthy
+      mail-service:
         condition: service_healthy
       eureka-server:
         condition: service_healthy
