@@ -1,18 +1,26 @@
 spring:
   cloud:
     gateway:
-      discovery:
-        locator:
-          enabled: true
-          lower-case-service-id: true
-      routes:
-        - id: assessment-service
-          uri: lb://assessment-service
-          predicates:
-            - Path=/api/v1/assessment/**
-        - id: auth-service
-          uri: lb://auth-service
-          predicates:
-            - Path=/api/v1/auth/**
+      server:
+        webflux:
+          discovery:
+            locator:
+              enabled: true
+              lower-case-service-id: true
+          routes:
+            - id: assessment-service
+              uri: lb://assessment-service
+              predicates:
+                - Path=/api/v1/assessment/**
+            - id: auth-service
+              uri: lb://auth-service
+              predicates:
+                - Path=/api/v1/auth/**
 server:
   port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health

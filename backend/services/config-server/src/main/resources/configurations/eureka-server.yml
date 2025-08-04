@@ -9,3 +9,9 @@ eureka:
 #      defaultZone: http://localhost:8761/eureka/
 server:
   port: 8761
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
