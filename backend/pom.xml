@@ -81,6 +81,10 @@
 			<artifactId>spring-security-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-oauth2-client</artifactId>
+		</dependency>
 		<!--	jwt	-->
 		<dependency>
 			<groupId>io.jsonwebtoken</groupId>
@@ -97,6 +101,18 @@
 			<artifactId>jjwt-jackson</artifactId>
 			<version>0.11.5</version>
 		</dependency>
+		<!--	mail	-->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-mail</artifactId>
+		</dependency>
+		<!--	firebase	-->
+		<dependency>
+			<groupId>com.google.firebase</groupId>
+			<artifactId>firebase-admin</artifactId>
+			<version>9.3.0</version>
+		</dependency>
+		<!--	utils	-->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-devtools</artifactId>

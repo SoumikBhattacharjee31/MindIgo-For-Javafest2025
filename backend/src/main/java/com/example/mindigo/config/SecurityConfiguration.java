@@ -19,6 +19,7 @@ public class SecurityConfiguration {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final AuthenticationProvider authenticationProvider;
+    private final com.example.mindigo.auth.Oauth2LoginSuccessHandler oauth2LoginSuccessHandler;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) {
@@ -27,9 +28,15 @@ public class SecurityConfiguration {
                     .csrf(AbstractHttpConfigurer::disable)
                     .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                     .authorizeHttpRequests(authorize -> authorize
-                            .requestMatchers("/**").permitAll()
+                            .requestMatchers("/api/v1/**").permitAll()
+                            .requestMatchers("/app").permitAll()
+                            .requestMatchers("/api/test/**").permitAll()
+                            .requestMatchers("/bot/chat").permitAll()
+                            .requestMatchers("/v1/chat").permitAll()
+                            .requestMatchers("/gemini/chat").permitAll()
                             .anyRequest().authenticated()
                     )
+                    .oauth2Login(customizer-> customizer.successHandler(oauth2LoginSuccessHandler))
                     .authenticationProvider(authenticationProvider)
                     .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
             return http.build();

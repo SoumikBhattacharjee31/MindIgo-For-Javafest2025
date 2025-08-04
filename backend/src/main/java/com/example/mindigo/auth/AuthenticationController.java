@@ -28,11 +28,39 @@ public class AuthenticationController {
         return ResponseEntity.ok(service.register(file,request,response));
     }
 
+    @GetMapping("/get-otp")
+    public ResponseEntity<String> getOTP(
+            HttpServletRequest request, HttpServletResponse response
+    ){
+        return ResponseEntity.ok(service.getOTP(request,response));
+    }
+
     @PostMapping("/login")
     public ResponseEntity<String> authenticateLogin(
             @RequestBody AuthenticationRequest request, HttpServletResponse response
     ){
         return ResponseEntity.ok(service.authenticateLogin(request, response));
+    }
+
+    @PostMapping("/loginOTP")
+    public ResponseEntity<String> authenticateLoginOTP(
+            @RequestBody AuthenticationRequest request, HttpServletResponse response
+    ){
+        return ResponseEntity.ok(service.authenticateLoginOTP(request, response));
+    }
+
+    @PostMapping("/get-pass")
+    public ResponseEntity<String> getPasswordMail(
+            @RequestBody AuthenticationRequest request
+    ){
+        return ResponseEntity.ok(service.getPasswordMail(request));
+    }
+
+    @PostMapping("/set-pass")
+    public ResponseEntity<String> settPassword(
+            @RequestBody AuthenticationRequest request, HttpServletResponse response
+    ){
+        return ResponseEntity.ok(service.setPassword(request));
     }
 
 }

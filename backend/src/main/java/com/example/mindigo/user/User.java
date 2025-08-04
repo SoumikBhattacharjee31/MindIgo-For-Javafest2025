@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -40,6 +41,13 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "user", fetch = FetchType.EAGER)
     private List<UserConnectedAccount> connectedAccounts = new ArrayList<>();
 
+    public User (OAuth2User oAuth2User) {
+        this.email = oAuth2User.getAttribute("email");
+        this.name = oAuth2User.getAttribute("name");
+        this.role = Role.USER;
+        this.valid = true;
+    }
+
     public void addConnectedAccount(UserConnectedAccount connectedAccount) {
         connectedAccounts.add(connectedAccount);
     }
@@ -48,8 +56,6 @@ public class User implements UserDetails {
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority(role.name()));
     }
-
-    public boolean getValid() { return true; }
 
     @Override
     public String getPassword() {
