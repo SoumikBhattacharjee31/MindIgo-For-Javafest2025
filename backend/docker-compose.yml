@@ -41,6 +41,9 @@ services:
     depends_on:
       config-server:
         condition: service_healthy
+    environment:
+      - CONFIG_SERVER_URL=http://config-server:8888
+      - EUREKA_HOSTNAME=eureka-server
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
       interval: 10s
@@ -58,11 +61,17 @@ services:
     depends_on:
       eureka-server:
         condition: service_healthy
+    environment:
+      - CONFIG_SERVER_URL=http://config-server:8888
+      - EUREKA_SERVER_URL=http://eureka-server:8761/eureka/
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - EUREKA_HOSTNAME=auth-service
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
       interval: 10s
-      timeout: 5s
-      retries: 5
+      timeout: 10s
+      retries: 10
     restart: unless-stopped
 
   assessment-service:
@@ -75,11 +84,17 @@ services:
     depends_on:
       eureka-server:
         condition: service_healthy
+    environment:
+      - CONFIG_SERVER_URL=http://config-server:8888
+      - EUREKA_SERVER_URL=http://eureka-server:8761/eureka/
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - EUREKA_HOSTNAME=assessment-service
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
       interval: 10s
-      timeout: 5s
-      retries: 5
+      timeout: 10s
+      retries: 10
     restart: unless-stopped
 
   gateway-server:
@@ -96,11 +111,15 @@ services:
         condition: service_healthy
       eureka-server:
         condition: service_healthy
+    environment:
+      - CONFIG_SERVER_URL=http://config-server:8888
+      - EUREKA_SERVER_URL=http://eureka-server:8761/eureka/
+      - EUREKA_HOSTNAME=gateway-server
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 10s
-      timeout: 5s
-      retries: 5
+      timeout: 10s
+      retries: 10
     restart: unless-stopped
 
 networks:
