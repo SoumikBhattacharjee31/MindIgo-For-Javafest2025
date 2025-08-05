@@ -1,4 +1,4 @@
-package com.mindigo.assessment_service.models;
+package com.mindigo.auth_service.models;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -11,11 +11,17 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Table(name = "quiz")
-public class Quiz {
+@Table(name = "option")
+public class Option {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String question;
-    private String type;
+    private String name;
+    private String label;
+    private String footer;
+
+    @ManyToOne
+    @JoinColumn(name = "quiz_id")
+    private Quiz quiz;
+
 }

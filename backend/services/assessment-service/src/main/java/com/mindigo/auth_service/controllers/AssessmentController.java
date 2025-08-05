@@ -1,6 +1,6 @@
-package com.mindigo.assessment_service.controllers;
+package com.mindigo.auth_service.controllers;
 
-import com.mindigo.assessment_service.dto.TestResponse;
+import com.mindigo.auth_service.dto.TestResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
