@@ -49,7 +49,7 @@ public class MailService {
             throw new InvalidEmailException("Receiver email cannot be empty");
         }
         if (!isValidEmailFormat(request.getReceiver())) {
-            throw new InvalidEmailException("Invalid receiver email format");
+            throw new InvalidEmailException("Invalid receiver email format: " + request.getReceiver());
         }
         if (request.getSubject() == null || request.getSubject().trim().isEmpty()) {
             throw new InvalidEmailException("Subject cannot be empty");
