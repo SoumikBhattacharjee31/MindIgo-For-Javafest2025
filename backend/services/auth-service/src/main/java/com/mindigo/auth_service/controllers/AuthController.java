@@ -43,7 +43,6 @@ public class AuthController {
     public ResponseEntity<String> getOTP(
             HttpServletRequest request, HttpServletResponse response
     ){
-        System.out.println("here");
         return ResponseEntity.ok(service.getOTP(request,response));
     }
 
