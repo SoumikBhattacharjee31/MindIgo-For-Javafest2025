@@ -1,6 +1,7 @@
 package com.mindigo.auth_service.controllers;
 
 import com.mindigo.auth_service.dto.TestResponse;
+import com.mindigo.auth_service.dto.ValidateResponse;
 import com.mindigo.auth_service.services.AuthenticationService;
 import com.mindigo.auth_service.dto.AuthenticationRequest;
 import com.mindigo.auth_service.dto.RegisterRequest;
@@ -75,12 +76,16 @@ public class AuthController {
     }
 
     @GetMapping("/hello")
-    public ResponseEntity<String> hello() { return ResponseEntity.ok("Hello World"); }
+    public ResponseEntity<String> hello(HttpServletRequest request) {
+        System.out.println("==============================================");
+        System.out.println(request.getHeader("X-User-Id"));
+        System.out.println(request.getHeader("X-User-Email"));
+        return ResponseEntity.ok("Hello World");
+    }
 
     @GetMapping("/validate")
-    public String validate(@RequestParam("token") String token) {
-        service.validateToken(token);
-        return "Token is valid";
+    public ValidateResponse validate(@RequestParam("token") String token) {
+        return service.validateToken(token);
     }
 
 }

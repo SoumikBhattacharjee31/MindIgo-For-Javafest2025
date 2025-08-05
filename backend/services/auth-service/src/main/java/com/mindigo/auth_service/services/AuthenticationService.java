@@ -1,14 +1,11 @@
 package com.mindigo.auth_service.services;
 
-import com.mindigo.auth_service.dto.MailSendRequest;
-import com.mindigo.auth_service.dto.MailSendResponse;
+import com.mindigo.auth_service.dto.*;
 import com.mindigo.auth_service.models.Role;
 import com.mindigo.auth_service.models.User;
 import com.mindigo.auth_service.models.UserOTP;
 import com.mindigo.auth_service.models.UserToken;
 import com.mindigo.auth_service.utils.*;
-import com.mindigo.auth_service.dto.AuthenticationRequest;
-import com.mindigo.auth_service.dto.RegisterRequest;
 import com.mindigo.auth_service.jwt.JwtService;
 import com.mindigo.auth_service.repositories.UserOTPRepository;
 import com.mindigo.auth_service.repositories.UserRepository;
@@ -188,11 +185,21 @@ public class AuthenticationService {
     }
 
     // check if token is valid or not
-    public void validateToken(String token) {
+    public ValidateResponse validateToken(String token) {
         String userEmail = jwtService.extractUsername(token);
-        if (userEmail != null && !userEmail.isEmpty() && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
-            jwtService.isTokenValid(token, userDetails);
+        String id = jwtService.extractId(token);
+
+        // Validate email and id
+        if (userEmail == null || id == null || userEmail.isEmpty()) {
+            throw new RuntimeException("Invalid token credentials: Missing email or id");
         }
+
+        // Validate token against UserDetails
+        UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
+        if (!jwtService.isTokenValid(token, userDetails)) {
+            throw new RuntimeException("Invalid token credentials: Token is invalid or expired");
+        }
+
+        return new ValidateResponse(Long.parseLong(id), userEmail);
     }
 }
