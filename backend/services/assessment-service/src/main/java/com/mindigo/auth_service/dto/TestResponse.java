@@ -1,4 +1,4 @@
-package com.mindigo.assessment_service.dto;
+package com.mindigo.auth_service.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

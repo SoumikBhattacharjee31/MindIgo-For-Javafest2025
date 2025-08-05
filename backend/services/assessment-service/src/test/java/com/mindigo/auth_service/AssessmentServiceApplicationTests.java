@@ -1,4 +1,4 @@
-package com.mindigo.assessment_service;
+package com.mindigo.auth_service;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
