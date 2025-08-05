@@ -1,103 +1,122 @@
-import Image from "next/image";
+"use client";
+import { useRef, useState } from "react";
+import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
+import Hero from "./components/Hero";
+import MetaHead from "./components/MetaHead";
+import Services from "./components/Services";
+import Testimonial from "./components/Testimonial";
+import Wavesvg from "./components/Wavesvg";
+// import { useSpring, animated } from "react-spring";
+
+import ServeyService from "./components/ServeyService";
+import GameService from "./components/GameService";
+
+import { scroller } from 'react-scroll';
+import { useWheel } from "react-use-gesture";
+
+const debounce = (func: (...args: any[]) => void, wait: number) => {
+  let timeout: NodeJS.Timeout | null = null;
+
+  return (...args: any[]) => {
+    // console.log('hello');
+    if (timeout) clearTimeout(timeout);
+    timeout = setTimeout(() => {
+      // console.log('world');
+      func.apply(this, args);
+    }, wait);
+  };
+}
+
+const throttle = (func: (...args: any[]) => void, limit: number) => {
+  let inThrottle: boolean;
+
+  return function(this: any, ...args: any[]) {
+    if (!inThrottle) {
+      func.apply(this, args);
+      inThrottle = true;
+      setTimeout(() => inThrottle = false, limit);
+    }
+  };
+}
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+  const [ curSec, setCurSec ] = useState(0);
+  const sectionRefs = useRef<HTMLDivElement[]>([]);
+
+  const getCurrentSection = () => {
+    let currentSection = 0;
+    let maxVisibleHeight = 0;
+  
+    sectionRefs.current.forEach((section, index) => {
+      const rect = section.getBoundingClientRect();
+      const visibleHeight = Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0);
+      
+      if (visibleHeight > maxVisibleHeight) {
+        maxVisibleHeight = visibleHeight;
+        currentSection = index;
+      }
+    });
+  
+    return currentSection;
+  };
+  
+  
+
+  const scrollToSection = debounce( (index: number) => {
+    const curSec = getCurrentSection();
+    
+    if(index==1){
+      index=(curSec+1)>=sectionRefs.current.length?sectionRefs.current.length-1:curSec+1;
+      setCurSec(index);
+    }
+    else {
+      index=curSec==0?0:curSec-1;
+      setCurSec(index);
+    }
+    // console.log(index);
+    if (sectionRefs.current[index]) {
+      scroller.scrollTo(sectionRefs.current[index].id, {
+        duration: 800,
+        delay: 0,
+        smooth: 'easeInOutQuart'
+      });
+    }
+  },200);
+
+  const bind = useWheel(({ direction }) => {
+    if (direction[1] > 0) {
+      scrollToSection(1); // Adjust index to your need
+    } else if (direction[1] < 0) {
+      scrollToSection(0); // Adjust index to your need
+    }
+  });
+  
+  return (
+    <div {...bind()} className="bg-base-200 text-base-content min-h-screen">
+      <MetaHead />
+
+      <Navbar />
+      <Wavesvg />
+      <div id="section1" ref={(el) => {el && sectionRefs.current.push(el);}}>
+        <Hero />
+      </div>
+      <div id="section2" ref={(el) => {el && sectionRefs.current.push(el);}}>
+        <ServeyService/>
+      </div>
+      <div id="section3" ref={(el) => {el && sectionRefs.current.push(el);}}>
+        <GameService/>
+      </div>
+      <div id="section4" ref={(el) => {el && sectionRefs.current.push(el);}}>
+        <Services />
+      </div>
+      <div id="section5" ref={(el) => {el && sectionRefs.current.push(el);}} className="relative">
+        <Testimonial />
+      </div>
+      <div id="section6" ref={(el) => {el && sectionRefs.current.push(el);}} className="relative">
+        <Footer />
+      </div>
     </div>
   );
 }
