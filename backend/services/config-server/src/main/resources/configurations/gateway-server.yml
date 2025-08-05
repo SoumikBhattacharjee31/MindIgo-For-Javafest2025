@@ -21,6 +21,10 @@ spring:
               uri: lb://mail-service
               predicates:
                 - Path=/api/v1/mail/**
+            - id: game-service
+              uri: lb://game-service
+              predicates:
+                - Path=/api/v1/game/**
 server:
   port: 8080
 

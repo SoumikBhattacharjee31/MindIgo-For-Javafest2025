@@ -11,16 +11,17 @@
         <module name="eureka-server" />
         <module name="gateway-server" />
       </profile>
-      <profile name="Annotation profile for mail-service" enabled="true">
+      <profile name="Annotation profile for game-service" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="false">
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.38/lombok-1.18.38.jar" />
         </processorPath>
-        <module name="mail-service" />
         <module name="auth-service" />
         <module name="assessment-service" />
+        <module name="game-service" />
+        <module name="mail-service" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
@@ -33,6 +34,7 @@
       <module name="auth-service" options="-parameters" />
       <module name="config-server" options="-parameters" />
       <module name="eureka-server" options="-parameters" />
+      <module name="game-service" options="-parameters" />
       <module name="gateway-server" options="-parameters" />
       <module name="mail-service" options="-parameters" />
       <module name="mindigo" options="-parameters" />
