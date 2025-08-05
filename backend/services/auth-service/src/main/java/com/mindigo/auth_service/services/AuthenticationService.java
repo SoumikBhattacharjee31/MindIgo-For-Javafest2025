@@ -234,7 +234,7 @@ public class AuthenticationService {
                     mailMessage
             );
             System.out.println("mail sent");
-            String mailServiceUrl = "http://localhost:8080/api/v1/mail/send-mail"; // Adjust to your mail-service URL
+            String mailServiceUrl = "http://MAIL-SERVICE/api/v1/mail/send-mail"; // Adjust to your mail-service URL
             ResponseEntity<MailSendResponse> mailResponse = restTemplate.postForEntity(
                     mailServiceUrl,
                     mailRequest,
