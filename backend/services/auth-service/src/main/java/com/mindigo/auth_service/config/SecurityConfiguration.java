@@ -33,7 +33,8 @@ public class SecurityConfiguration {
                     )
 //                    .oauth2Login(customizer-> customizer.successHandler(oauth2LoginSuccessHandler))
                     .authenticationProvider(authenticationProvider)
-                    .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+//                    .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+            ;
             return http.build();
         } catch (Exception e) {
             throw new RuntimeException(e);

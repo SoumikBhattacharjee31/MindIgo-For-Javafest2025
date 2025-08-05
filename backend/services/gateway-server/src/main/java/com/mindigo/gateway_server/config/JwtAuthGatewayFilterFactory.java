@@ -28,12 +28,10 @@ public class JwtAuthGatewayFilterFactory extends AbstractGatewayFilterFactory<Jw
 
     @Override
     public GatewayFilter apply(Config config) {
-        System.out.println("YOOOOOOOOOOOOOOOOOOOOOOOOOO");
 
         return (exchange, chain) -> {
             // Skip authentication for unsecured routes
             if (!routeValidator.isSecured.test(exchange.getRequest())) {
-                System.out.println("SAFE");
                 return chain.filter(exchange);
             }
 
@@ -47,7 +45,6 @@ public class JwtAuthGatewayFilterFactory extends AbstractGatewayFilterFactory<Jw
                 throw new RuntimeException("Missing JWT token in cookie");
             }
 
-            System.out.println("Here");
             // Validate JWT via WebClient
             return webClient.get()
                     .uri("http://AUTH-SERVICE/api/v1/auth/validate?token=" + jwt)

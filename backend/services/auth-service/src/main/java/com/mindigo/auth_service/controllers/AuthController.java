@@ -80,7 +80,6 @@ public class AuthController {
 
     @GetMapping("/validate")
     public String validate(@RequestParam("token") String token) {
-        System.out.println("Puhi puhi");
         service.validateToken(token);
         return "Token is valid";
     }

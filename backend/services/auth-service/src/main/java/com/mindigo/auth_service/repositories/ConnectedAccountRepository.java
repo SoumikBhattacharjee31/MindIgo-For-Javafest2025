@@ -12,5 +12,4 @@ import org.springframework.stereotype.Repository;
 public interface ConnectedAccountRepository extends JpaRepository<UserConnectedAccount, Long> {
     @Query("SELECT a FROM UserConnectedAccount a WHERE a.provider = :provider AND a.providerId = :providerId")
     Optional<UserConnectedAccount> findByProviderAndProviderId(@Param("provider") String provider, @Param("providerId") String providerId);
-
 }
