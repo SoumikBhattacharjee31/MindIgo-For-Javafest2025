@@ -1,92 +1,202 @@
 package com.mindigo.auth_service.controllers;
 
-import com.mindigo.auth_service.dto.TestResponse;
-import com.mindigo.auth_service.dto.ValidateResponse;
+import com.mindigo.auth_service.dto.*;
 import com.mindigo.auth_service.services.AuthenticationService;
-import com.mindigo.auth_service.dto.AuthenticationRequest;
-import com.mindigo.auth_service.dto.RegisterRequest;
+import com.mindigo.auth_service.validators.AuthValidationGroups;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/auth")
-
+@Tag(name = "Authentication", description = "Authentication and authorization endpoints")
+@Slf4j
+@Validated
 public class AuthController {
 
-    @Autowired
-    private final AuthenticationService service;
+    private final AuthenticationService authenticationService;
 
-    @GetMapping("/test")
-    public ResponseEntity<TestResponse> testingPath(){
-        TestResponse test = TestResponse
-                .builder()
-                .api("api/v1/auth/test")
-                .status("UP").build();
-        return ResponseEntity.ok(test);
+    @GetMapping("/health")
+    @Operation(summary = "Health check endpoint")
+    public ResponseEntity<ApiResponseClass<TestResponse>> healthCheck() {
+        TestResponse test = TestResponse.builder()
+                .api("api/v1/auth/health")
+                .status("UP")
+                .timestamp(System.currentTimeMillis())
+                .build();
+
+        return ResponseEntity.ok(ApiResponseClass.<TestResponse>builder()
+                .success(true)
+                .data(test)
+                .message("Service is healthy")
+                .build());
     }
 
-    @PostMapping(value = "/register", consumes = "multipart/form-data")
-    public ResponseEntity<String> register(
-            @RequestPart(value = "file", required = false) MultipartFile file,
-            @RequestPart("registerRequest") RegisterRequest request,
-            HttpServletResponse response
-    ) {
-        return ResponseEntity.ok(service.register(file, request, response));
+    @PostMapping(value = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Register a new user")
+    @ApiResponse(responseCode = "201", description = "User registered successfully")
+    @ApiResponse(responseCode = "400", description = "Invalid input")
+    @ApiResponse(responseCode = "409", description = "User already exists")
+    public ResponseEntity<ApiResponseClass<AuthenticationResponse>> register(
+            @RequestPart(value = "profileImage", required = false) MultipartFile profileImage,
+            @RequestPart("user") @Validated(AuthValidationGroups.Registration.class) RegisterRequest request,
+            HttpServletResponse response) {
+
+        log.info("Registration attempt for email: {}", request.getEmail());
+
+        AuthenticationResponse authResponse = authenticationService.register(profileImage, request, response);
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponseClass.<AuthenticationResponse>builder()
+                        .success(true)
+                        .data(authResponse)
+                        .message("User registered successfully")
+                        .build());
     }
 
-    @GetMapping("/get-otp")
-    public ResponseEntity<String> getOTP(
-            HttpServletRequest request, HttpServletResponse response
-    ){
-        return ResponseEntity.ok(service.getOTP(request,response));
+    @PostMapping("/request-otp")
+    @Operation(summary = "Request OTP for account validation")
+    public ResponseEntity<ApiResponseClass<Void>> requestOtp(
+            HttpServletRequest request) {
+
+        String result = authenticationService.requestOtp(request);
+
+        return ResponseEntity.ok(ApiResponseClass.<Void>builder()
+                .success(true)
+                .message(result)
+                .build());
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> authenticateLogin(
-            @RequestBody AuthenticationRequest request, HttpServletResponse response
-    ){
-        return ResponseEntity.ok(service.authenticateLogin(request, response));
+    @Operation(summary = "Authenticate user login")
+    @ApiResponse(responseCode = "200", description = "Login successful")
+    @ApiResponse(responseCode = "401", description = "Invalid credentials")
+    @ApiResponse(responseCode = "403", description = "Account not validated")
+    public ResponseEntity<ApiResponseClass<AuthenticationResponse>> login(
+            @RequestBody @Validated(AuthValidationGroups.Login.class) AuthenticationRequest request,
+            HttpServletResponse response,
+            HttpServletRequest httpRequest) {
+
+        log.info("Login attempt for email: {}", request.getEmail());
+
+        AuthenticationResponse authResponse = authenticationService.authenticateLogin(request, response, httpRequest);
+
+        return ResponseEntity.ok(ApiResponseClass.<AuthenticationResponse>builder()
+                .success(true)
+                .data(authResponse)
+                .message("Login successful")
+                .build());
     }
 
-    @PostMapping("/loginOTP")
-    public ResponseEntity<String> authenticateLoginOTP(
-            @RequestBody AuthenticationRequest request, HttpServletRequest request2, HttpServletResponse response
-    ){
-        return ResponseEntity.ok(service.authenticateLoginOTP(request, request2, response));
+    @PostMapping("/verify-otp")
+    @Operation(summary = "Verify OTP and complete registration")
+    public ResponseEntity<ApiResponseClass<AuthenticationResponse>> verifyOtp(
+            @RequestBody @Validated(AuthValidationGroups.OtpVerification.class) OtpVerificationRequest request,
+            HttpServletRequest httpRequest,
+            HttpServletResponse response) {
+
+        AuthenticationResponse authResponse = authenticationService.verifyOtp(request, httpRequest, response);
+
+        return ResponseEntity.ok(ApiResponseClass.<AuthenticationResponse>builder()
+                .success(true)
+                .data(authResponse)
+                .message("OTP verified successfully")
+                .build());
     }
 
-    @PostMapping("/get-pass")
-    public ResponseEntity<String> getPasswordMail(
-            @RequestBody AuthenticationRequest request
-    ){
-        return ResponseEntity.ok(service.getPasswordMail(request));
+    @PostMapping("/forgot-password")
+    @Operation(summary = "Request password reset link")
+    public ResponseEntity<ApiResponseClass<Void>> forgotPassword(
+            @RequestBody @Validated(AuthValidationGroups.ForgotPassword.class) ForgotPasswordRequest request) {
+
+        log.info("Password reset requested for email: {}", request.getEmail());
+
+        String result = authenticationService.requestPasswordReset(request);
+
+        return ResponseEntity.ok(ApiResponseClass.<Void>builder()
+                .success(true)
+                .message(result)
+                .build());
     }
 
-    @PostMapping("/set-pass")
-    public ResponseEntity<String> settPassword(
-            @RequestBody AuthenticationRequest request, HttpServletResponse response
-    ){
-        return ResponseEntity.ok(service.setPassword(request));
+    @PostMapping("/reset-password")
+    @Operation(summary = "Reset password with token")
+    public ResponseEntity<ApiResponseClass<Void>> resetPassword(
+            @RequestBody @Validated(AuthValidationGroups.PasswordReset.class) ResetPasswordRequest request) {
+
+        String result = authenticationService.resetPassword(request);
+
+        return ResponseEntity.ok(ApiResponseClass.<Void>builder()
+                .success(true)
+                .message(result)
+                .build());
     }
 
-    @GetMapping("/hello")
-    public ResponseEntity<String> hello(HttpServletRequest request) {
-        System.out.println("==============================================");
-        System.out.println(request.getHeader("X-User-Id"));
-        System.out.println(request.getHeader("X-User-Email"));
-        return ResponseEntity.ok("Hello World");
+    @PostMapping("/logout")
+    @Operation(summary = "Logout user")
+    public ResponseEntity<ApiResponseClass<Void>> logout(
+            HttpServletRequest request,
+            HttpServletResponse response) {
+
+        authenticationService.logout(request, response);
+
+        return ResponseEntity.ok(ApiResponseClass.<Void>builder()
+                .success(true)
+                .message("Logged out successfully")
+                .build());
+    }
+
+    @PostMapping("/refresh")
+    @Operation(summary = "Refresh authentication token")
+    public ResponseEntity<ApiResponseClass<AuthenticationResponse>> refreshToken(
+            HttpServletRequest request,
+            HttpServletResponse response) {
+
+        AuthenticationResponse authResponse = authenticationService.refreshToken(request, response);
+
+        return ResponseEntity.ok(ApiResponseClass.<AuthenticationResponse>builder()
+                .success(true)
+                .data(authResponse)
+                .message("Token refreshed successfully")
+                .build());
     }
 
     @GetMapping("/validate")
-    public ValidateResponse validate(@RequestParam("token") String token) {
-        return service.validateToken(token);
+    @Operation(summary = "Validate JWT token")
+    public ResponseEntity<ApiResponseClass<ValidateResponse>> validateToken(
+            @RequestParam("token") String token) {
+
+        ValidateResponse validation = authenticationService.validateToken(token);
+
+        return ResponseEntity.ok(ApiResponseClass.<ValidateResponse>builder()
+                .success(true)
+                .data(validation)
+                .message("Token is valid")
+                .build());
     }
 
-}
+    @GetMapping("/profile")
+    @Operation(summary = "Get current user profile")
+    public ResponseEntity<ApiResponseClass<UserProfileResponse>> getCurrentUser(
+            HttpServletRequest request) {
 
+        UserProfileResponse profile = authenticationService.getCurrentUserProfile(request);
+
+        return ResponseEntity.ok(ApiResponseClass.<UserProfileResponse>builder()
+                .success(true)
+                .data(profile)
+                .message("Profile retrieved successfully")
+                .build());
+    }
+}

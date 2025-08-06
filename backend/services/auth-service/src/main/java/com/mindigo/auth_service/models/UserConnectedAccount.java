@@ -4,11 +4,13 @@ package com.mindigo.auth_service.models;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
+
+import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Getter
+@Data
 @NoArgsConstructor
 public class UserConnectedAccount{
     @Id

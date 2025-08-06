@@ -10,10 +10,22 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 @Service
-public class MailService {
+public class EmailService {
 
     @Autowired
     public RestTemplate restTemplate;
+
+    public void sendPasswordChangeConfirmationEmail(String email, String userName) {
+        sendMail(email, "Password Change Confirmation", "Password for user "+userName+" changed successfully");
+    }
+
+    public void sendPasswordResetEmail(String email, String userName, String resetUrl) {
+        sendMail(email, "Password Reset Link", "Password reset link for user "+userName+": "+resetUrl);
+    }
+
+    public void sendOtpEmail(String email, String userName, String otp) {
+        sendMail(email, "OTP for Signing Up", "Dear "+userName+", use this otp to complete your signup: "+otp);
+    }
 
     public void sendMail(String receiver, String subject, String body) {
         try {
