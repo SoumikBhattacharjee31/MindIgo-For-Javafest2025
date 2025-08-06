@@ -100,11 +100,24 @@ public class JwtAuthGatewayFilterFactory extends AbstractGatewayFilterFactory<Jw
     }
 
     // Inner class to match the ValidateResponse DTO
-    @Data
     public static class ValidateResponse {
-        // Getters and setters
         private Long id;
         private String email;
 
+        public Long getId() {
+            return id;
+        }
+
+        public void setId(Long id) {
+            this.id = id;
+        }
+
+        public String getEmail() {
+            return email;
+        }
+
+        public void setEmail(String email) {
+            this.email = email;
+        }
     }
 }

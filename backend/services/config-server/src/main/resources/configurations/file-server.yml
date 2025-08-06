@@ -16,8 +16,10 @@ spring:
       max-file-size: 10MB
       max-request-size: 10MB
 
-file:
-  upload-dir: ./public
+supabase:
+  url: ${SUPABASE_URL}
+  key: ${SUPABASE_KEY}
+  bucket: ${SUPABASE_BUCKET}
 
 management:
   endpoints:
