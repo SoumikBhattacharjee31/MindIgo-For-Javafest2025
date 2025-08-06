@@ -8,16 +8,16 @@ spring:
               enabled: true
               lower-case-service-id: true
           routes:
-            - id: assessment-service
-              uri: lb://assessment-service
-              predicates:
-                - Path=/api/v1/assessment/**
             - id: auth-service
               uri: lb://auth-service
               predicates:
                 - Path=/api/v1/auth/**
               filters:
                 - name: JwtAuth
+            - id: assessment-service
+              uri: lb://assessment-service
+              predicates:
+                - Path=/api/v1/assessment/**
             - id: mail-service
               uri: lb://mail-service
               predicates:
@@ -26,6 +26,10 @@ spring:
               uri: lb://game-service
               predicates:
                 - Path=/api/v1/game/**
+            - id: file-server
+              uri: lb://file-server
+              predicates:
+                - Path=/api/v1/file/**
 server:
   port: 8080
 
