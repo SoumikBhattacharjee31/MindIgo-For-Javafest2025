@@ -1,6 +1,6 @@
 package com.mindigo.auth_service.config;
 
-import com.mindigo.auth_service.jwt.JwtAuthenticationFilter;
+//import com.mindigo.auth_service.jwt.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,7 +17,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfiguration {
 
-    private final JwtAuthenticationFilter jwtAuthFilter;
+//    private final JwtAuthenticationFilter jwtAuthFilter;
     private final AuthenticationProvider authenticationProvider;
 //    private final com.mindigo.auth_service.auth.Oauth2LoginSuccessHandler oauth2LoginSuccessHandler;
 

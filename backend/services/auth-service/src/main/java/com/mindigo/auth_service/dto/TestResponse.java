@@ -1,3 +1,4 @@
+// TestResponse.java
 package com.mindigo.auth_service.dto;
 
 import lombok.AllArgsConstructor;
@@ -10,6 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TestResponse {
-    String status;
-    String api;
+    private String api;
+    private String status;
+    private Long timestamp;
 }

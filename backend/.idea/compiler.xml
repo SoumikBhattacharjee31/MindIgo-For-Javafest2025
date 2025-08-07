@@ -10,8 +10,7 @@
         <module name="config-server" />
         <module name="gateway-server" />
         <module name="eureka-server" />
-      </profile>
-      <profile name="Annotation profile for mail-service" enabled="true">
+      </profile><profile name="Annotation profile for file-server" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />

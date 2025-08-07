@@ -22,7 +22,12 @@ public class ImageHelper {
         var user = repository.findUserByEmail(email);
         if(user == null) return;
         String imageAddress = imageService.upload(file);
-        user.setImage(imageAddress);
+        user.setProfileImageUrl(imageAddress);
         System.out.println(imageAddress);
+    }
+
+    public void storeUserProfileImage(Long id, MultipartFile file) {
+        String email = repository.findById(Math.toIntExact(id)).get().getEmail();
+        setImage(email,file);
     }
 }
