@@ -30,6 +30,10 @@ spring:
               uri: lb://file-server
               predicates:
                 - Path=/api/v1/file/**
+            - id: content-service
+              uri: lb://content-service
+              predicates:
+                - Path=/api/v1/content/**
 server:
   port: 8080
 

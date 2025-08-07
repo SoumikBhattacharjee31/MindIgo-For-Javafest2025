@@ -11,7 +11,7 @@
         <module name="gateway-server" />
         <module name="eureka-server" />
       </profile>
-      <profile name="Annotation profile for auth-service" enabled="true">
+      <profile name="Annotation profile for content-service" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
@@ -22,6 +22,7 @@
         <module name="file-server" />
         <module name="assessment-service" />
         <module name="game-service" />
+        <module name="content-service" />
         <module name="mail-service" />
       </profile>
     </annotationProcessing>
@@ -34,6 +35,7 @@
       <module name="assessment-service" options="-parameters" />
       <module name="auth-service" options="-parameters" />
       <module name="config-server" options="-parameters" />
+      <module name="content-service" options="-parameters" />
       <module name="eureka-server" options="-parameters" />
       <module name="file-server" options="-parameters" />
       <module name="game-service" options="-parameters" />
