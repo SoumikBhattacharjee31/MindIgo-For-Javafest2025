@@ -41,12 +41,9 @@ public class JwtAuthGatewayFilterFactory extends AbstractGatewayFilterFactory<Jw
     public GatewayFilter apply(Config config) {
         return (exchange, chain) -> {
             // Skip authentication for unsecured routes
-            System.out.println("Here");
             if (!routeValidator.isSecured.test(exchange.getRequest())) {
-                System.out.println("Safe");
                 return chain.filter(exchange);
             }
-            System.out.println("Oops");
 
             // Get JWT from cookie
             ServerHttpRequest request = exchange.getRequest();
@@ -77,6 +74,7 @@ public class JwtAuthGatewayFilterFactory extends AbstractGatewayFilterFactory<Jw
                         ServerHttpRequest modifiedRequest = exchange.getRequest().mutate()
                                 .header("X-User-Id", String.valueOf(response.getId()))
                                 .header("X-User-Email", response.getEmail())
+                                .header("X-User-Role", response.getRole())
                                 .header("X-Authenticated", "true") // Optional: flag for authenticated requests
                                 .build();
 
@@ -103,6 +101,7 @@ public class JwtAuthGatewayFilterFactory extends AbstractGatewayFilterFactory<Jw
     public static class ValidateResponse {
         private Long id;
         private String email;
+        private String role;
 
         public Long getId() {
             return id;
@@ -118,6 +117,14 @@ public class JwtAuthGatewayFilterFactory extends AbstractGatewayFilterFactory<Jw
 
         public void setEmail(String email) {
             this.email = email;
+        }
+
+        public String getRole() {
+            return role;
+        }
+
+        public void setRole(String role) {
+            this.role = role;
         }
     }
 }

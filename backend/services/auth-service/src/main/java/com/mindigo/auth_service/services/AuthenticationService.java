@@ -87,7 +87,7 @@ public class AuthenticationService {
             // Create user
             User user = User.builder()
                     .name(request.getName())
-                    .email(request.getEmail().toLowerCase().trim())
+                    .email(request.getEmail().trim())
                     .password(passwordEncoder.encode(request.getPassword()))
                     .role(Role.valueOf(request.getRole().toUpperCase()))
                     .dateOfBirth(request.getDateOfBirth())
@@ -98,20 +98,20 @@ public class AuthenticationService {
                     .updatedAt(LocalDateTime.now())
                     .build();
 
-            user = userRepository.save(user);
+            String imageUrl=null;
 
             // Handle profile image upload asynchronously
             if (profileImage != null && !profileImage.isEmpty()) {
-                User finalUser = user;
-                CompletableFuture.runAsync(() -> {
-                    try {
-                        imageStorageService.storeUserProfileImage(finalUser.getId(), profileImage);
-                        log.info("Profile image uploaded for user: {}", finalUser.getEmail());
-                    } catch (Exception e) {
-                        log.error("Failed to upload profile image for user: {}", finalUser.getEmail(), e);
-                    }
-                });
+                try {
+                    imageUrl = imageStorageService.processUserProfileImageUpload(request.getEmail(), profileImage);
+                    log.info("Profile image uploaded for user: {}", request.getEmail());
+                } catch (Exception e) {
+                    log.error("Failed to upload profile image for user: {}", request.getEmail(), e);
+                }
             }
+
+            user.setProfileImageUrl(imageUrl);
+            user = userRepository.save(user);
 
             // Generate tokens
             String accessToken = jwtService.generateAccessToken(user);
@@ -482,10 +482,17 @@ public class AuthenticationService {
                 throw new InvalidTokenException("Token is invalid or expired");
             }
 
+            Optional<User> user = userRepository.findByEmail(userEmail);
+            if (user.isEmpty()) {
+                throw new InvalidTokenException("User not found");
+            }
+            String role = String.valueOf(user.get().getRole());
+
             return ValidateResponse.builder()
                     .userId(Long.parseLong(userId))
                     .email(userEmail)
                     .valid(true)
+                    .role(role)
                     .build();
 
         } catch (Exception e) {

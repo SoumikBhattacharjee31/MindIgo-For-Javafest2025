@@ -30,12 +30,14 @@ public class FileController {
     public ResponseEntity<ApiResponse<String>> uploadFile(
             @RequestParam("file") MultipartFile file,
             @PathVariable String type) {
+        System.out.println("=====================================================");
         if (!type.equals("images") && !type.equals("cvs")) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(ApiResponse.error("Invalid type: must be 'images' or 'cvs'", HttpStatus.BAD_REQUEST));
         }
         try {
             String fileUrl = fileService.uploadFile(file, type);
+            System.out.println("done");
             return ResponseEntity.ok(ApiResponse.success(fileUrl, "File uploaded successfully"));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)

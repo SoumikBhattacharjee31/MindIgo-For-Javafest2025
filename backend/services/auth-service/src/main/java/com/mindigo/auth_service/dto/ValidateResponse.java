@@ -14,4 +14,5 @@ public class ValidateResponse {
     private Long userId;
     private String email;
     private boolean valid;
+    private String role;
 }
