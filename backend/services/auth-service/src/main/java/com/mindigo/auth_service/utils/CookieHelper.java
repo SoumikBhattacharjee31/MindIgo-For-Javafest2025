@@ -4,45 +4,66 @@ import com.mindigo.auth_service.jwt.JwtService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.util.Arrays;
-
 @Component
+@RequiredArgsConstructor
 public class CookieHelper {
 
-    @Autowired
-    private JwtService jwtService;
+    @Value("${app.cookie.secure:true}")
+    private boolean secureCookies;
 
-    public static void removeCookie(HttpServletResponse response, String name) {
-        Cookie cookie = new Cookie(name, null);
-        cookie.setPath("/");
-        cookie.setHttpOnly(true);
-        cookie.setMaxAge(0); // Delete the cookie
-        response.addCookie(cookie);
-    }
+    @Value("${app.cookie.same-site:strict}")
+    private String sameSite;
 
-    public static void addCookie(HttpServletResponse response, String name, String value) {
+    private final JwtService jwtService;
+
+    public void setSecureCookie(HttpServletResponse response, String name, String value, long maxAgeSeconds) {
         Cookie cookie = new Cookie(name, value);
         cookie.setPath("/");
         cookie.setHttpOnly(true);
-        cookie.setMaxAge(86400); // 1 day
+        cookie.setSecure(secureCookies);
+        cookie.setMaxAge((int) maxAgeSeconds);
+
+        // Set SameSite attribute
+        cookie.setAttribute("SameSite", sameSite);
+
         response.addCookie(cookie);
     }
 
-    public String getMailFromCookie(HttpServletRequest request) {
-        Cookie[] cookies = request.getCookies();
-        Cookie jwtCookie = Arrays.stream(cookies)
-                .filter(cookie -> "jwtToken".equals(cookie.getName()))
-                .findFirst()
-                .orElse(null);
-        String jwt, userEmail;
-        if (jwtCookie != null) {
-            jwt = jwtCookie.getValue();
-            userEmail = jwtService.extractUsername(jwt);
+    public void clearCookie(HttpServletResponse response, String name) {
+        Cookie cookie = new Cookie(name, null);
+        cookie.setPath("/");
+        cookie.setHttpOnly(true);
+        cookie.setSecure(secureCookies);
+        cookie.setMaxAge(0);
+        cookie.setAttribute("SameSite", sameSite);
+        response.addCookie(cookie);
+    }
+
+    public String getEmailFromCookie(HttpServletRequest request) {
+        String accessToken = getTokenFromCookie(request, "accessToken");
+        if (accessToken == null || accessToken.isEmpty()) {
+            return null;
         }
-        else throw new RuntimeException("No jwtToken found in cookies");
-        return userEmail;
+        try {
+            return jwtService.extractUsername(accessToken);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public String getTokenFromCookie(HttpServletRequest request, String name) {
+        if (request.getCookies() == null) {
+            return null;
+        }
+
+        return java.util.Arrays.stream(request.getCookies())
+                .filter(cookie -> name.equals(cookie.getName()))
+                .findFirst()
+                .map(Cookie::getValue)
+                .orElse(null);
     }
 }
