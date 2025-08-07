@@ -39,43 +39,62 @@ public class JwtAuthGatewayFilterFactory extends AbstractGatewayFilterFactory<Jw
 
     @Override
     public GatewayFilter apply(Config config) {
+        System.out.println("???");
         return (exchange, chain) -> {
             // Skip authentication for unsecured routes
+            System.out.println("here");
             if (!routeValidator.isSecured.test(exchange.getRequest())) {
+                System.out.println("safe");
                 return chain.filter(exchange);
             }
+            System.out.println("oops");
 
-            // Get JWT from cookie
+            // Get JWT from cookie - auth service sets "accessToken" cookie
             ServerHttpRequest request = exchange.getRequest();
             MultiValueMap<String, HttpCookie> cookies = request.getCookies();
-            HttpCookie jwtCookie = cookies.getFirst("jwtToken");
+
+            HttpCookie jwtCookie = cookies.getFirst("accessToken");
             String jwt = (jwtCookie != null) ? jwtCookie.getValue() : null;
 
+            System.out.println("jwt found?");
             if (jwt == null) {
-                return Mono.error(new RuntimeException("Missing JWT token in cookie"));
+                return createUnauthorizedResponse(exchange, "Missing JWT token in cookie");
             }
+            System.out.println("yes");
 
             // Validate JWT and get user details
             return webClient.get()
                     .uri("http://AUTH-SERVICE/api/v1/auth/validate?token=" + jwt)
                     .retrieve()
-                    .onStatus(HttpStatusCode::isError, response ->
-                            Mono.error(new RuntimeException("Auth service error: " + response.statusCode())))
-                    .bodyToMono(ValidateResponse.class)
-                    .flatMap(response -> {
-                        // Validate response
-                        if (response.getId() == null || response.getEmail() == null) {
-                            return Mono.error(new RuntimeException("Invalid JWT token: Missing id or email"));
+                    .onStatus(HttpStatusCode::isError, response -> {
+                        if (response.statusCode() == HttpStatus.UNAUTHORIZED) {
+                            return Mono.error(new RuntimeException("Invalid or expired JWT token"));
+                        }
+                        return Mono.error(new RuntimeException("Auth service error: " + response.statusCode()));
+                    })
+                    .bodyToMono(ApiResponseClass.class)
+                    .flatMap(apiResponse -> {
+                        // Check if the API response indicates success
+                        if (!apiResponse.isSuccess() || apiResponse.getData() == null) {
+                            return Mono.error(new RuntimeException("Invalid JWT token: " + apiResponse.getMessage()));
                         }
 
-                        System.out.println("Validated user: " + response.getEmail() + " (ID: " + response.getId() + ")");
+                        ValidateResponse validateResponse = apiResponse.getData();
+
+                        // Validate response data
+                        if (validateResponse.getUserId() == null || validateResponse.getEmail() == null) {
+                            return Mono.error(new RuntimeException("Invalid JWT token: Missing user data"));
+                        }
+
+                        System.out.println("Validated user: " + validateResponse.getEmail() +
+                                " (ID: " + validateResponse.getUserId() + ")");
 
                         // Add user info to request headers for downstream services
                         ServerHttpRequest modifiedRequest = exchange.getRequest().mutate()
-                                .header("X-User-Id", String.valueOf(response.getId()))
-                                .header("X-User-Email", response.getEmail())
-                                .header("X-User-Role", response.getRole())
-                                .header("X-Authenticated", "true") // Optional: flag for authenticated requests
+                                .header("X-User-Id", String.valueOf(validateResponse.getUserId()))
+                                .header("X-User-Email", validateResponse.getEmail())
+                                .header("X-User-Role", validateResponse.getRole())
+                                .header("X-Authenticated", "true")
                                 .build();
 
                         // Continue with modified request
@@ -83,32 +102,69 @@ public class JwtAuthGatewayFilterFactory extends AbstractGatewayFilterFactory<Jw
                     })
                     .onErrorResume(Exception.class, e -> {
                         System.err.println("Authentication failed: " + e.getMessage());
-                        // Return 401 Unauthorized response
-                        ServerHttpResponse response = exchange.getResponse();
-                        response.setStatusCode(HttpStatus.UNAUTHORIZED);
-                        response.getHeaders().add("Content-Type", "application/json");
-                        String body = "{\"error\":\"Unauthorized\",\"message\":\"Invalid or expired token\"}";
-                        DataBuffer buffer = response.bufferFactory().wrap(body.getBytes(StandardCharsets.UTF_8));
-                        return response.writeWith(Mono.just(buffer));
+                        return createUnauthorizedResponse(exchange, "Invalid or expired token");
                     });
         };
     }
 
-    public static class Config {
+    private Mono<Void> createUnauthorizedResponse(org.springframework.web.server.ServerWebExchange exchange, String message) {
+        ServerHttpResponse response = exchange.getResponse();
+        response.setStatusCode(HttpStatus.UNAUTHORIZED);
+        response.getHeaders().add("Content-Type", "application/json");
+
+        String body = String.format("{\"success\":false,\"error\":\"Unauthorized\",\"message\":\"%s\"}", message);
+        DataBuffer buffer = response.bufferFactory().wrap(body.getBytes(StandardCharsets.UTF_8));
+        return response.writeWith(Mono.just(buffer));
     }
 
-    // Inner class to match the ValidateResponse DTO
-    public static class ValidateResponse {
-        private Long id;
-        private String email;
-        private String role;
+    public static class Config {
+        // Configuration properties can be added here if needed
+    }
 
-        public Long getId() {
-            return id;
+    // Wrapper class to match the ApiResponseClass structure from auth service
+    public static class ApiResponseClass {
+        private boolean success;
+        private ValidateResponse data;
+        private String message;
+
+        public boolean isSuccess() {
+            return success;
         }
 
-        public void setId(Long id) {
-            this.id = id;
+        public void setSuccess(boolean success) {
+            this.success = success;
+        }
+
+        public ValidateResponse getData() {
+            return data;
+        }
+
+        public void setData(ValidateResponse data) {
+            this.data = data;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+
+        public void setMessage(String message) {
+            this.message = message;
+        }
+    }
+
+    // Inner class to match the ValidateResponse DTO from auth service
+    public static class ValidateResponse {
+        private Long userId;
+        private String email;
+        private String role;
+        private boolean valid;
+
+        public Long getUserId() {
+            return userId;
+        }
+
+        public void setUserId(Long userId) {
+            this.userId = userId;
         }
 
         public String getEmail() {
@@ -125,6 +181,14 @@ public class JwtAuthGatewayFilterFactory extends AbstractGatewayFilterFactory<Jw
 
         public void setRole(String role) {
             this.role = role;
+        }
+
+        public boolean isValid() {
+            return valid;
+        }
+
+        public void setValid(boolean valid) {
+            this.valid = valid;
         }
     }
 }

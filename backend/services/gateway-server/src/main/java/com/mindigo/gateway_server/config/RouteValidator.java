@@ -12,6 +12,9 @@ public class RouteValidator {
         String path = request.getURI().getPath();
 
         // Allow all /api/v1/auth/** endpoints
+        if (path.startsWith("/api/v1/auth/hello")) {
+            return true;
+        }
         if (path.startsWith("/api/v1/auth/")) {
             return false;
         }

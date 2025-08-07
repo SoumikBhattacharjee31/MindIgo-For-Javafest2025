@@ -26,6 +26,8 @@ spring:
               uri: lb://game-service
               predicates:
                 - Path=/api/v1/game/**
+              filters:
+                - name: JwtAuth
             - id: file-server
               uri: lb://file-server
               predicates:

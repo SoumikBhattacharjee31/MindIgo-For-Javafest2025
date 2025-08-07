@@ -4,6 +4,7 @@ import com.mindigo.game_service.dto.GridResponse;
 import com.mindigo.game_service.dto.TestResponse;
 import com.mindigo.game_service.exceptions.InvalidParameterException;
 import com.mindigo.game_service.services.InfinityLoopService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
