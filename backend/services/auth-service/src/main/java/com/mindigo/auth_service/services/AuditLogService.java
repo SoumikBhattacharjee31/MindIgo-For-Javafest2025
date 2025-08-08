@@ -1,6 +1,6 @@
 package com.mindigo.auth_service.services;
 
-import com.mindigo.auth_service.models.AuditLog;
+import com.mindigo.auth_service.entity.AuditLog;
 import com.mindigo.auth_service.repositories.AuditLogRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -1,6 +1,6 @@
 package com.mindigo.auth_service.repositories;
 
-import com.mindigo.auth_service.models.User;
+import com.mindigo.auth_service.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

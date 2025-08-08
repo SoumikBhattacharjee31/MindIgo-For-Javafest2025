@@ -1,6 +1,6 @@
 package com.mindigo.auth_service.utils;
 
-import com.mindigo.auth_service.jwt.JwtService;
+import com.mindigo.auth_service.services.JwtService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

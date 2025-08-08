@@ -1,14 +1,16 @@
 package com.mindigo.auth_service.services;
 
-import com.mindigo.auth_service.dto.*;
-import com.mindigo.auth_service.exceptions.*;
-import com.mindigo.auth_service.models.*;
+import com.mindigo.auth_service.dto.request.*;
+import com.mindigo.auth_service.dto.response.AuthenticationResponse;
+import com.mindigo.auth_service.dto.response.UserProfileResponse;
+import com.mindigo.auth_service.dto.response.ValidateResponse;
+import com.mindigo.auth_service.exception.*;
+import com.mindigo.auth_service.entity.*;
+import com.mindigo.auth_service.repositories.ImageService;
 import com.mindigo.auth_service.repositories.UserOTPRepository;
 import com.mindigo.auth_service.repositories.UserRepository;
 import com.mindigo.auth_service.repositories.UserTokenRepository;
 import com.mindigo.auth_service.utils.*;
-import com.mindigo.auth_service.jwt.JwtService;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
@@ -50,7 +52,7 @@ public class AuthenticationService {
     @Value("${app.password-reset.expiry-hours}")
     private int passwordResetExpiryHours;
 
-    private final ImageHelper imageStorageService;
+    private final ImageService imageStorageService;
     private final UserRepository userRepository;
     private final UserOTPRepository otpRepository;
     private final UserTokenRepository userTokenRepository;

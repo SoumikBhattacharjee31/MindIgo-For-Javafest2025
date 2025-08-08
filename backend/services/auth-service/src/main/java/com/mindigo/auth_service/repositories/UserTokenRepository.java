@@ -1,8 +1,7 @@
 package com.mindigo.auth_service.repositories;
 
-import com.mindigo.auth_service.models.TokenType;
-import com.mindigo.auth_service.models.UserToken;
-import org.springframework.cglib.core.Local;
+import com.mindigo.auth_service.entity.TokenType;
+import com.mindigo.auth_service.entity.UserToken;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDateTime;

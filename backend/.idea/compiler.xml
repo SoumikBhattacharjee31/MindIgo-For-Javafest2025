@@ -11,7 +11,7 @@
         <module name="gateway-server" />
         <module name="eureka-server" />
       </profile>
-      <profile name="Annotation profile for routine-service" enabled="true">
+      <profile name="Annotation profile for admin-service" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
@@ -25,6 +25,7 @@
         <module name="file-server" />
         <module name="assessment-service" />
         <module name="mail-service" />
+        <module name="admin-service" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
@@ -33,6 +34,7 @@
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="admin-service" options="-parameters" />
       <module name="assessment-service" options="-parameters" />
       <module name="auth-service" options="-parameters" />
       <module name="config-server" options="-parameters" />

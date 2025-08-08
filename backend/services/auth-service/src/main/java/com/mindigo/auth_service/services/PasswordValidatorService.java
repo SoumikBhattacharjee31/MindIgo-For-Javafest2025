@@ -1,6 +1,6 @@
 package com.mindigo.auth_service.services;
 
-import com.mindigo.auth_service.exceptions.InvalidPasswordException;
+import com.mindigo.auth_service.exception.InvalidPasswordException;
 import org.springframework.stereotype.Service;
 
 import java.util.regex.Pattern;

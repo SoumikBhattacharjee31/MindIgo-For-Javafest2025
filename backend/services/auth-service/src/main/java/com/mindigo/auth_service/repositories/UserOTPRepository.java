@@ -1,9 +1,8 @@
 package com.mindigo.auth_service.repositories;
 
-import com.mindigo.auth_service.models.UserOTP;
+import com.mindigo.auth_service.entity.UserOTP;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import javax.swing.text.html.Option;
 import java.time.LocalDateTime;
 import java.util.Optional;
 

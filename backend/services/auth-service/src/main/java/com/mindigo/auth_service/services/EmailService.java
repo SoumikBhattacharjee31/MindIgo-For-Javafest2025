@@ -1,7 +1,7 @@
 package com.mindigo.auth_service.services;
 
-import com.mindigo.auth_service.dto.MailSendRequest;
-import com.mindigo.auth_service.dto.MailSendResponse;
+import com.mindigo.auth_service.dto.request.MailSendRequest;
+import com.mindigo.auth_service.dto.response.MailSendResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
