@@ -32,3 +32,10 @@ management:
     web:
       exposure:
         include: health
+
+logging:
+  level:
+    root: INFO               # Default logging level
+    com.mindigo.content_service: DEBUG   # Customize for your package or class
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
