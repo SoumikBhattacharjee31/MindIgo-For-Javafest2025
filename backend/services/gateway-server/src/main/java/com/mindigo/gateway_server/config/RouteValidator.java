@@ -19,6 +19,10 @@ public class RouteValidator {
             return false;
         }
 
+        if (path.startsWith("/api/v1/routines")) {
+            return false;
+        }
+
         // Allow any /api/v1/**/test
         return !path.matches("^/api/v1/.*/test/?$");
 

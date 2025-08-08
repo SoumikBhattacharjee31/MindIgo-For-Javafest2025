@@ -36,6 +36,12 @@ spring:
               uri: lb://content-service
               predicates:
                 - Path=/api/v1/content/**
+            - id: routine-service
+              uri: lb://routine-service
+              predicates:
+                - Path=/api/v1/routines/**
+              filters:
+                - name: JwtAuth
 server:
   port: 8080
 
