@@ -95,21 +95,21 @@ export default function Home() {
   });
 
   // Call API on mount
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     console.log("yo");
-  //     try {
-  //       const response = await axios.get('http://localhost:8080/api/v1/auth/hello', {
-  //         withCredentials: true,
-  //       });
-  //       console.log(response.data);
-  //       console.log("ho");
-  //     } catch (error) {
-  //       console.error(error);
-  //     }
-  //   };
-  //   fetchData();
-  // }, []);
+  useEffect(() => {
+    const fetchData = async () => {
+      console.log("yo");
+      try {
+        const response = await axios.get('http://localhost:8080/api/v1/auth/hello', {
+          withCredentials: true,
+        });
+        console.log(response.data);
+        console.log("hoo");
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    fetchData();
+  }, []);
   
   return (
     <div {...bind()} className="bg-base-200 text-base-content min-h-screen">

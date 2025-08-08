@@ -1,14 +1,16 @@
 package com.mindigo.auth_service.services;
 
-import com.mindigo.auth_service.dto.*;
-import com.mindigo.auth_service.exceptions.*;
-import com.mindigo.auth_service.models.*;
+import com.mindigo.auth_service.dto.request.*;
+import com.mindigo.auth_service.dto.response.AuthenticationResponse;
+import com.mindigo.auth_service.dto.response.UserProfileResponse;
+import com.mindigo.auth_service.dto.response.ValidateResponse;
+import com.mindigo.auth_service.exception.*;
+import com.mindigo.auth_service.entity.*;
+import com.mindigo.auth_service.repositories.ImageService;
 import com.mindigo.auth_service.repositories.UserOTPRepository;
 import com.mindigo.auth_service.repositories.UserRepository;
 import com.mindigo.auth_service.repositories.UserTokenRepository;
 import com.mindigo.auth_service.utils.*;
-import com.mindigo.auth_service.jwt.JwtService;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
@@ -50,7 +52,7 @@ public class AuthenticationService {
     @Value("${app.password-reset.expiry-hours}")
     private int passwordResetExpiryHours;
 
-    private final ImageHelper imageStorageService;
+    private final ImageService imageStorageService;
     private final UserRepository userRepository;
     private final UserOTPRepository otpRepository;
     private final UserTokenRepository userTokenRepository;
@@ -87,7 +89,7 @@ public class AuthenticationService {
             // Create user
             User user = User.builder()
                     .name(request.getName())
-                    .email(request.getEmail().toLowerCase().trim())
+                    .email(request.getEmail().trim())
                     .password(passwordEncoder.encode(request.getPassword()))
                     .role(Role.valueOf(request.getRole().toUpperCase()))
                     .dateOfBirth(request.getDateOfBirth())
@@ -98,20 +100,20 @@ public class AuthenticationService {
                     .updatedAt(LocalDateTime.now())
                     .build();
 
-            user = userRepository.save(user);
+            String imageUrl=null;
 
             // Handle profile image upload asynchronously
             if (profileImage != null && !profileImage.isEmpty()) {
-                User finalUser = user;
-                CompletableFuture.runAsync(() -> {
-                    try {
-                        imageStorageService.storeUserProfileImage(finalUser.getId(), profileImage);
-                        log.info("Profile image uploaded for user: {}", finalUser.getEmail());
-                    } catch (Exception e) {
-                        log.error("Failed to upload profile image for user: {}", finalUser.getEmail(), e);
-                    }
-                });
+                try {
+                    imageUrl = imageStorageService.processUserProfileImageUpload(request.getEmail(), profileImage);
+                    log.info("Profile image uploaded for user: {}", request.getEmail());
+                } catch (Exception e) {
+                    log.error("Failed to upload profile image for user: {}", request.getEmail(), e);
+                }
             }
+
+            user.setProfileImageUrl(imageUrl);
+            user = userRepository.save(user);
 
             // Generate tokens
             String accessToken = jwtService.generateAccessToken(user);
@@ -482,10 +484,17 @@ public class AuthenticationService {
                 throw new InvalidTokenException("Token is invalid or expired");
             }
 
+            Optional<User> user = userRepository.findByEmail(userEmail);
+            if (user.isEmpty()) {
+                throw new InvalidTokenException("User not found");
+            }
+            String role = String.valueOf(user.get().getRole());
+
             return ValidateResponse.builder()
                     .userId(Long.parseLong(userId))
                     .email(userEmail)
                     .valid(true)
+                    .role(role)
                     .build();
 
         } catch (Exception e) {

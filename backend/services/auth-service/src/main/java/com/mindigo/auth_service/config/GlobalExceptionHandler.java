@@ -1,7 +1,7 @@
 package com.mindigo.auth_service.config;
 
-import com.mindigo.auth_service.dto.ApiResponseClass;
-import com.mindigo.auth_service.exceptions.*;
+import com.mindigo.auth_service.dto.response.ApiResponseClass;
+import com.mindigo.auth_service.exception.*;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;

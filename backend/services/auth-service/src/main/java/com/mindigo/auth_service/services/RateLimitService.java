@@ -1,13 +1,10 @@
 package com.mindigo.auth_service.services;
 
-import com.mindigo.auth_service.exceptions.RateLimitExceededException;
+import com.mindigo.auth_service.exception.RateLimitExceededException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
-
-import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor

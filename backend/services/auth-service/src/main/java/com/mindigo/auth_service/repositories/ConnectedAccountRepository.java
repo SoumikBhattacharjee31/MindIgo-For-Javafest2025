@@ -2,7 +2,7 @@ package com.mindigo.auth_service.repositories;
 
 import java.util.Optional;
 
-import com.mindigo.auth_service.models.UserConnectedAccount;
+import com.mindigo.auth_service.entity.UserConnectedAccount;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
