@@ -29,8 +29,8 @@ import org.springframework.web.bind.annotation.*;
 public class PackageController {
     private final PackageService packageService;
 
-    private boolean isAuthorized(String role) {
-        return role.equalsIgnoreCase("EXPERT") || role.equalsIgnoreCase("ADMIN");
+    private boolean isNotAuthorized(String role) {
+        return !role.equalsIgnoreCase("EXPERT") && !role.equalsIgnoreCase("ADMIN");
     }
 
     @PostMapping("/add")
@@ -43,7 +43,7 @@ public class PackageController {
             @RequestHeader(value = "X-User-Id") String userId,
             @Valid @RequestBody PackageRequest request) {
         try {
-            if (!isAuthorized(role)) {
+            if (isNotAuthorized(role)) {
                 log.warn("Unauthorized package creation attempt by user: {}", userId);
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(ApiResponseClass.error("Unauthorized access", "403"));
@@ -77,7 +77,7 @@ public class PackageController {
             @RequestHeader(value = "X-User-Id") String userId,
             @PathVariable Long packageId) {
         try {
-            if (!isAuthorized(role)) {
+            if (isNotAuthorized(role)) {
                 log.warn("Unauthorized package removal attempt by user: {}", userId);
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(ApiResponseClass.error("Unauthorized access", "403"));
@@ -101,7 +101,7 @@ public class PackageController {
         }
     }
 
-    @PatchMapping("/{packageId}/activate")
+    @PatchMapping("/activate/{packageId}")
     @Operation(summary = "Activate a package", description = "Allows EXPERT or ADMIN to activate a package if it has at least one active course")
     @ApiResponse(responseCode = "200", description = "Package activated successfully")
     @ApiResponse(responseCode = "403", description = "Unauthorized access")
@@ -112,7 +112,7 @@ public class PackageController {
             @RequestHeader(value = "X-User-Id") String userId,
             @PathVariable Long packageId) {
         try {
-            if (!isAuthorized(role)) {
+            if (isNotAuthorized(role)) {
                 log.warn("Unauthorized package activation attempt by user: {}", userId);
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(ApiResponseClass.error("Unauthorized access", "403"));
@@ -160,6 +160,7 @@ public class PackageController {
         }
     }
 
+    //TODO: needs to be tested after integration of auth-service for resolving user id via email
     @GetMapping("/list/email")
     @Operation(summary = "List packages by email", description = "Lists all packages owned by the user with pagination using email")
     @ApiResponse(responseCode = "200", description = "Packages retrieved successfully")
@@ -228,47 +229,7 @@ public class PackageController {
     }
 
     @PutMapping("/edit/{packageId}")
-    @Operation(summary = "Replace a package", description = "Allows EXPERT or ADMIN to fully replace a package")
-    @ApiResponse(responseCode = "200", description = "Package replaced successfully")
-    @ApiResponse(responseCode = "403", description = "Unauthorized access")
-    @ApiResponse(responseCode = "404", description = "Package not found")
-    @ApiResponse(responseCode = "400", description = "Invalid input")
-    public ResponseEntity<ApiResponseClass<PackageResponse>> replacePackage(
-            @RequestHeader(value = "X-Role") String role,
-            @RequestHeader(value = "X-User-Id") String userId,
-            @PathVariable Long packageId,
-            @Valid @RequestBody PackageRequest packageRequest) {
-        try {
-            if (!isAuthorized(role)) {
-                log.warn("Unauthorized package replacement attempt by user: {}", userId);
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(ApiResponseClass.error("Unauthorized access", "403"));
-            }
-            PackageResponse response = packageService.replacePackage(Long.parseLong(userId), packageId, packageRequest);
-            log.info("Package {} replaced successfully by user: {}", packageId, userId);
-            return ResponseEntity.ok()
-                    .body(ApiResponseClass.success(response, "Package replaced successfully"));
-        } catch (NumberFormatException e) {
-            log.error("Invalid userId format: {}", userId);
-            return ResponseEntity.badRequest()
-                    .body(ApiResponseClass.error("Invalid user ID format", "400"));
-        } catch (PackageNotFoundException e) {
-            log.error("Package not found: {}", packageId);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(ApiResponseClass.error(e.getMessage(), "404"));
-        } catch (PackageCreationException e) {
-            log.error("Validation error replacing package: {}", e.getMessage());
-            return ResponseEntity.badRequest()
-                    .body(ApiResponseClass.error(e.getMessage(), "400"));
-        } catch (Exception e) {
-            log.error("Unexpected error replacing package: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponseClass.error("Unexpected error occurred", "500"));
-        }
-    }
-
-    @PatchMapping("/{packageId}")
-    @Operation(summary = "Partially update a package", description = "Allows EXPERT or ADMIN to partially update a package")
+    @Operation(summary = "Edit a package", description = "Allows EXPERT or ADMIN to partially update a package")
     @ApiResponse(responseCode = "200", description = "Package updated successfully")
     @ApiResponse(responseCode = "403", description = "Unauthorized access")
     @ApiResponse(responseCode = "404", description = "Package not found")
@@ -279,7 +240,7 @@ public class PackageController {
             @PathVariable Long packageId,
             @RequestBody PackageRequest packageRequest) {
         try {
-            if (!isAuthorized(role)) {
+            if (isNotAuthorized(role)) {
                 log.warn("Unauthorized package update attempt by user: {}", userId);
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(ApiResponseClass.error("Unauthorized access", "403"));

@@ -11,4 +11,5 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
     boolean existsByTitleAndPackageEntityId(String title, Long packageId);
     Page<Course> findByOwnerId(Long ownerId, Pageable pageable);
     Page<Course> findByActiveTrue(Pageable pageable);
+    Page<Course> findByPackageEntityId(Long packageId, Pageable pageable);
 }

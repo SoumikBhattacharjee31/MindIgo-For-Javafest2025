@@ -20,10 +20,5 @@ public class CourseRequest {
     private String title;
     @Size(max = 1000, message = "Description cannot exceed 1000 characters")
     private String description;
-    private Boolean custom;
-    @Email(message = "Invalid target user email format")
-    private String targetUserEmail;
     private Long packageId;
-    @Min(value = 1, message = "Duration must be at least 1 day")
-    private Integer durationDays;
 }

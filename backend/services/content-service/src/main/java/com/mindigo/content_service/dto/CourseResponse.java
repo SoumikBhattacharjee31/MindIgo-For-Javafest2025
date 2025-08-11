@@ -15,11 +15,9 @@ public class CourseResponse {
     private Long id;
     private String title;
     private String description;
-    private Long ownerId;
-    private Boolean custom;
     private Boolean active;
-    private Long targetUserId;
-    private Long packageId;
+    private Boolean enrolled;
+    private Double progress;
     private Integer durationDays;
     private Boolean canEdit;
 }

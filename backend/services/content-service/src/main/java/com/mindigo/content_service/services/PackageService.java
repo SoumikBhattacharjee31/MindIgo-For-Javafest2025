@@ -62,6 +62,9 @@ public class PackageService {
         if (request.getFree() && request.getPrice() != 0.0) {
             throw new PackageCreationException("Price of a free package must be 0");
         }
+        if (!request.getFree()  && request.getPrice() == 0.0) {
+            throw new PackageCreationException("Price of a not-free package must be greater than 0");
+        }
     }
 
     @Transactional
@@ -194,39 +197,6 @@ public class PackageService {
     }
 
     @Transactional
-    public PackageResponse replacePackage(Long userId, Long packageId, PackageRequest packageRequest) {
-        validatePackageRequest(packageRequest);
-        Package packageEntity = packageRepository.findById(packageId)
-                .orElseThrow(() -> new PackageNotFoundException("Package with ID " + packageId + " not found"));
-
-        if (!packageEntity.getOwnerId().equals(userId)) {
-            throw new PackageNotFoundException("User not authorized to replace this package");
-        }
-
-        if (!packageEntity.getName().equals(packageRequest.getName()) &&
-                packageRepository.existsByName(packageRequest.getName())) {
-            throw new PackageCreationException("A package with the name '" + packageRequest.getName() + "' already exists");
-        }
-
-        packageEntity.setName(packageRequest.getName());
-        packageEntity.setDescription(packageRequest.getDescription());
-        packageEntity.setPrice(packageRequest.getPrice());
-        packageEntity.setFree(packageRequest.getFree());
-
-        Package savedPackage = packageRepository.save(packageEntity);
-
-        return PackageResponse.builder()
-                .id(savedPackage.getId())
-                .name(savedPackage.getName())
-                .description(savedPackage.getDescription())
-                .price(savedPackage.getPrice())
-                .free(savedPackage.getFree())
-                .active(savedPackage.getActive())
-                .canEdit(true)
-                .build();
-    }
-
-    @Transactional
     public PackageResponse updatePackage(Long userId, Long packageId, PackageRequest packageRequest) {
         Package packageEntity = packageRepository.findById(packageId)
                 .orElseThrow(() -> new PackageNotFoundException("Package with ID " + packageId + " not found"));
@@ -243,7 +213,6 @@ public class PackageService {
                 throw new PackageCreationException("A package with the name '" + packageRequest.getName() + "' already exists");
             }
             packageEntity.setName(packageRequest.getName());
-            needsValidation = true;
         }
         if (packageRequest.getDescription() != null) {
             packageEntity.setDescription(packageRequest.getDescription());
@@ -262,6 +231,9 @@ public class PackageService {
 
         if (needsValidation && packageEntity.getFree() && packageEntity.getPrice() != 0.0) {
             throw new PackageCreationException("Price of a free package must be 0");
+        }
+        if (needsValidation && !packageEntity.getFree() && packageEntity.getPrice() == 0.0) {
+            throw new PackageCreationException("Price of a not-free package must be greater than 0");
         }
 
         Package savedPackage = packageRepository.save(packageEntity);

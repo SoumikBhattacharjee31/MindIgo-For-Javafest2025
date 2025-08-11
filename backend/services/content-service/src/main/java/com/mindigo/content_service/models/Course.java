@@ -34,15 +34,8 @@ public class Course {
     @Column(name = "owner_id", nullable = false)
     private Long ownerId; // Reference to owner from auth_service
 
-    @Column(name = "custom", nullable = false)
-    private Boolean custom; // customized course for a user
-
     @Column(name = "active", nullable = false)//it will be true if at least one CourseDay in it.
     private Boolean active;
-
-
-    @Column(name = "target_user_id")
-    private Long targetUserId; // Optional, for custom courses
 
     @NotNull(message = "Package is mandatory")
     @ManyToOne(fetch = FetchType.LAZY)
