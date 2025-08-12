@@ -7,4 +7,5 @@ public class AuthValidationGroups {
     public interface OtpVerification {}
     public interface ForgotPassword {}
     public interface PasswordReset {}
+    public interface CounselorRegistration {}
 }

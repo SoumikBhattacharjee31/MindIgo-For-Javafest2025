@@ -2,6 +2,7 @@ package com.mindigo.auth_service.services;
 
 import com.mindigo.auth_service.dto.request.*;
 import com.mindigo.auth_service.dto.response.AuthenticationResponse;
+import com.mindigo.auth_service.dto.response.CounselorStatusResponse;
 import com.mindigo.auth_service.dto.response.UserProfileResponse;
 import com.mindigo.auth_service.dto.response.ValidateResponse;
 import com.mindigo.auth_service.exception.*;
@@ -159,6 +160,31 @@ public class AuthenticationService {
             // Find user
             User user = userRepository.findByEmail(email)
                     .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password"));
+
+            // Update the existing login method to handle counselor status
+// Add this check in the authenticateLogin method after email verification check:
+
+// Additional check for counselors
+            if (user.getRole() == Role.COUNSELOR && !user.isCounselorApproved()) {
+                auditLogService.logSecurityEvent("LOGIN_FAILED", email,
+                        "Counselor not approved by admin", clientIp);
+
+                String message;
+                switch (user.getCounselorStatus()) {
+                    case PENDING_VERIFICATION:
+                        message = "Your counselor account is pending admin approval. Please wait for verification.";
+                        break;
+                    case REJECTED:
+                        message = "Your counselor account has been rejected. Please contact support for more information.";
+                        break;
+                    case SUSPENDED:
+                        message = "Your counselor account has been suspended. Please contact support.";
+                        break;
+                    default:
+                        message = "Your counselor account is not approved for login.";
+                }
+                throw new AccountNotApprovedException(message);
+            }
 
             // Check if account is active
             if (!user.getIsActive()) {
@@ -606,5 +632,136 @@ public class AuthenticationService {
 
         return username.charAt(0) + "*".repeat(username.length() - 2) +
                 username.charAt(username.length() - 1) + "@" + domain;
+    }
+
+    // Add these methods to your existing AuthenticationService class
+
+    @Transactional
+    public String registerCounselor(MultipartFile profileImage,
+                                    MultipartFile verificationDocument,
+                                    CounselorRegisterRequest request) {
+        String clientIp = getClientIpFromRequest();
+
+        // Rate limiting
+        rateLimitService.checkRateLimit("counselor_register", request.getEmail(), 3, 3600);
+
+        log.info("Counselor registration attempt for email: {}", request.getEmail());
+
+        try {
+            // Check if user already exists
+            if (userRepository.existsByEmail(request.getEmail())) {
+                auditLogService.logSecurityEvent("COUNSELOR_REGISTRATION_FAILED", request.getEmail(),
+                        "User already exists", clientIp);
+                throw new UserAlreadyExistsException("An account with this email already exists");
+            }
+
+            // Check if license number is already registered
+            if (userRepository.existsByLicenseNumber(request.getLicenseNumber())) {
+                throw new BadRequestException("A counselor with this license number is already registered");
+            }
+
+            // Validate password strength
+            passwordValidatorService.validatePassword(request.getPassword());
+
+            // Upload verification document
+            String verificationDocumentUrl = null;
+            if (verificationDocument != null && !verificationDocument.isEmpty()) {
+                try {
+                    verificationDocumentUrl = imageStorageService.processUserProfileImageUpload(
+                            request.getEmail(), verificationDocument);
+                } catch (Exception e) {
+                    log.error("Failed to upload verification document for counselor: {}", request.getEmail(), e);
+                    throw new BadRequestException("Failed to upload verification document");
+                }
+            } else {
+                throw new BadRequestException("Verification document is required for counselor registration");
+            }
+
+            // Handle profile image upload
+            String imageUrl = null;
+            if (profileImage != null && !profileImage.isEmpty()) {
+                try {
+                    imageUrl = imageStorageService.processUserProfileImageUpload(request.getEmail(), profileImage);
+                } catch (Exception e) {
+                    log.error("Failed to upload profile image for counselor: {}", request.getEmail(), e);
+                }
+            }
+
+            // Create counselor user
+            User counselor = User.builder()
+                    .name(request.getName())
+                    .email(request.getEmail().trim())
+                    .password(passwordEncoder.encode(request.getPassword()))
+                    .role(Role.COUNSELOR)
+                    .dateOfBirth(request.getDateOfBirth())
+                    .gender(Gender.valueOf(request.getGender().toUpperCase()))
+                    .licenseNumber(request.getLicenseNumber())
+                    .specialization(request.getSpecialization())
+                    .verificationDocumentUrl(verificationDocumentUrl)
+                    .profileImageUrl(imageUrl)
+                    .counselorStatus(CounselorStatus.PENDING_VERIFICATION)
+                    .isEmailVerified(false)
+                    .isActive(true)
+                    .createdAt(LocalDateTime.now())
+                    .updatedAt(LocalDateTime.now())
+                    .build();
+
+            counselor = userRepository.save(counselor);
+
+            // Send email confirmation
+            CompletableFuture.runAsync(() -> {
+                try {
+                    emailService.sendCounselorRegistrationConfirmation(request.getEmail(), request.getName());
+                } catch (Exception e) {
+                    log.error("Failed to send counselor registration confirmation email", e);
+                }
+            });
+
+            // Notify admin about new counselor registration (if admin service has endpoint)
+            CompletableFuture.runAsync(() -> {
+                try {
+                    // This would call admin-service to notify about new counselor registration
+                    // adminServiceClient.notifyNewCounselorRegistration(counselor.getId());
+                } catch (Exception e) {
+                    log.error("Failed to notify admin about new counselor registration", e);
+                }
+            });
+
+            auditLogService.logSecurityEvent("COUNSELOR_REGISTERED", counselor.getEmail(),
+                    "Counselor registration submitted", clientIp);
+
+            log.info("Counselor registered successfully (pending approval): {}", counselor.getEmail());
+
+            return "Counselor registration submitted successfully. " +
+                    "Your account will be activated after admin verification. " +
+                    "You will receive an email notification once approved.";
+
+        } catch (Exception e) {
+            auditLogService.logSecurityEvent("COUNSELOR_REGISTRATION_FAILED", request.getEmail(),
+                    e.getMessage(), clientIp);
+            throw e;
+        }
+    }
+
+    public CounselorStatusResponse getCounselorStatus(HttpServletRequest request) {
+        String email = cookieHelper.getEmailFromCookie(request);
+
+        if (email == null) {
+            throw new InvalidTokenException("Invalid session");
+        }
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        if (user.getRole() != Role.COUNSELOR) {
+            throw new BadRequestException("This endpoint is only for counselors");
+        }
+
+        return CounselorStatusResponse.builder()
+                .status(user.getCounselorStatus())
+                .verificationNotes(user.getVerificationNotes())
+                .verifiedAt(user.getAdminVerifiedAt())
+                .canLogin(user.isCounselorApproved() && user.getIsEmailVerified())
+                .build();
     }
 }

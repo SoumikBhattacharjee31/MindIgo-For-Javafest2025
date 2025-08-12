@@ -12,7 +12,13 @@ public enum Permission {
     MANAGE_USERS("Manage users"),
     DELETE_USERS("Delete users"),
     MODERATE_CONTENT("Moderate content"),
-    SYSTEM_ADMIN("System administration");
+    SYSTEM_ADMIN("System administration"),
+    READ_CLIENTS("Read client list"),
+    MANAGE_SESSIONS("Manage counseling sessions"),
+    VIEW_CLIENT_HISTORY("View client history"),
+    CREATE_PRESCRIPTIONS("Create prescriptions"),
+    BOOK_SESSIONS("Book counseling sessions"),
+    VIEW_OWN_SESSIONS("View own counseling sessions");
 
     private final String description;
 

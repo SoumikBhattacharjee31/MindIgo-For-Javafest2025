@@ -32,6 +32,8 @@ public class ImageService {
     public String processUserProfileImageUpload(String email, MultipartFile file) {
 
         try {
+            String originalFilename = file.getOriginalFilename();
+            String sanitizedFilename = sanitizeFilename(originalFilename);
             // Prepare the multipart form data
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.MULTIPART_FORM_DATA);
@@ -40,7 +42,7 @@ public class ImageService {
             body.add("file", new ByteArrayResource(file.getBytes()) {
                 @Override
                 public String getFilename() {
-                    return file.getOriginalFilename();
+                    return sanitizedFilename;
                 }
             });
 
@@ -66,6 +68,14 @@ public class ImageService {
             System.err.println("Error communicating with file-service: " + e.getMessage());
         }
         return null;
+    }
+
+    private String sanitizeFilename(String filename) {
+        if (filename == null) {
+            return "default_filename.png"; // Fallback in case filename is null
+        }
+        // Replace spaces and colons with underscores, and remove other invalid characters
+        return filename.replaceAll("[\\s:]+", "_").replaceAll("[^a-zA-Z0-9._-]", "");
     }
 
     /**

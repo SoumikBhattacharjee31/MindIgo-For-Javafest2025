@@ -27,7 +27,27 @@ public enum Role {
             Permission.DELETE_USERS,
             Permission.MODERATE_CONTENT,
             Permission.SYSTEM_ADMIN
-    ));
+    )),
+
+    // Add this new role to your existing Role enum
+
+    COUNSELOR("Counselor", Set.of(
+            Permission.READ_PROFILE,
+            Permission.UPDATE_PROFILE,
+            Permission.UPLOAD_PROFILE_IMAGE,
+            Permission.READ_CLIENTS,
+            Permission.MANAGE_SESSIONS,
+            Permission.VIEW_CLIENT_HISTORY,
+            Permission.CREATE_PRESCRIPTIONS
+    )),
+
+    CLIENT("Client", Set.of(
+            Permission.READ_PROFILE,
+            Permission.UPDATE_PROFILE,
+            Permission.UPLOAD_PROFILE_IMAGE,
+            Permission.BOOK_SESSIONS,
+            Permission.VIEW_OWN_SESSIONS
+    )),;
 
     private final String displayName;
     private final Set<Permission> permissions;

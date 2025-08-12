@@ -110,6 +110,62 @@ public class User implements UserDetails {
     @Column(name = "updated_by", length = 100)
     private String updatedBy;
 
+    // Counselor-specific fields
+    @Column(name = "license_number", length = 100)
+    private String licenseNumber;
+
+    @Column(name = "specialization", length = 200)
+    private String specialization;
+
+    @Column(name = "verification_document_url", length = 500)
+    private String verificationDocumentUrl;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "counselor_status", length = 20)
+    @Builder.Default
+    private CounselorStatus counselorStatus = CounselorStatus.PENDING_VERIFICATION;
+
+    @Column(name = "admin_verified_by")
+    private Long adminVerifiedBy;
+
+    @Column(name = "admin_verified_at")
+    private LocalDateTime adminVerifiedAt;
+
+    @Column(name = "verification_notes", length = 1000)
+    private String verificationNotes;
+
+    // Helper methods for counselor status
+    public boolean isCounselorApproved() {
+        return role == Role.COUNSELOR && counselorStatus == CounselorStatus.APPROVED;
+    }
+
+    public boolean isCounselorPending() {
+        return role == Role.COUNSELOR && counselorStatus == CounselorStatus.PENDING_VERIFICATION;
+    }
+
+    public void approveCounselor(Long adminId, String notes) {
+        this.counselorStatus = CounselorStatus.APPROVED;
+        this.adminVerifiedBy = adminId;
+        this.adminVerifiedAt = LocalDateTime.now();
+        this.verificationNotes = notes;
+    }
+
+    public void rejectCounselor(Long adminId, String notes) {
+        this.counselorStatus = CounselorStatus.REJECTED;
+        this.adminVerifiedBy = adminId;
+        this.adminVerifiedAt = LocalDateTime.now();
+        this.verificationNotes = notes;
+    }
+
+    // Update isEnabled() method to check counselor approval
+    @Override
+    public boolean isEnabled() {
+        if (role == Role.COUNSELOR) {
+            return isActive && isEmailVerified && isCounselorApproved();
+        }
+        return isActive && isEmailVerified;
+    }
+
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<UserConnectedAccount> connectedAccounts = new ArrayList<>();
@@ -246,10 +302,10 @@ public class User implements UserDetails {
         return true;
     }
 
-    @Override
-    public boolean isEnabled() {
-        return isActive && isEmailVerified;
-    }
+//    @Override
+//    public boolean isEnabled() {
+//        return isActive && isEmailVerified;
+//    }
 
     // Convenience methods with better naming
     public Boolean getIsEmailVerified() {

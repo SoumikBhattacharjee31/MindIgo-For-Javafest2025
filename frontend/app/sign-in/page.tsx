@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import { useRouter } from 'next/navigation';
+import UserTypeSelector from "../components/UserTypeSelector";
 
 import SignInButton from "./components/SignInButton";
 import EmailInputField from "./components/EmailInputField";
@@ -23,6 +24,7 @@ const Login = () => {
   const [emailId, setEmailId] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [loading, setLoading] = React.useState(false);
+  const [userType, setUserType] = React.useState("CLIENT");
   const router = useRouter();
 
   const handleSubmit = async (e:any) => {
@@ -46,8 +48,17 @@ const Login = () => {
       // Handle structured response from backend
       if (response.data.success) {
         successToast('Login successful');
-        // Navigate to home page
-        router.push("/home");
+        
+        // Get user role from response and redirect accordingly
+        const userRole = response.data.data.user.role;
+        
+        if (userRole === 'COUNSELOR') {
+          router.push("/counselor-dashboard");
+        } else if (userRole === 'CLIENT') {
+          router.push("/client-dashboard");
+        } else {
+          router.push("/home"); // Default for other roles
+        }
       } else {
         errorToast(response.data.message || 'Login failed');
       }
@@ -57,11 +68,19 @@ const Login = () => {
         if (error.response?.status === 401) {
           errorToast('Invalid email or password');
         } else if (error.response?.status === 403) {
-          if (error.response.data.message.includes('Email not verified')) {
+          const message = error.response.data.message;
+          if (message.includes('Email not verified')) {
             errorToast('Please verify your email before logging in');
             router.push("/sign-up-verification");
+          } else if (message.includes('pending admin approval')) {
+            errorToast('Your counselor account is pending admin approval');
+            router.push("/counselor-status");
+          } else if (message.includes('rejected')) {
+            errorToast('Your counselor account has been rejected. Please contact support.');
+          } else if (message.includes('suspended')) {
+            errorToast('Your counselor account has been suspended. Please contact support.');
           } else {
-            errorToast(error.response.data.message || 'Account is deactivated');
+            errorToast(message || 'Account access denied');
           }
         } else if (error.response?.status === 429) {
           errorToast('Too many login attempts. Please try again later.');
@@ -88,6 +107,7 @@ const Login = () => {
         </div>
         <div className="w-full md:w-1/2 p-4 md:p-8 space-y-4 border-gray-300">
           <SignInLabel />
+          <UserTypeSelector userType={userType} setUserType={setUserType} />
           <form className="space-y-4" onSubmit={handleSubmit}>
             <EmailInputField setEmailId={setEmailId} />
             <PasswordInputField setPassword={setPassword} />

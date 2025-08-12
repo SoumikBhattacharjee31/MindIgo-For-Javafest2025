@@ -200,4 +200,42 @@ public class AuthController {
                 .message("Profile retrieved successfully")
                 .build());
     }
+
+    // Add this endpoint to your existing AuthController class
+
+    @PostMapping(value = "/register-counselor", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Register a new counselor (requires admin approval)")
+    @ApiResponse(responseCode = "201", description = "Counselor registration submitted successfully")
+    @ApiResponse(responseCode = "400", description = "Invalid input")
+    @ApiResponse(responseCode = "409", description = "User already exists")
+    public ResponseEntity<ApiResponseClass<String>> registerCounselor(
+            @RequestPart(value = "profileImage", required = false) MultipartFile profileImage,
+            @RequestPart(value = "verificationDocument") MultipartFile verificationDocument,
+            @RequestPart("counselor") @Validated(AuthValidationGroups.CounselorRegistration.class) CounselorRegisterRequest request) {
+
+        log.info("Counselor registration attempt for email: {}", request.getEmail());
+
+        String result = authenticationService.registerCounselor(profileImage, verificationDocument, request);
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponseClass.<String>builder()
+                        .success(true)
+                        .data(result)
+                        .message("Counselor registration submitted successfully. Awaiting admin approval.")
+                        .build());
+    }
+
+    @GetMapping("/counselor-status")
+    @Operation(summary = "Get counselor verification status")
+    public ResponseEntity<ApiResponseClass<CounselorStatusResponse>> getCounselorStatus(
+            HttpServletRequest request) {
+
+        CounselorStatusResponse status = authenticationService.getCounselorStatus(request);
+
+        return ResponseEntity.ok(ApiResponseClass.<CounselorStatusResponse>builder()
+                .success(true)
+                .data(status)
+                .message("Counselor status retrieved successfully")
+                .build());
+    }
 }
