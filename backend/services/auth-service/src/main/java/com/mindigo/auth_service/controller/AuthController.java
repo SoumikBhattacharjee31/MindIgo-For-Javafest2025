@@ -211,16 +211,21 @@ public class AuthController {
     public ResponseEntity<ApiResponseClass<String>> registerCounselor(
             @RequestPart(value = "profileImage", required = false) MultipartFile profileImage,
             @RequestPart(value = "verificationDocument") MultipartFile verificationDocument,
-            @RequestPart("counselor") @Validated(AuthValidationGroups.CounselorRegistration.class) CounselorRegisterRequest request) {
+            @RequestPart("counselor") @Validated(AuthValidationGroups.CounselorRegistration.class) CounselorRegisterRequest request,
+            HttpServletResponse response) {
 
         log.info("Counselor registration attempt for email: {}", request.getEmail());
 
-        String result = authenticationService.registerCounselor(profileImage, verificationDocument, request);
+        AuthenticationResponse result = authenticationService.registerCounselor(profileImage, verificationDocument, request, response);
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponseClass.<String>builder()
                         .success(true)
-                        .data(result)
+                        .data(
+                                "Counselor registration submitted successfully. " +
+                                "Your account will be activated after admin verification. " +
+                                "You will receive an email notification once approved."
+                        )
                         .message("Counselor registration submitted successfully. Awaiting admin approval.")
                         .build());
     }

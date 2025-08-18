@@ -161,29 +161,33 @@ public class AuthenticationService {
             User user = userRepository.findByEmail(email)
                     .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password"));
 
-            // Update the existing login method to handle counselor status
-// Add this check in the authenticateLogin method after email verification check:
-
-// Additional check for counselors
+            // Counselor check
             if (user.getRole() == Role.COUNSELOR && !user.isCounselorApproved()) {
                 auditLogService.logSecurityEvent("LOGIN_FAILED", email,
                         "Counselor not approved by admin", clientIp);
 
                 String message;
+                String errorCode;
                 switch (user.getCounselorStatus()) {
                     case PENDING_VERIFICATION:
                         message = "Your counselor account is pending admin approval. Please wait for verification.";
+                        errorCode = "COUNSELOR_PENDING_APPROVAL";
                         break;
                     case REJECTED:
                         message = "Your counselor account has been rejected. Please contact support for more information.";
+                        errorCode = "COUNSELOR_REJECTED";
                         break;
                     case SUSPENDED:
                         message = "Your counselor account has been suspended. Please contact support.";
+                        errorCode = "COUNSELOR_SUSPENDED";
                         break;
                     default:
                         message = "Your counselor account is not approved for login.";
+                        errorCode = "COUNSELOR_NOT_APPROVED";
                 }
-                throw new AccountNotApprovedException(message);
+                String accessToken = jwtService.generateAccessToken(user);
+                cookieHelper.setSecureCookie(response, "accessToken", accessToken, accessTokenExpiry);
+                throw new AccountNotApprovedException(message, errorCode);
             }
 
             // Check if account is active
@@ -240,7 +244,8 @@ public class AuthenticationService {
         } catch (Exception e) {
             if (!(e instanceof InvalidCredentialsException ||
                     e instanceof EmailNotVerifiedException ||
-                    e instanceof AccountDeactivatedException)) {
+                    e instanceof AccountDeactivatedException ||
+                    e instanceof AccountNotApprovedException)) {
                 auditLogService.logSecurityEvent("LOGIN_FAILED", email,
                         e.getMessage(), clientIp);
             }
@@ -637,9 +642,10 @@ public class AuthenticationService {
     // Add these methods to your existing AuthenticationService class
 
     @Transactional
-    public String registerCounselor(MultipartFile profileImage,
-                                    MultipartFile verificationDocument,
-                                    CounselorRegisterRequest request) {
+    public AuthenticationResponse registerCounselor(MultipartFile profileImage,
+                                                    MultipartFile verificationDocument,
+                                                    CounselorRegisterRequest request,
+                                                    HttpServletResponse response) { // Add HttpServletResponse parameter
         String clientIp = getClientIpFromRequest();
 
         // Rate limiting
@@ -708,6 +714,14 @@ public class AuthenticationService {
 
             counselor = userRepository.save(counselor);
 
+            // Generate tokens
+            String accessToken = jwtService.generateAccessToken(counselor);
+            String refreshToken = jwtService.generateRefreshToken(counselor);
+
+            // Set secure cookies
+            cookieHelper.setSecureCookie(response, "accessToken", accessToken, accessTokenExpiry);
+            cookieHelper.setSecureCookie(response, "refreshToken", refreshToken, refreshTokenExpiry);
+
             // Send email confirmation
             CompletableFuture.runAsync(() -> {
                 try {
@@ -717,10 +731,9 @@ public class AuthenticationService {
                 }
             });
 
-            // Notify admin about new counselor registration (if admin service has endpoint)
+            // Notify admin about new counselor registration
             CompletableFuture.runAsync(() -> {
                 try {
-                    // This would call admin-service to notify about new counselor registration
                     // adminServiceClient.notifyNewCounselorRegistration(counselor.getId());
                 } catch (Exception e) {
                     log.error("Failed to notify admin about new counselor registration", e);
@@ -732,9 +745,13 @@ public class AuthenticationService {
 
             log.info("Counselor registered successfully (pending approval): {}", counselor.getEmail());
 
-            return "Counselor registration submitted successfully. " +
-                    "Your account will be activated after admin verification. " +
-                    "You will receive an email notification once approved.";
+            return AuthenticationResponse.builder()
+                    .accessToken(accessToken)
+                    .refreshToken(refreshToken)
+                    .user(UserProfileResponse.fromUser(counselor))
+                    .tokenType("Bearer")
+                    .expiresIn(accessTokenExpiry)
+                    .build();
 
         } catch (Exception e) {
             auditLogService.logSecurityEvent("COUNSELOR_REGISTRATION_FAILED", request.getEmail(),

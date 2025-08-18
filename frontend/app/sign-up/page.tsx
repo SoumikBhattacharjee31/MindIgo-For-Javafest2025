@@ -164,7 +164,7 @@ const SignUp = () => {
             <UserTypeSelector userType={userType} setUserType={setUserType} />
             <NameInputField setName={setName} />
             <DOBInputField setDOB={setDOB} />
-            <GenderInputField setGender={setGender} />
+            <GenderInputField gender={gender} setGender={setGender} />
             {userType === "COUNSELOR" && (
               <CounselorSpecificFields
                 licenseNumber={licenseNumber}
