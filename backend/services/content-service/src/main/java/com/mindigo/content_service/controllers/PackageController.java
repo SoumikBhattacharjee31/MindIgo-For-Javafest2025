@@ -30,16 +30,16 @@ public class PackageController {
     private final PackageService packageService;
 
     private boolean isNotAuthorized(String role) {
-        return !role.equalsIgnoreCase("EXPERT") && !role.equalsIgnoreCase("ADMIN");
+        return !role.equalsIgnoreCase("COUNSELOR") && !role.equalsIgnoreCase("ADMIN");
     }
 
     @PostMapping("/add")
-    @Operation(summary = "Create a new package", description = "Allows EXPERT or ADMIN to create a package")
+    @Operation(summary = "Create a new package", description = "Allows COUNSELOR or ADMIN to create a package")
     @ApiResponse(responseCode = "201", description = "Package created successfully")
     @ApiResponse(responseCode = "403", description = "Unauthorized access")
     @ApiResponse(responseCode = "400", description = "Invalid input")
     public ResponseEntity<ApiResponseClass<PackageResponse>> addPackage(
-            @RequestHeader(value = "X-Role") String role,
+            @RequestHeader(value = "X-User-Role") String role,
             @RequestHeader(value = "X-User-Id") String userId,
             @Valid @RequestBody PackageRequest request) {
         try {
@@ -68,12 +68,12 @@ public class PackageController {
     }
 
     @DeleteMapping("/{packageId}")
-    @Operation(summary = "Remove a package", description = "Allows EXPERT or ADMIN to remove a package")
+    @Operation(summary = "Remove a package", description = "Allows COUNSELOR or ADMIN to remove a package")
     @ApiResponse(responseCode = "200", description = "Package removed successfully")
     @ApiResponse(responseCode = "403", description = "Unauthorized access")
     @ApiResponse(responseCode = "404", description = "Package not found")
     public ResponseEntity<ApiResponseClass<Void>> removePackage(
-            @RequestHeader(value = "X-Role") String role,
+            @RequestHeader(value = "X-User-Role") String role,
             @RequestHeader(value = "X-User-Id") String userId,
             @PathVariable Long packageId) {
         try {
@@ -102,13 +102,13 @@ public class PackageController {
     }
 
     @PatchMapping("/activate/{packageId}")
-    @Operation(summary = "Activate a package", description = "Allows EXPERT or ADMIN to activate a package if it has at least one active course")
+    @Operation(summary = "Activate a package", description = "Allows COUNSELOR or ADMIN to activate a package if it has at least one active course")
     @ApiResponse(responseCode = "200", description = "Package activated successfully")
     @ApiResponse(responseCode = "403", description = "Unauthorized access")
     @ApiResponse(responseCode = "404", description = "Package not found")
     @ApiResponse(responseCode = "400", description = "No active courses in package")
     public ResponseEntity<ApiResponseClass<PackageResponse>> activatePackage(
-            @RequestHeader(value = "X-Role") String role,
+            @RequestHeader(value = "X-User-Role") String role,
             @RequestHeader(value = "X-User-Id") String userId,
             @PathVariable Long packageId) {
         try {
@@ -229,13 +229,13 @@ public class PackageController {
     }
 
     @PutMapping("/edit/{packageId}")
-    @Operation(summary = "Edit a package", description = "Allows EXPERT or ADMIN to partially update a package")
+    @Operation(summary = "Edit a package", description = "Allows COUNSELOR or ADMIN to partially update a package")
     @ApiResponse(responseCode = "200", description = "Package updated successfully")
     @ApiResponse(responseCode = "403", description = "Unauthorized access")
     @ApiResponse(responseCode = "404", description = "Package not found")
     @ApiResponse(responseCode = "400", description = "Invalid input")
     public ResponseEntity<ApiResponseClass<PackageResponse>> updatePackage(
-            @RequestHeader(value = "X-Role") String role,
+            @RequestHeader(value = "X-User-Role") String role,
             @RequestHeader(value = "X-User-Id") String userId,
             @PathVariable Long packageId,
             @RequestBody PackageRequest packageRequest) {

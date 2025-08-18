@@ -4,15 +4,14 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 import java.util.List;
 
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class PagedCourseResponse {
-    private List<CourseResponse> courses;
+public class PagedCourseDayResponse {
+    private List<CourseDayResponse> courseDays;
     private int size;
     private int page;
     private long totalElements;

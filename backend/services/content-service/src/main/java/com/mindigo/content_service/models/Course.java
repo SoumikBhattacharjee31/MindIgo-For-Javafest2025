@@ -42,10 +42,6 @@ public class Course {
     @JoinColumn(name = "package_id", nullable = false)
     private Package packageEntity; // Many-to-One with Package
 
-    @Min(value = 1, message = "Duration must be at least 1 day")
-    @Column(name = "duration_days", nullable = false)
-    private int durationDays;
-
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

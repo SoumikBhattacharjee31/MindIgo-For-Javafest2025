@@ -11,8 +11,8 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class PagedCourseResponse {
-    private List<CourseResponse> courses;
+public class PagedTaskResponse {
+    private List<TaskResponse> tasks;
     private int size;
     private int page;
     private long totalElements;

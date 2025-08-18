@@ -1,6 +1,5 @@
 package com.mindigo.content_service.dto;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,16 +10,13 @@ import java.util.List;
 
 @Data
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public class PackageResponse {
+@NoArgsConstructor
+public class CourseDayResponse {
     private Long id;
-    private String name;
+    private String title;
     private String description;
-    private Double price;
-    private Boolean free;
-    private Boolean active;
+    private List<TaskSummaryResponse> taskList = new ArrayList<>();
+    private Integer dayNumber;
     private Boolean canEdit;
-    private List<CourseSummaryResponse> courses;
 }

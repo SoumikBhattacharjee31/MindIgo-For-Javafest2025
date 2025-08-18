@@ -29,7 +29,7 @@ public class CourseController {
     private final CourseService courseService;
 
     private boolean isNotAuthorized(String role) {
-        return !role.equalsIgnoreCase("EXPERT") && !role.equalsIgnoreCase("ADMIN");
+        return !role.equalsIgnoreCase("COUNSELOR") && !role.equalsIgnoreCase("ADMIN");
     }
 
     @GetMapping("/{courseId}")
@@ -86,12 +86,12 @@ public class CourseController {
     }
 
     @PostMapping("/add")
-    @Operation(summary = "Create a new course", description = "Allows EXPERT or ADMIN to create a non-custom course")
+    @Operation(summary = "Create a new course", description = "Allows COUNSELOR or ADMIN to create a non-custom course")
     @ApiResponse(responseCode = "201", description = "Course created successfully")
     @ApiResponse(responseCode = "403", description = "Unauthorized access")
     @ApiResponse(responseCode = "400", description = "Invalid input")
     public ResponseEntity<ApiResponseClass<CourseResponse>> addCourse(
-            @RequestHeader(value = "X-Role") String role,
+            @RequestHeader(value = "X-User-Role") String role,
             @RequestHeader(value = "X-User-Id") String userId,
             @Valid @RequestBody CourseRequest request) {
         try {
@@ -120,12 +120,12 @@ public class CourseController {
     }
 
     @DeleteMapping("/{courseId}")
-    @Operation(summary = "Remove a course", description = "Allows EXPERT or ADMIN to remove a course")
+    @Operation(summary = "Remove a course", description = "Allows COUNSELOR or ADMIN to remove a course")
     @ApiResponse(responseCode = "200", description = "Course removed successfully")
     @ApiResponse(responseCode = "403", description = "Unauthorized access")
     @ApiResponse(responseCode = "404", description = "Course not found")
     public ResponseEntity<ApiResponseClass<Void>> removeCourse(
-            @RequestHeader(value = "X-Role") String role,
+            @RequestHeader(value = "X-User-Role") String role,
             @RequestHeader(value = "X-User-Id") String userId,
             @PathVariable Long courseId) {
         try {
@@ -154,13 +154,13 @@ public class CourseController {
     }
 
     @PatchMapping("/activate/{courseId}")
-    @Operation(summary = "Activate a course", description = "Allows EXPERT or ADMIN to activate a course if it has at least one course day")
+    @Operation(summary = "Activate a course", description = "Allows COUNSELOR or ADMIN to activate a course if it has at least one course day")
     @ApiResponse(responseCode = "200", description = "Course activated successfully")
     @ApiResponse(responseCode = "403", description = "Unauthorized access")
     @ApiResponse(responseCode = "404", description = "Course not found")
     @ApiResponse(responseCode = "400", description = "No course days in course")
     public ResponseEntity<ApiResponseClass<CourseResponse>> activateCourse(
-            @RequestHeader(value = "X-Role") String role,
+            @RequestHeader(value = "X-User-Role") String role,
             @RequestHeader(value = "X-User-Id") String userId,
             @PathVariable Long courseId) {
         try {
@@ -189,13 +189,13 @@ public class CourseController {
     }
 
     @PutMapping("/edit/{courseId}")
-    @Operation(summary = "update a course", description = "Allows EXPERT or ADMIN to partially update a course")
+    @Operation(summary = "update a course", description = "Allows COUNSELOR or ADMIN to partially update a course")
     @ApiResponse(responseCode = "200", description = "Course updated successfully")
     @ApiResponse(responseCode = "403", description = "Unauthorized access")
     @ApiResponse(responseCode = "404", description = "Course or package not found")
     @ApiResponse(responseCode = "400", description = "Invalid input")
     public ResponseEntity<ApiResponseClass<CourseResponse>> updateCourse(
-            @RequestHeader(value = "X-Role") String role,
+            @RequestHeader(value = "X-User-Role") String role,
             @RequestHeader(value = "X-User-Id") String userId,
             @PathVariable Long courseId,
             @RequestBody CourseRequest courseRequest) {
