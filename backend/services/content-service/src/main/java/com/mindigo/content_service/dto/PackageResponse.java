@@ -6,6 +6,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -19,4 +22,5 @@ public class PackageResponse {
     private Boolean free;
     private Boolean active;
     private Boolean canEdit;
+    private List<CourseSummaryResponse> courses;
 }

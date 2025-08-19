@@ -1,5 +1,6 @@
 package com.mindigo.content_service.services;
 
+import com.mindigo.content_service.dto.CourseSummaryResponse;
 import com.mindigo.content_service.dto.PackageRequest;
 import com.mindigo.content_service.dto.PagedPackageResponse;
 import com.mindigo.content_service.dto.PackageResponse;
@@ -178,6 +179,18 @@ public class PackageService {
     public PackageResponse getPackageDetails(Long packageId, Long userId) {
         Package packageEntity = packageRepository.findById(packageId)
                 .orElseThrow(() -> new PackageNotFoundException("Package with ID " + packageId + " not found"));
+        List<Course> courseList = packageEntity.getCourses();
+
+        List<CourseSummaryResponse> courseSummaryResponseList = courseList.stream()
+                .map(course ->
+                    CourseSummaryResponse
+                            .builder()
+                            .id(course.getId())
+                            .title(course.getTitle())
+                            .active(course.getActive())
+                            .build()
+                )
+                .toList();
 
         return PackageResponse.builder()
                 .id(packageEntity.getId())
@@ -187,6 +200,7 @@ public class PackageService {
                 .free(packageEntity.getFree())
                 .active(packageEntity.getActive())
                 .canEdit(userId.equals(packageEntity.getOwnerId()))
+                .courses(courseSummaryResponseList)
                 .build();
     }
 

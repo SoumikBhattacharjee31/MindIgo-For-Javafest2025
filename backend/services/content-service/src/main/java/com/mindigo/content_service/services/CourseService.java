@@ -44,7 +44,6 @@ public class CourseService {
                 .ownerId(userId)
                 .active(false)
                 .packageEntity(packageEntity)
-                .durationDays(0)
                 .build();
 
         Course savedCourse = courseRepository.save(newCourse);
@@ -56,7 +55,7 @@ public class CourseService {
                 .active(savedCourse.getActive())
                 .enrolled(false)
                 .progress(0.0)
-                .durationDays(savedCourse.getDurationDays())
+                .durationDays(savedCourse.getDays().size())
                 .canEdit(true)
                 .build();
     }
@@ -105,7 +104,7 @@ public class CourseService {
                 .active(savedCourse.getActive())
                 .enrolled(false)
                 .progress(0.0)
-                .durationDays(savedCourse.getDurationDays())
+                .durationDays(savedCourse.getDays().size())
                 .canEdit(true)
                 .build();
     }
@@ -126,7 +125,7 @@ public class CourseService {
                         .active(course.getActive())
                         .enrolled(false)
                         .progress(0.0)
-                        .durationDays(course.getDurationDays())
+                        .durationDays(course.getDays().size())
                         .canEdit(course.getOwnerId().equals(userId))
                         .build())
                 .toList();
@@ -152,7 +151,7 @@ public class CourseService {
                 .active(course.getActive())
                 .enrolled(false)
                 .progress(0.0)
-                .durationDays(course.getDurationDays())
+                .durationDays(course.getDays().size())
                 .canEdit(userId.equals(course.getOwnerId()))
                 .build();
     }
@@ -193,7 +192,7 @@ public class CourseService {
                 .active(savedCourse.getActive())
                 .enrolled(false)
                 .progress(0.0)
-                .durationDays(savedCourse.getDurationDays())
+                .durationDays(savedCourse.getDays().size())
                 .canEdit(true)
                 .build();
     }

@@ -1,3 +1,4 @@
+// Base Task Entity
 package com.mindigo.content_service.models;
 
 import jakarta.persistence.*;
@@ -5,12 +6,13 @@ import jakarta.validation.constraints.*;
 import lombok.*;
 
 @Data
-@Builder
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "task")
-public class Task {
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "task_type", discriminatorType = DiscriminatorType.STRING)
+public abstract class Task {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
@@ -23,7 +25,7 @@ public class Task {
 
     @NotNull(message = "Task type is mandatory")
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "task_type", nullable = false, insertable = false, updatable = false)
     private TaskType type;
 
     @NotBlank(message = "Title is mandatory")
@@ -31,10 +33,20 @@ public class Task {
     @Column(nullable = false)
     private String title;
 
-//    @Size(max = 1000, message = "Instructions cannot exceed 1000 characters")
-//    private String instructions;
-//
-//    @Size(max = 255, message = "Content URL cannot exceed 255 characters")
-//    @Column(name = "content_url")
-//    private String contentUrl;
+    @Size(max = 1000, message = "Description cannot exceed 1000 characters")
+    private String description;
+
+    @Column(name = "order_index", nullable = false)
+    private Integer orderIndex;
+
+    @Column(nullable = false)
+    private Boolean active = true;
+
+    protected Task(CourseDay courseDay, String title, String description, Integer orderIndex, TaskType type) {
+        this.courseDay = courseDay;
+        this.title = title;
+        this.description = description;
+        this.orderIndex = orderIndex;
+        this.type = type;
+    }
 }

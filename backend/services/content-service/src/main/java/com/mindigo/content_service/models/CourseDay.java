@@ -26,7 +26,7 @@ public class CourseDay {
 
     @Min(value = 1, message = "Day number must be at least 1")
     @Column(name = "day_number", nullable = false)
-    private int dayNumber;
+    private Integer dayNumber;
 
     @NotBlank(message = "Title is mandatory")
     @Size(max = 255, message = "Title cannot exceed 255 characters")
