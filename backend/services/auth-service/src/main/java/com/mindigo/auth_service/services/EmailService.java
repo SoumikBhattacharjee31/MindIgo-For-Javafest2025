@@ -49,4 +49,31 @@ public class EmailService {
             throw new RuntimeException("Error communicating with mail-service: " + e.getMessage());
         }
     }
+
+    // Add these methods to your existing EmailService class
+
+    public void sendCounselorApprovalEmail(String email, String userName) {
+        sendMail(email, "Counselor Account Approved",
+                "Dear " + userName + ", your counselor account has been approved! You can now log in and start providing counseling services.");
+    }
+
+    public void sendCounselorRejectionEmail(String email, String userName, String reason) {
+        String body = "Dear " + userName + ", unfortunately your counselor application has been rejected.";
+        if (reason != null && !reason.trim().isEmpty()) {
+            body += " Reason: " + reason;
+        }
+        body += " Please contact support if you have any questions.";
+
+        sendMail(email, "Counselor Application Rejected", body);
+    }
+
+    public void sendCounselorAdditionalInfoEmail(String email, String userName, String requiredInfo) {
+        String body = "Dear " + userName + ", we need additional information for your counselor application.";
+        if (requiredInfo != null && !requiredInfo.trim().isEmpty()) {
+            body += " Details: " + requiredInfo;
+        }
+        body += " Please provide the requested information to complete your application.";
+
+        sendMail(email, "Additional Information Required", body);
+    }
 }

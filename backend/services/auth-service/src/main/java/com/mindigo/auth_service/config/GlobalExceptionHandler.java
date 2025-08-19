@@ -236,4 +236,19 @@ public class GlobalExceptionHandler {
 
         return request.getRemoteAddr();
     }
+
+    @ExceptionHandler(AccountNotApprovedException.class)
+    public ResponseEntity<ApiResponseClass<Void>> handleAccountNotApproved(
+            AccountNotApprovedException ex, HttpServletRequest request) {
+        log.warn("Account not approved: {} - IP: {}", ex.getMessage(), getClientIp(request));
+
+        ApiResponseClass<Void> response = ApiResponseClass.<Void>builder()
+                .success(false)
+                .message(ex.getMessage())
+                .errorCode(ex.getErrorCode() != null ? ex.getErrorCode() : "ACCOUNT_NOT_APPROVED")
+                .timestamp(LocalDateTime.now())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+    }
 }

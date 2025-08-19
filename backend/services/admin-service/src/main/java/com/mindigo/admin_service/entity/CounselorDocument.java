@@ -14,8 +14,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "doctor_documents")
-public class DoctorDocument {
+@Table(name = "counselor_documents")
+public class CounselorDocument {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,7 +23,7 @@ public class DoctorDocument {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "application_id", nullable = false)
-    private DoctorApplication application;
+    private CounselorApplication application;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "document_type", nullable = false)

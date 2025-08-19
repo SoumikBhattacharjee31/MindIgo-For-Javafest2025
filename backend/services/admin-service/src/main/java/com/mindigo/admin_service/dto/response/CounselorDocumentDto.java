@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class DoctorDocumentDto {
+public class CounselorDocumentDto {
     private Long id;
     private DocumentType documentType;
     private String fileName;

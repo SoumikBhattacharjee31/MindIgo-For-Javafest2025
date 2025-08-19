@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams, useParams } from 'next/navigation';
 import axios from 'axios';
 import { getCookie } from 'cookies-next';
 import { successToast, errorToast, warningToast } from '../../../../util/toastHelper';
@@ -8,8 +8,8 @@ import ReviewModal from '../../../components/admin/ReviewModal';
 
 const ApplicationDetail = () => {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const id = searchParams.get('id');
+  const searchParams = useParams();
+  const id = searchParams.id;
   const [app, setApp] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -19,7 +19,7 @@ const ApplicationDetail = () => {
     const fetchApp = async () => {
       try {
         const token = getCookie('authToken');
-        const res = await axios.get(`http://localhost:8082/api/v1/admin/applications/${id}`, {
+        const res = await axios.get(`http://localhost:8080/api/v1/admin/applications/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setApp(res.data.data);
@@ -37,10 +37,10 @@ const ApplicationDetail = () => {
     try {
       const token = getCookie('authToken');
       const res = await axios.post(
-        'http://localhost:8082/api/v1/admin/applications/review',
+        'http://localhost:8080/api/v1/admin/applications/review',
         {
           applicationId: id,
-          status: action === 'APPROVE' ? 'APPROVED' : action === 'REJECT' ? 'REJECTED' : 'PENDING',
+          status: action === 'APPROVE' ? 'APPROVED' : action === 'REJECT' ? 'REJECTED' : 'ADDITIONAL_INFO_REQUIRED',
           comments,
         },
         {

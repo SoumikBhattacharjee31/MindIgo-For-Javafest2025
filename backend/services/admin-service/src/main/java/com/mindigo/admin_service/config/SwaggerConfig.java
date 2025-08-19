@@ -18,7 +18,7 @@ public class SwaggerConfig {
                 .info(new Info()
                         .title("Admin Service API")
                         .version("1.0")
-                        .description("Admin Service for managing doctor applications and system administration")
+                        .description("Admin Service for managing counselor applications and system administration")
                         .contact(new Contact()
                                 .name("Mindigo Team")
                                 .email("admin@mindigo.com")))

@@ -15,7 +15,7 @@ public class AdminDashboardResponse {
     private long approvedApplications;
     private long rejectedApplications;
     private long totalUsers;
-    private long totalDoctors;
+    private long totalCounselors;
     private long activeUsers;
     private long recentApplications; // Last 7 days
 }

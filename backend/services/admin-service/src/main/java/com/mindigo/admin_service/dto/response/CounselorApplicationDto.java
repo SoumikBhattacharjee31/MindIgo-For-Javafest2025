@@ -1,6 +1,6 @@
 package com.mindigo.admin_service.dto.response;
 
-import com.mindigo.admin_service.entity.DoctorApplicationStatus;
+import com.mindigo.admin_service.entity.CounselorApplicationStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,7 +13,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class DoctorApplicationDto {
+public class CounselorApplicationDto {
     private Long id;
     private String email;
     private String fullName;
@@ -25,12 +25,12 @@ public class DoctorApplicationDto {
     private String medicalSchool;
     private Integer graduationYear;
     private String bio;
-    private DoctorApplicationStatus status;
+    private CounselorApplicationStatus status;
     private String adminComments;
     private String reviewedBy;
     private LocalDateTime reviewedAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private List<DoctorDocumentDto> documents;
+    private List<CounselorDocumentDto> documents;
     private boolean hasRequiredDocuments;
 }

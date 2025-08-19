@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -211,16 +212,21 @@ public class AuthController {
     public ResponseEntity<ApiResponseClass<String>> registerCounselor(
             @RequestPart(value = "profileImage", required = false) MultipartFile profileImage,
             @RequestPart(value = "verificationDocument") MultipartFile verificationDocument,
-            @RequestPart("counselor") @Validated(AuthValidationGroups.CounselorRegistration.class) CounselorRegisterRequest request) {
+            @RequestPart("counselor") @Validated(AuthValidationGroups.CounselorRegistration.class) CounselorRegisterRequest request,
+            HttpServletResponse response) {
 
         log.info("Counselor registration attempt for email: {}", request.getEmail());
 
-        String result = authenticationService.registerCounselor(profileImage, verificationDocument, request);
+        AuthenticationResponse result = authenticationService.registerCounselor(profileImage, verificationDocument, request, response);
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponseClass.<String>builder()
                         .success(true)
-                        .data(result)
+                        .data(
+                                "Counselor registration submitted successfully. " +
+                                "Your account will be activated after admin verification. " +
+                                "You will receive an email notification once approved."
+                        )
                         .message("Counselor registration submitted successfully. Awaiting admin approval.")
                         .build());
     }
@@ -236,6 +242,40 @@ public class AuthController {
                 .success(true)
                 .data(status)
                 .message("Counselor status retrieved successfully")
+                .build());
+    }
+
+//    @PostMapping("/admin/login")
+//    @Operation(summary = "Authenticate admin login")
+//    @ApiResponse(responseCode = "200", description = "Admin login successful")
+//    @ApiResponse(responseCode = "401", description = "Invalid credentials")
+//    @ApiResponse(responseCode = "403", description = "Not an admin account or account not validated")
+//    public ResponseEntity<ApiResponseClass<AuthenticationResponse>> adminLogin(
+//            @RequestBody @Validated(AuthValidationGroups.Login.class) AuthenticationRequest request,
+//            HttpServletResponse response,
+//            HttpServletRequest httpRequest) {
+//            log.info("Admin login attempt for email: {}", request.getEmail());
+//        AuthenticationResponse authResponse = authenticationService.adminAuthenticateLogin(request, response, httpRequest);
+//        return ResponseEntity.ok(ApiResponseClass.<AuthenticationResponse>builder()
+//                .success(true)
+//                .data(authResponse)
+//                .message("Admin login successful")
+//                .build());
+//    }
+
+    @PostMapping("/admin/update-counselor-status")
+    @Operation(summary = "Update counselor status from admin service")
+    @ApiResponse(responseCode = "200", description = "Counselor status updated successfully")
+    public ResponseEntity<ApiResponseClass<Void>> updateCounselorStatus(
+            @RequestBody @Valid CounselorStatusUpdateRequest request) {
+
+        log.info("Admin status update request for counselor: {}", request.getEmail());
+
+        String result = authenticationService.updateCounselorStatus(request);
+
+        return ResponseEntity.ok(ApiResponseClass.<Void>builder()
+                .success(true)
+                .message(result)
                 .build());
     }
 }

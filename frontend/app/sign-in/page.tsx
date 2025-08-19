@@ -1,8 +1,8 @@
+// In Login.tsx
 "use client";
 import React from "react";
 import { useRouter } from 'next/navigation';
 import UserTypeSelector from "../components/UserTypeSelector";
-
 import SignInButton from "./components/SignInButton";
 import EmailInputField from "./components/EmailInputField";
 import PasswordInputField from "./components/PasswordInputField";
@@ -15,7 +15,6 @@ import ForgotPasswordLink from "./components/ForgotPasswordLink";
 import TitleWithGifIcon from "./components/TitleWithGifIcon";
 import MeditationGif from "./components/MeditationGif";
 import axios from 'axios';
-
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { successToast, errorToast, warningToast } from '../../util/toastHelper';
@@ -27,57 +26,52 @@ const Login = () => {
   const [userType, setUserType] = React.useState("CLIENT");
   const router = useRouter();
 
-  const handleSubmit = async (e:any) => {
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
-    
+
     // Validate inputs
     if (!emailId || !password) {
       warningToast('Please fill in all fields');
       return;
     }
-    
+
     setLoading(true);
     try {
       const response = await axios.post('http://localhost:8080/api/v1/auth/login', {
         email: emailId,
         password: password,
-      }, { 
-        withCredentials: true 
+      }, {
+        withCredentials: true
       });
-      
-      // Handle structured response from backend
+
       if (response.data.success) {
         successToast('Login successful');
-        
-        // Get user role from response and redirect accordingly
         const userRole = response.data.data.user.role;
-        
         if (userRole === 'COUNSELOR') {
           router.push("/counselor-dashboard");
         } else if (userRole === 'CLIENT') {
           router.push("/client-dashboard");
         } else {
-          router.push("/home"); // Default for other roles
+          router.push("/home");
         }
       } else {
         errorToast(response.data.message || 'Login failed');
       }
     } catch (error) {
-      // Handle different error scenarios
       if (axios.isAxiosError(error)) {
         if (error.response?.status === 401) {
           errorToast('Invalid email or password');
         } else if (error.response?.status === 403) {
-          const message = error.response.data.message;
-          if (message.includes('Email not verified')) {
-            errorToast('Please verify your email before logging in');
-            router.push("/sign-up-verification");
-          } else if (message.includes('pending admin approval')) {
+          const { message, errorCode } = error.response.data;
+          if (errorCode === 'COUNSELOR_PENDING_APPROVAL' || message.includes('pending admin approval')) {
             errorToast('Your counselor account is pending admin approval');
             router.push("/counselor-status");
-          } else if (message.includes('rejected')) {
+          } else if (errorCode === 'EMAIL_NOT_VERIFIED' || message.includes('Email not verified')) {
+            errorToast('Please verify your email before logging in');
+            router.push("/sign-up-verification");
+          } else if (errorCode === 'COUNSELOR_REJECTED' || message.includes('rejected')) {
             errorToast('Your counselor account has been rejected. Please contact support.');
-          } else if (message.includes('suspended')) {
+          } else if (errorCode === 'COUNSELOR_SUSPENDED' || message.includes('suspended')) {
             errorToast('Your counselor account has been suspended. Please contact support.');
           } else {
             errorToast(message || 'Account access denied');
