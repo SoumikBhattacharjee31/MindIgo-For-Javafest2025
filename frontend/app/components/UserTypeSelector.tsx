@@ -8,15 +8,15 @@ interface UserTypeSelectorProps {
 const UserTypeSelector: React.FC<UserTypeSelectorProps> = ({ userType, setUserType }) => {
   return (
     <div className="w-full mb-6">
-      {/* <div className="text-center mb-4">
+      <div className="text-center mb-4">
         <h3 className="text-lg font-semibold text-gray-800 mb-1">Welcome!</h3>
         <p className="text-sm text-gray-600">Choose your account type to continue</p>
-      </div> */}
+      </div>
       
-      <div className="flex gap-3">
+      <div className="flex flex-col gap-3 items-center">
         {/* Client Option */}
         <label 
-          className={`flex-1 relative cursor-pointer group transition-all duration-300 ${
+          className={`w-1/2 flex-1 relative cursor-pointer group transition-all duration-300 ${
             userType === "CLIENT" 
               ? "transform scale-105" 
               : "hover:transform hover:scale-102"
@@ -74,7 +74,7 @@ const UserTypeSelector: React.FC<UserTypeSelectorProps> = ({ userType, setUserTy
 
         {/* Counselor Option */}
         <label 
-          className={`flex-1 relative cursor-pointer group transition-all duration-300 ${
+          className={`w-1/2 flex-1 relative cursor-pointer group transition-all duration-300 ${
             userType === "COUNSELOR" 
               ? "transform scale-105" 
               : "hover:transform hover:scale-102"
@@ -132,7 +132,7 @@ const UserTypeSelector: React.FC<UserTypeSelectorProps> = ({ userType, setUserTy
       </div>
       
       {/* Subtle animation indicator */}
-      {/* <div className="mt-3 text-center">
+      <div className="mt-3 text-center">
         <div className={`inline-flex items-center text-xs transition-all duration-500 ${
           userType ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
         }`}>
@@ -143,7 +143,7 @@ const UserTypeSelector: React.FC<UserTypeSelectorProps> = ({ userType, setUserTy
             {userType === "CLIENT" ? "Ready to find support" : "Ready to help others"}
           </span>
         </div>
-      </div> */}
+      </div>
     </div>
   );
 };

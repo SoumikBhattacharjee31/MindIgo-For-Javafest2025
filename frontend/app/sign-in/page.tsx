@@ -1,4 +1,3 @@
-// In Login.tsx
 "use client";
 import React from "react";
 import { useRouter } from 'next/navigation';
@@ -95,16 +94,20 @@ const Login = () => {
       <div className="flex w-11/12 max-w-4xl bg-white/90 rounded-3xl shadow-2xl overflow-hidden border border-blue-100">
         <div className="hidden md:flex w-1/2 p-8 items-center justify-center bg-gradient-to-br from-blue-100 via-blue-50 to-white">
           <div className="text-center">
-            <SignInLabel/>
+
             <TitleWithGifIcon />
             <MeditationGif />
           </div>
         </div>
-        <div className="w-full md:w-1/2 p-6 md:p-10 space-y-5">
-          <UserTypeSelector userType={userType} setUserType={setUserType} />
+        <div className="w-full md:w-1/2 p-6 md:p-8 space-y-5">
+          <SignInLabel />
           <form className="space-y-5" onSubmit={handleSubmit}>
             <EmailInputField setEmailId={setEmailId} />
-            <PasswordInputField setPassword={setPassword}/>
+            <PasswordInputField setPassword={setPassword} />
+            <div className="flex justify-between text-sm mt-2">
+              <SignUpLink />
+              <ForgotPasswordLink />
+            </div>
             {loading ? (
               <div className="flex justify-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
@@ -114,11 +117,9 @@ const Login = () => {
             )}
           </form>
           <ButtonTypeDivider />
-          <SignInWithGoogleButton />
-          <SignInWithFacebookButton />
-          <div className="flex justify-between text-sm mt-2">
-            <SignUpLink />
-            <ForgotPasswordLink />
+          <div className="grid grid-cols-2">
+            <div className="flex items-center justify-end"><SignInWithGoogleButton /></div>
+            <div className="flex items-center"><SignInWithFacebookButton /></div>
           </div>
         </div>
       </div>

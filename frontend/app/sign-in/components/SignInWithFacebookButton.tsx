@@ -1,24 +1,25 @@
 import React from "react";
-import { getProviderLoginUrl } from "@/util/providerLogin";
 import Link from "next/link";
+import { getProviderLoginUrl } from "@/util/providerLogin";
 
-const SignInWithFacebookButton = () => {
+const SignInWithFacebookButton: React.FC = () => {
   return (
-    <div className="w-full">
+    <div className="w-1/2 pl-2">
       <Link href={getProviderLoginUrl('facebook')}>
-      <button className="
-        relative w-full py-4 px-6 rounded-2xl font-medium transition-all duration-300 overflow-hidden group
-        bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800
-        text-white hover:shadow-lg hover:scale-105
-      ">
-        <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        <div className="relative z-10 flex items-center justify-center space-x-3">
-          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-          </svg>
-          <span>Continue with Facebook</span>
-        </div>
-      </button>
+        <button className="
+          relative py-3 px-4 rounded-xl font-medium transition-all duration-300 overflow-hidden group
+          bg-white border-2 border-blue-200/50 hover:border-blue-300 hover:shadow-md hover:scale-105
+          text-gray-700 hover:text-gray-800
+        ">
+          <div className="relative z-10 flex items-center justify-center">
+            <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M22 12c0-5.522-4.477-10-10-10S2 6.478 2 12c0 4.99 3.656 9.128 8.437 9.878v-6.987h-2.54v-2.891h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.344 21.128 22 16.99 22 12z"
+                fill="#1877F2"
+              />
+            </svg>
+          </div>
+        </button>
       </Link>
     </div>
   );
