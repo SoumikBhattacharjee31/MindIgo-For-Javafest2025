@@ -22,7 +22,7 @@ import { successToast, errorToast, warningToast } from '../../util/toastHelper'
 import axios from 'axios';
 import UserTypeSelector from "../components/UserTypeSelector";
 import CounselorSpecificFields from "../components/CounselorSpecificFields";
-import ButtonTypeDivider from "./components/ButtonTypeDivider copy";
+import ButtonTypeDivider from "./components/ButtonTypeDivider";
 
 const SignUp = () => {
   const [currentStep, setCurrentStep] = useState(0);
