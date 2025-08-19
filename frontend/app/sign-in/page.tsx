@@ -47,9 +47,9 @@ const Login = () => {
         successToast('Login successful');
         const userRole = response.data.data.user.role;
         if (userRole === 'COUNSELOR') {
-          router.push("/counselor-dashboard");
-        } else if (userRole === 'CLIENT') {
-          router.push("/client-dashboard");
+          router.push("/dashboard/counselor");
+        } else if (userRole === 'USER') {
+          router.push("/dashboard/client");
         } else {
           router.push("/home");
         }
