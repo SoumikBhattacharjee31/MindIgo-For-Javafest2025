@@ -97,34 +97,32 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-500 via-blue-700 to-cyan-400 flex items-center justify-center">
-      <div className="flex w-5/6 max-w-5xl bg-white bg-opacity-50 rounded shadow-lg overflow-hidden">
-        <div className="hidden md:flex w-1/2 p-8 border-gray-300 items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 via-white to-blue-100 flex items-center justify-center">
+      <div className="flex w-11/12 max-w-4xl bg-white/90 rounded-3xl shadow-2xl overflow-hidden border border-blue-100">
+        <div className="hidden md:flex w-1/2 p-8 items-center justify-center bg-gradient-to-br from-blue-100 via-blue-50 to-white">
           <div className="text-center">
+            <SignInLabel/>
             <TitleWithGifIcon />
             <MeditationGif />
           </div>
         </div>
-        <div className="w-full md:w-1/2 p-4 md:p-8 space-y-4 border-gray-300">
-          <SignInLabel />
+        <div className="w-full md:w-1/2 p-6 md:p-10 space-y-5">
           <UserTypeSelector userType={userType} setUserType={setUserType} />
-          <form className="space-y-4" onSubmit={handleSubmit}>
+          <form className="space-y-5" onSubmit={handleSubmit}>
             <EmailInputField setEmailId={setEmailId} />
-            <PasswordInputField setPassword={setPassword} />
+            <PasswordInputField setPassword={setPassword}/>
             {loading ? (
               <div className="flex justify-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
               </div>
             ) : (
               <SignInButton emailId={emailId} password={password} />
             )}
           </form>
-          
           <ButtonTypeDivider />
           <SignInWithGoogleButton />
           <SignInWithFacebookButton />
-
-          <div className="text-center flex justify-between">
+          <div className="flex justify-between text-sm mt-2">
             <SignUpLink />
             <ForgotPasswordLink />
           </div>
