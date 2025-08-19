@@ -66,6 +66,7 @@ public class AuthenticationService {
     private final RateLimitService rateLimitService;
     private final AuditLogService auditLogService;
     private final PasswordValidatorService passwordValidatorService;
+    private final AdminServiceClient adminServiceClient;
 
     @Transactional
     public AuthenticationResponse register(MultipartFile profileImage, RegisterRequest request, HttpServletResponse response) {
@@ -645,7 +646,7 @@ public class AuthenticationService {
     public AuthenticationResponse registerCounselor(MultipartFile profileImage,
                                                     MultipartFile verificationDocument,
                                                     CounselorRegisterRequest request,
-                                                    HttpServletResponse response) { // Add HttpServletResponse parameter
+                                                    HttpServletResponse response) {
         String clientIp = getClientIpFromRequest();
 
         // Rate limiting
@@ -722,21 +723,28 @@ public class AuthenticationService {
             cookieHelper.setSecureCookie(response, "accessToken", accessToken, accessTokenExpiry);
             cookieHelper.setSecureCookie(response, "refreshToken", refreshToken, refreshTokenExpiry);
 
+            // Create counselor application in admin service asynchronously
+            String finalVerificationDocumentUrl = verificationDocumentUrl;
+            String finalImageUrl = imageUrl;
+            CompletableFuture.runAsync(() -> {
+                try {
+                    CounselorApplicationRequest applicationRequest = CounselorApplicationRequest
+                            .fromCounselorRegisterRequest(request, finalVerificationDocumentUrl, finalImageUrl);
+                    adminServiceClient.createCounselorApplication(applicationRequest);
+                    log.info("Successfully created counselor application in admin service for: {}", request.getEmail());
+                } catch (Exception e) {
+                    log.error("Failed to create counselor application in admin service for: {}", request.getEmail(), e);
+                    // Note: We don't throw here as the user registration is already complete
+                    // You might want to implement a retry mechanism or manual sync
+                }
+            });
+
             // Send email confirmation
             CompletableFuture.runAsync(() -> {
                 try {
                     emailService.sendCounselorRegistrationConfirmation(request.getEmail(), request.getName());
                 } catch (Exception e) {
                     log.error("Failed to send counselor registration confirmation email", e);
-                }
-            });
-
-            // Notify admin about new counselor registration
-            CompletableFuture.runAsync(() -> {
-                try {
-                    // adminServiceClient.notifyNewCounselorRegistration(counselor.getId());
-                } catch (Exception e) {
-                    log.error("Failed to notify admin about new counselor registration", e);
                 }
             });
 
@@ -780,5 +788,93 @@ public class AuthenticationService {
                 .verifiedAt(user.getAdminVerifiedAt())
                 .canLogin(user.isCounselorApproved() && user.getIsEmailVerified())
                 .build();
+    }
+
+    // Add this method to your existing AuthenticationService class
+
+    @Transactional
+    public String updateCounselorStatus(CounselorStatusUpdateRequest request) {
+        String email = request.getEmail().toLowerCase().trim();
+
+        log.info("Updating counselor status for email: {} to status: {}", email, request.getStatus());
+
+        try {
+            User counselor = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new UserNotFoundException("Counselor not found with email: " + email));
+
+            if (counselor.getRole() != Role.COUNSELOR) {
+                throw new BadRequestException("User is not a counselor");
+            }
+
+            // Update counselor status based on admin decision
+            switch (request.getStatus().toUpperCase()) {
+                case "APPROVED":
+                    counselor.setCounselorStatus(CounselorStatus.APPROVED);
+                    counselor.setVerificationNotes(request.getComments());
+                    counselor.setAdminVerifiedAt(LocalDateTime.now());
+
+                    // Send approval email
+                    CompletableFuture.runAsync(() -> {
+                        try {
+                            emailService.sendCounselorApprovalEmail(email, counselor.getName());
+                        } catch (Exception e) {
+                            log.error("Failed to send counselor approval email", e);
+                        }
+                    });
+                    break;
+
+                case "REJECTED":
+                    counselor.setCounselorStatus(CounselorStatus.REJECTED);
+                    counselor.setVerificationNotes(request.getComments());
+                    counselor.setAdminVerifiedAt(LocalDateTime.now());
+
+                    // Send rejection email
+                    CompletableFuture.runAsync(() -> {
+                        try {
+                            emailService.sendCounselorRejectionEmail(email, counselor.getName(), request.getComments());
+                        } catch (Exception e) {
+                            log.error("Failed to send counselor rejection email", e);
+                        }
+                    });
+                    break;
+
+                case "ADDITIONAL_INFO_REQUIRED":
+                    counselor.setCounselorStatus(CounselorStatus.ADDITIONAL_INFO_REQUIRED);
+                    counselor.setVerificationNotes(request.getComments());
+                    counselor.setAdminVerifiedAt(LocalDateTime.now());
+
+                    // Send additional info request email
+                    CompletableFuture.runAsync(() -> {
+                        try {
+                            emailService.sendCounselorAdditionalInfoEmail(email, counselor.getName(), request.getComments());
+                        } catch (Exception e) {
+                            log.error("Failed to send counselor additional info email", e);
+                        }
+                    });
+                    break;
+
+                case "SUSPENDED":
+                    counselor.setCounselorStatus(CounselorStatus.SUSPENDED);
+                    counselor.setVerificationNotes(request.getComments());
+                    counselor.setAdminVerifiedAt(LocalDateTime.now());
+                    break;
+
+                default:
+                    throw new BadRequestException("Invalid counselor status: " + request.getStatus());
+            }
+
+            userRepository.save(counselor);
+
+            auditLogService.logSecurityEvent("COUNSELOR_STATUS_UPDATED", email,
+                    "Status updated to: " + request.getStatus(), getClientIpFromRequest());
+
+            log.info("Successfully updated counselor status for email: {} to: {}", email, request.getStatus());
+
+            return String.format("Counselor status updated to %s successfully", request.getStatus());
+
+        } catch (Exception e) {
+            log.error("Failed to update counselor status for email: {}", email, e);
+            throw e;
+        }
     }
 }

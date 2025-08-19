@@ -4,9 +4,9 @@ import lombok.Getter;
 
 @Getter
 public enum AdminActionType {
-    DOCTOR_APPLICATION_APPROVED("Doctor Application Approved"),
-    DOCTOR_APPLICATION_REJECTED("Doctor Application Rejected"),
-    DOCTOR_APPLICATION_REVIEWED("Doctor Application Reviewed"),
+    Counselor_APPLICATION_APPROVED("Counselor Application Approved"),
+    Counselor_APPLICATION_REJECTED("Counselor Application Rejected"),
+    Counselor_APPLICATION_REVIEWED("Counselor Application Reviewed"),
     USER_ACCOUNT_SUSPENDED("User Account Suspended"),
     USER_ACCOUNT_ACTIVATED("User Account Activated"),
     ADMIN_LOGIN("Admin Login"),

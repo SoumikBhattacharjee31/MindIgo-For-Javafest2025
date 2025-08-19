@@ -16,12 +16,13 @@ const AdminLogin = () => {
     setLoading(true);
 
     try {
-      const res = await axios.post('http://localhost:8081/api/v1/auth/admin/login', {
+      const res = await axios.post('http://localhost:8080/api/v1/auth/login', {
         email,
         password,
       }, {
         withCredentials: true,
       });
+      
 
       if (res.data.success) {
         const { token } = res.data.data;

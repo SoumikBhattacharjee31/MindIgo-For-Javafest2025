@@ -12,7 +12,7 @@ const Dashboard = () => {
     const fetchStats = async () => {
       try {
         const token = getCookie('authToken');
-        const res = await axios.get('http://localhost:8082/api/v1/admin/dashboard', {
+        const res = await axios.get('http://localhost:8080/api/v1/admin/dashboard', {
           headers: { Authorization: `Bearer ${token}` },
         });
         setStats(res.data.data);

@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 
@@ -33,7 +35,7 @@ public class AdminAuditLog {
     private AdminActionType actionType;
 
     @Column(name = "target_email", length = 100)
-    private String targetEmail; // Email of affected user/doctor
+    private String targetEmail; // Email of affected user/counselor
 
     @Column(name = "target_id")
     private Long targetId; // ID of affected resource
@@ -52,5 +54,6 @@ public class AdminAuditLog {
     private LocalDateTime timestamp;
 
     @Column(name = "additional_data", columnDefinition = "JSON")
+    @JdbcTypeCode(SqlTypes.JSON)
     private String additionalData; // Store additional context as JSON
 }

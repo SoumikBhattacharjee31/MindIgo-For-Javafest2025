@@ -1,10 +1,12 @@
 package com.mindigo.admin_service.controller;
 
 import com.mindigo.admin_service.dto.request.ApplicationReviewRequest;
+import com.mindigo.admin_service.dto.request.CounselorApplicationCreateRequest;
+import com.mindigo.admin_service.dto.request.CounselorApplicationStatusUpdateRequest;
 import com.mindigo.admin_service.dto.response.AdminDashboardResponse;
 import com.mindigo.admin_service.dto.response.ApiResponseClass;
-import com.mindigo.admin_service.dto.response.DoctorApplicationDto;
-import com.mindigo.admin_service.entity.DoctorApplicationStatus;
+import com.mindigo.admin_service.dto.response.CounselorApplicationDto;
+import com.mindigo.admin_service.entity.CounselorApplicationStatus;
 import com.mindigo.admin_service.service.AdminService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -17,8 +19,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -45,8 +47,8 @@ public class AdminController {
     }
 
     @GetMapping("/applications")
-    @Operation(summary = "Get all doctor applications with pagination")
-    public ResponseEntity<ApiResponseClass<Page<DoctorApplicationDto>>> getAllApplications(
+    @Operation(summary = "Get all counselor applications with pagination")
+    public ResponseEntity<ApiResponseClass<Page<CounselorApplicationDto>>> getAllApplications(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
@@ -56,9 +58,9 @@ public class AdminController {
                 Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
         Pageable pageable = PageRequest.of(page, size, sort);
 
-        Page<DoctorApplicationDto> applications = adminService.getAllApplications(pageable);
+        Page<CounselorApplicationDto> applications = adminService.getAllApplications(pageable);
 
-        return ResponseEntity.ok(ApiResponseClass.<Page<DoctorApplicationDto>>builder()
+        return ResponseEntity.ok(ApiResponseClass.<Page<CounselorApplicationDto>>builder()
                 .success(true)
                 .data(applications)
                 .message("Applications retrieved successfully")
@@ -66,16 +68,16 @@ public class AdminController {
     }
 
     @GetMapping("/applications/status/{status}")
-    @Operation(summary = "Get doctor applications by status")
-    public ResponseEntity<ApiResponseClass<Page<DoctorApplicationDto>>> getApplicationsByStatus(
-            @PathVariable DoctorApplicationStatus status,
+    @Operation(summary = "Get counselor applications by status")
+    public ResponseEntity<ApiResponseClass<Page<CounselorApplicationDto>>> getApplicationsByStatus(
+            @PathVariable CounselorApplicationStatus status,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<DoctorApplicationDto> applications = adminService.getApplicationsByStatus(status, pageable);
+        Page<CounselorApplicationDto> applications = adminService.getApplicationsByStatus(status, pageable);
 
-        return ResponseEntity.ok(ApiResponseClass.<Page<DoctorApplicationDto>>builder()
+        return ResponseEntity.ok(ApiResponseClass.<Page<CounselorApplicationDto>>builder()
                 .success(true)
                 .data(applications)
                 .message("Applications retrieved successfully")
@@ -83,11 +85,11 @@ public class AdminController {
     }
 
     @GetMapping("/applications/{id}")
-    @Operation(summary = "Get doctor application by ID")
-    public ResponseEntity<ApiResponseClass<DoctorApplicationDto>> getApplicationById(@PathVariable Long id) {
-        DoctorApplicationDto application = adminService.getApplicationById(id);
+    @Operation(summary = "Get counselor application by ID")
+    public ResponseEntity<ApiResponseClass<CounselorApplicationDto>> getApplicationById(@PathVariable Long id) {
+        CounselorApplicationDto application = adminService.getApplicationById(id);
 
-        return ResponseEntity.ok(ApiResponseClass.<DoctorApplicationDto>builder()
+        return ResponseEntity.ok(ApiResponseClass.<CounselorApplicationDto>builder()
                 .success(true)
                 .data(application)
                 .message("Application retrieved successfully")
@@ -95,7 +97,7 @@ public class AdminController {
     }
 
     @PostMapping("/applications/review")
-    @Operation(summary = "Review doctor application (approve/reject/request info)")
+    @Operation(summary = "Review counselor application (approve/reject/request info)")
     @ApiResponse(responseCode = "200", description = "Application reviewed successfully")
     public ResponseEntity<ApiResponseClass<Void>> reviewApplication(
             @Valid @RequestBody ApplicationReviewRequest request,
@@ -109,6 +111,38 @@ public class AdminController {
         return ResponseEntity.ok(ApiResponseClass.<Void>builder()
                 .success(true)
                 .message(result)
+                .build());
+    }
+
+    // Add these methods to your existing AdminController class
+
+    @PostMapping("/counselor-applications/create")
+    @Operation(summary = "Create counselor application from auth service")
+    @ApiResponse(responseCode = "201", description = "Application created successfully")
+    public ResponseEntity<ApiResponseClass<String>> createCounselorApplication(
+            @Valid @RequestBody CounselorApplicationCreateRequest request) {
+
+        Long applicationId = adminService.createCounselorApplication(request);
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponseClass.<String>builder()
+                        .success(true)
+                        .data("Application created with ID: " + applicationId)
+                        .message("Counselor application created successfully")
+                        .build());
+    }
+
+    @PostMapping("/counselor-applications/update-status")
+    @Operation(summary = "Update counselor application status from auth service")
+    @ApiResponse(responseCode = "200", description = "Status updated successfully")
+    public ResponseEntity<ApiResponseClass<String>> updateCounselorApplicationStatus(
+            @Valid @RequestBody CounselorApplicationStatusUpdateRequest request) {
+
+        adminService.updateCounselorApplicationStatus(request);
+
+        return ResponseEntity.ok(ApiResponseClass.<String>builder()
+                .success(true)
+                .message("Counselor application status updated successfully")
                 .build());
     }
 }

@@ -17,12 +17,12 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "doctor_applications", indexes = {
+@Table(name = "counselor_applications", indexes = {
         @Index(name = "idx_application_email", columnList = "email"),
         @Index(name = "idx_application_status", columnList = "status"),
         @Index(name = "idx_application_created", columnList = "created_at")
 })
-public class DoctorApplication {
+public class CounselorApplication {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,7 +34,7 @@ public class DoctorApplication {
     @Column(nullable = false, length = 100)
     private String fullName;
 
-    @Column(nullable = false, length = 20)
+    @Column(nullable = true, length = 20)
     private String phoneNumber;
 
     @Column(nullable = false, length = 100)
@@ -43,10 +43,10 @@ public class DoctorApplication {
     @Column(nullable = false, length = 100)
     private String specialty;
 
-    @Column(nullable = false, length = 50)
+    @Column(nullable = true, length = 50)
     private String yearsOfExperience;
 
-    @Column(nullable = false, length = 200)
+    @Column(nullable = true, length = 200)
     private String currentWorkplace;
 
     @Column(name = "medical_school", length = 200)
@@ -61,7 +61,7 @@ public class DoctorApplication {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @Builder.Default
-    private DoctorApplicationStatus status = DoctorApplicationStatus.PENDING;
+    private CounselorApplicationStatus status = CounselorApplicationStatus.PENDING;
 
     @Column(name = "admin_comments", columnDefinition = "TEXT")
     private String adminComments;
@@ -82,10 +82,10 @@ public class DoctorApplication {
 
     @OneToMany(mappedBy = "application", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    private List<DoctorDocument> documents = new ArrayList<>();
+    private List<CounselorDocument> documents = new ArrayList<>();
 
     // Helper methods
-    public void addDocument(DoctorDocument document) {
+    public void addDocument(CounselorDocument document) {
         if (documents == null) {
             documents = new ArrayList<>();
         }
@@ -94,21 +94,21 @@ public class DoctorApplication {
     }
 
     public void approve(String adminEmail, String comments) {
-        this.status = DoctorApplicationStatus.APPROVED;
+        this.status = CounselorApplicationStatus.APPROVED;
         this.reviewedBy = adminEmail;
         this.reviewedAt = LocalDateTime.now();
         this.adminComments = comments;
     }
 
     public void reject(String adminEmail, String comments) {
-        this.status = DoctorApplicationStatus.REJECTED;
+        this.status = CounselorApplicationStatus.REJECTED;
         this.reviewedBy = adminEmail;
         this.reviewedAt = LocalDateTime.now();
         this.adminComments = comments;
     }
 
     public void requestAdditionalInfo(String adminEmail, String comments) {
-        this.status = DoctorApplicationStatus.ADDITIONAL_INFO_REQUIRED;
+        this.status = CounselorApplicationStatus.ADDITIONAL_INFO_REQUIRED;
         this.reviewedBy = adminEmail;
         this.reviewedAt = LocalDateTime.now();
         this.adminComments = comments;
@@ -128,6 +128,6 @@ public class DoctorApplication {
     }
 
     public boolean isPending() {
-        return status == DoctorApplicationStatus.PENDING || status == DoctorApplicationStatus.UNDER_REVIEW;
+        return status == CounselorApplicationStatus.PENDING || status == CounselorApplicationStatus.UNDER_REVIEW;
     }
 }

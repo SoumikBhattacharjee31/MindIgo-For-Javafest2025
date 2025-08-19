@@ -13,7 +13,7 @@ const ApplicationsList = () => {
     const fetchApps = async () => {
       try {
         const token = getCookie('authToken');
-        const res = await axios.get('http://localhost:8082/api/v1/admin/applications', {
+        const res = await axios.get('http://localhost:8080/api/v1/admin/applications', {
           headers: { Authorization: `Bearer ${token}` },
         });
         setApps(res.data.data.content);
