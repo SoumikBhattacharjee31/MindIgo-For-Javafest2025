@@ -50,6 +50,12 @@ spring:
                 - Path=/api/v1/admin/**
               filters:
                 - name: JwtAuth
+            - id: ai-service
+              uri: lb://ai-service
+              predicates:
+                - Path=/api/v1/ai/**
+#              filters:
+#                - name: JwtAuth
 server:
   port: 8080
 
