@@ -21,6 +21,8 @@ import { ToastContainer} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import {successToast, errorToast, warningToast} from '../../util/toastHelper'
 import axios from 'axios';
+import UserTypeSelector from "../components/UserTypeSelector";
+import CounselorSpecificFields from "../components/CounselorSpecificFields";
 
 
 const SignUp = () => {
@@ -32,6 +34,10 @@ const SignUp = () => {
   const [password, setPassword] = React.useState("");
   const [rePassword, setRePassword] = React.useState("");
   const [profilePic, setProfilePic] = React.useState<File | undefined>();
+  const [userType, setUserType] = React.useState("CLIENT");
+  const [licenseNumber, setLicenseNumber] = React.useState("");
+  const [specialization, setSpecialization] = React.useState("");
+  const [verificationDocument, setVerificationDocument] = React.useState<File | undefined>();
   const router = useRouter();
 
 
@@ -47,41 +53,83 @@ const SignUp = () => {
       errorToast('Please fill in all required fields');
       return;
     }
+
+    // Additional validation for counselors
+    if (userType === "COUNSELOR") {
+      if (!licenseNumber || !specialization || !verificationDocument) {
+        errorToast('Please fill in all counselor-specific fields and upload verification document');
+        return;
+      }
+    }
     
     setLoading(true);
     try {
       // Create FormData with correct field names expected by backend
       const formData = new FormData();
       
-      // Add profile image if provided (with correct field name)
+      // Add profile image if provided
       if (profilePic) {
         formData.append('profileImage', profilePic);
       }
       
-      // Add user data as JSON string with correct field name
-      const userRequest = {
-        name,
-        email: emailId,
-        password,
-        role: 'USER',
-        dateOfBirth: dob,
-        gender
-      };
+      // Determine API endpoint and data structure based on user type
+      let endpoint = '';
+      let requestData = {};
+
+      if (userType === "COUNSELOR") {
+        endpoint = 'http://localhost:8080/api/v1/auth/register-counselor';
+        
+        // Add verification document (required for counselors)
+        if (verificationDocument) {
+          formData.append('verificationDocument', verificationDocument);
+        }
+
+        // Counselor request data
+        requestData = {
+          name,
+          email: emailId,
+          password,
+          dateOfBirth: dob,
+          gender,
+          licenseNumber,
+          specialization
+        };
+        
+        formData.append('counselor', new Blob([JSON.stringify(requestData)], { type: 'application/json' }));
+      } else {
+        // CLIENT registration
+        endpoint = 'http://localhost:8080/api/v1/auth/register';
+        
+        requestData = {
+          name,
+          email: emailId,
+          password,
+          role: 'CLIENT', // Changed from USER to CLIENT
+          dateOfBirth: dob,
+          gender
+        };
+        
+        formData.append('user', new Blob([JSON.stringify(requestData)], { type: 'application/json' }));
+      }
       
-      formData.append('user', new Blob([JSON.stringify(userRequest)], { type: 'application/json' }));
-      
-      // Send registration request to correct endpoint
-      const response = await axios.post('http://localhost:8080/api/v1/auth/register', formData, {
+      // Send registration request to appropriate endpoint
+      const response = await axios.post(endpoint, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
         withCredentials: true,
       });
       
-      // Properly handle structured response from backend
+      // Handle response
       if (response.data.success) {
-        successToast('Sign Up Request Sent Successfully. Now Verify with OTP');
-        router.push("/sign-up-verification");
+        if (userType === "COUNSELOR") {
+          successToast('Counselor registration submitted! Your account will be activated after admin approval.');
+          // Redirect to a counselor-specific status page
+          router.push("/counselor-status");
+        } else {
+          successToast('Sign Up Request Sent Successfully. Now Verify with OTP');
+          router.push("/sign-up-verification");
+        }
       } else {
         errorToast(response.data.message || 'Registration failed');
       }
@@ -113,9 +161,20 @@ const SignUp = () => {
           </div>
           <SignInLabel />
           <form className="space-y-4" onSubmit={handleSubmit}>
+            <UserTypeSelector userType={userType} setUserType={setUserType} />
             <NameInputField setName={setName} />
             <DOBInputField setDOB={setDOB} />
             <GenderInputField setGender={setGender} />
+            {userType === "COUNSELOR" && (
+              <CounselorSpecificFields
+                licenseNumber={licenseNumber}
+                setLicenseNumber={setLicenseNumber}
+                specialization={specialization}
+                setSpecialization={setSpecialization}
+                verificationDocument={verificationDocument}
+                setVerificationDocument={setVerificationDocument}
+              />
+            )}
             <EmailInputField setEmailId={setEmailId} />
             <PasswordInputField setPassword={setPassword} />
             <RePasswordInputField setRePassword={setRePassword} />

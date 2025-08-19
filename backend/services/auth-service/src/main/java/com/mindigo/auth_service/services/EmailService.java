@@ -27,6 +27,10 @@ public class EmailService {
         sendMail(email, "OTP for Signing Up", "Dear "+userName+", use this otp to complete your signup: "+otp);
     }
 
+    public void sendCounselorRegistrationConfirmation(String email, String userName) {
+        sendMail(email, "Registration is pending", "Dear "+userName+", Please wait for an admin to approve you request");
+    }
+
     public void sendMail(String receiver, String subject, String body) {
         try {
 
