@@ -1,0 +1,34 @@
+[
+    {
+            "id": "sleep",
+            "title": "Sleep Quality",
+            "value": "7.5h",
+            "change": "+12%",
+            "trend": "up",
+            "encouragement": "Sweet dreams lead to sweet insights! 😴✨"
+    },
+    {
+            "id": "mood",
+            "title": "Today's Mood",
+            "value": "Good",
+            "change": "↗ Improving",
+            "trend": "up",
+            "encouragement": "Your mood data helps us brighten your days! 🌈"
+    },
+    {
+            "id": "water",
+            "title": "Water Intake",
+            "value": "6/8 cups",
+            "change": "75%",
+            "trend": "neutral",
+            "encouragement": "Stay hydrated, stay amazing! More logs = better tips 💧"
+    },
+    {
+            "id": "activity",
+            "title": "Active Minutes",
+            "value": "45 min",
+            "change": "+5 min",
+            "trend": "up",
+            "encouragement": "Every step counts! Keep tracking for personalized insights 🚀"
+    }
+]

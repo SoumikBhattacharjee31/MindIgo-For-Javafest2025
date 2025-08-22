@@ -1,0 +1,20 @@
+[
+    {
+        "time": "2: 00 PM",
+        "activity": "Mindfulness Session",
+        "type": "meditation",
+        "nudge": "Your mind will thank you! 🧘‍♀️"
+    },
+    {
+        "time": "4: 30 PM",
+        "activity": "Breathing Exercise",
+        "type": "breathing",
+        "nudge": "Breathe in positivity! 🌸"
+    },
+    {
+        "time": "7: 00 PM",
+        "activity": "Evening Reflection",
+        "type": "journal",
+        "nudge": "Time to celebrate today's wins! 📝"
+    }
+]

@@ -7,6 +7,7 @@ import Sidebar from './components/Sidebar';
 import { FaUserDoctor } from 'react-icons/fa6';
 import { GiMeditation } from 'react-icons/gi';
 import HomePage from './pages/HomePage';
+import MindfullnessPage from './pages/MindfullnessPage';
 
 
 interface SidebarItem {
@@ -18,7 +19,7 @@ interface SidebarItem {
 
 
 const Dashboard = () => {
-  const [activeSection, setActiveSection] = useState<string>('overview');
+  const [activeSection, setActiveSection] = useState<string>('home');
 
   const sidebarItems: SidebarItem[] = [
     { id: 'home', label: 'Home', icon: <House className='w-5 h-5' /> },
@@ -35,6 +36,8 @@ const Dashboard = () => {
     switch (activeSection) {
       case 'home':
         return <HomePage />;
+      case 'mindfulness':
+        return <MindfullnessPage />;
       default:
         return (
           <div className="bg-white rounded-lg p-8 shadow-sm border border-gray-100">
@@ -61,22 +64,21 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* <Navbar /> */}
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 via-white to-blue-100">
       <div className="flex">
         <div className='w-16 bg-gradient-to-b from-indigo-50/80 via-blue-50/60 to-violet-50/40 min-h-screen  py-3 shadow-lg border-r border-indigo-100/50 flex justify-center'>
           <Sidebar activeSection={activeSection} setActiveSection={setActiveSection} sidebarItems={sidebarItems} />
         </div>
         <div className="flex-1 p-8">
           <div className="max-w-7xl mx-auto">
-            <div className="mb-8">
+            {/* <div className="mb-8">
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
                 Good morning! 👋
               </h1>
               <p className="text-gray-600">
                 Here's how your wellness journey is progressing today.
               </p>
-            </div>
+            </div> */}
 
             {renderMainContent()}
           </div>
