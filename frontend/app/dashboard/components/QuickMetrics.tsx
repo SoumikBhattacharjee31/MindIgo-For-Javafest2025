@@ -1,6 +1,6 @@
 import { Moon, Droplets, Smile, Activity, Star } from 'lucide-react';
 
-import metricData from '../../mock/metric_data.json';
+import metricData from '@/app/dashboard/mock/metric_data.json';
 import MetricCard from './MetricCard';
 
 const QuickMetrics = () => {

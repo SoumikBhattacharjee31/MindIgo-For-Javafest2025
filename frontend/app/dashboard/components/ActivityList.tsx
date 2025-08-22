@@ -1,6 +1,6 @@
 import {Calendar} from 'lucide-react';
-import ActivityCard from './ActivityCard';
-import activities from '../../mock/activity_data.json';
+import ActivityCard from '@/app/dashboard/components/ActivityCard';
+import activities from '@/app/dashboard/mock/activity_data.json';
 
 const ActivityList = () => {
     return (
