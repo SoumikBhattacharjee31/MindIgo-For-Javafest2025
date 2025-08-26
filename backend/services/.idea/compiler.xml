@@ -8,19 +8,22 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="config-server" />
-        <module name="eureka-server" />
         <module name="gateway-server" />
+        <module name="eureka-server" />
+        <module name="ai-service" />
       </profile>
-      <profile name="Annotation profile for routine-service" enabled="true">
+      <profile name="Annotation profile for meeting-service" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="false">
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.38/lombok-1.18.38.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.38/lombok-1.18.38.jar" />
         </processorPath>
         <module name="auth-service" />
         <module name="game-service" />
         <module name="content-service" />
+        <module name="meeting-service" />
         <module name="routine-service" />
         <module name="file-server" />
         <module name="assessment-service" />
@@ -28,10 +31,14 @@
         <module name="admin-service" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="call-service" target="24" />
+    </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="admin-service" options="-parameters" />
+      <module name="ai-service" options="-parameters" />
       <module name="assessment-service" options="-parameters" />
       <module name="auth-service" options="-parameters" />
       <module name="config-server" options="-parameters" />
@@ -41,6 +48,7 @@
       <module name="game-service" options="-parameters" />
       <module name="gateway-server" options="-parameters" />
       <module name="mail-service" options="-parameters" />
+      <module name="meeting-service" options="-parameters" />
       <module name="routine-service" options="-parameters" />
     </option>
   </component>
