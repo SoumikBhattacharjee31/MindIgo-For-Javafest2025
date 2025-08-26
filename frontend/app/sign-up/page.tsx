@@ -157,7 +157,7 @@ const SignUp = () => {
           name,
           email: emailId,
           password,
-          role: 'CLIENT', // Changed from USER to CLIENT
+          role: 'USER', // Changed from USER to CLIENT
           dateOfBirth: dob,
           gender
         };
@@ -226,8 +226,8 @@ const SignUp = () => {
           <div className="space-y-6">
             <h2 className="text-2xl font-bold text-gray-800">Basic Information</h2>
             <div className="flex flex-col space-y-4 justify-center">
-              <NameInputField setName={setName} />
-              <DOBInputField setDOB={setDOB} />
+              <NameInputField name={name} setName={setName} />
+              <DOBInputField dob={dob} setDOB={setDOB} />
               <GenderInputField gender={gender} setGender={setGender} />
             </div>
           </div>
@@ -238,9 +238,9 @@ const SignUp = () => {
           <div className="space-y-6">
             <h2 className="text-2xl font-bold text-gray-800">Account Credentials</h2>
             <div className="flex flex-col space-y-4 justify-center">
-              <EmailInputField setEmailId={setEmailId} />
-              <PasswordInputField setPassword={setPassword} />
-              <RePasswordInputField setRePassword={setRePassword} />
+              <EmailInputField emailId={emailId} setEmailId={setEmailId} />
+              <PasswordInputField password={password} setPassword={setPassword} />
+              <RePasswordInputField rePassword={rePassword} setRePassword={setRePassword} />
               {(rePassword && password !== rePassword) && (
                 <p className="text-sm text-red-500">Passwords do not match</p>
               )}
@@ -300,6 +300,7 @@ const SignUp = () => {
             <div className="flex justify-between mt-8">
 
               <button
+                type="button" 
                 onClick={prevStep}
                 disabled={currentStep === 0}
                 className={`flex items-center space-x-2 px-6 py-3 rounded-lg transition-all duration-200 ${currentStep === 0
@@ -320,6 +321,7 @@ const SignUp = () => {
                   )
                 ) : (
                   <button
+                    type="button" 
                     onClick={nextStep}
                     disabled={!canProceed()}
                     className={`flex items-center space-x-2 px-6 py-3 rounded-lg transition-all duration-200 ${canProceed()

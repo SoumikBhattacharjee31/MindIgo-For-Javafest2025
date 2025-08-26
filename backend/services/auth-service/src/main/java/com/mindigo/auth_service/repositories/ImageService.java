@@ -1,12 +1,11 @@
 package com.mindigo.auth_service.repositories;
 
+import com.mindigo.auth_service.dto.response.ApiResponseClass;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.ByteArrayResource;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -51,7 +50,15 @@ public class ImageService {
             String fileServiceUrl = "http://FILE-SERVER/api/v1/file/upload/images";
 
             // Make the REST call to the file server
-            ResponseEntity<String> response = restTemplate.postForEntity(fileServiceUrl, requestEntity, String.class);
+            // Somik Dasgupta made a change regarding new response type of File server
+            ResponseEntity<ApiResponseClass<String>> response =
+                    restTemplate.exchange(
+                            fileServiceUrl,
+                            HttpMethod.POST,
+                            requestEntity,
+                            new ParameterizedTypeReference<ApiResponseClass<String>>() {}
+                    );
+
 
 //            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
 //                String imageAddress = response.getBody();
@@ -61,7 +68,7 @@ public class ImageService {
 //            } else {
 //                System.err.println("Failed to upload image: Invalid response from file-service");
 //            }
-            return response.getBody();
+            return response.getBody().getData();
         } catch (HttpClientErrorException e) {
             System.err.println("Failed to upload image: " + e.getMessage());
         } catch (Exception e) {

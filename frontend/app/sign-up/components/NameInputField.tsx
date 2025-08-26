@@ -2,12 +2,13 @@ import React, { useState } from 'react';
 
 
 interface NameInputFieldProps {
+  name?: string;
   setName: (name: string) => void;
 }
 
-const NameInputField: React.FC<NameInputFieldProps> = ({ setName }) => {
+const NameInputField: React.FC<NameInputFieldProps> = ({ name, setName }) => {
   const [focused, setFocused] = useState(false);
-  const [value, setValue] = useState('');
+  const [value, setValue] = useState(name || '');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setValue(e.target.value);
@@ -43,7 +44,7 @@ const NameInputField: React.FC<NameInputFieldProps> = ({ setName }) => {
         absolute left-6 -top-2 px-2 bg-white text-xs font-medium transition-all duration-300
         ${focused || value ? 'opacity-100 translate-y-0 text-blue-600' : 'opacity-0 translate-y-2 text-gray-400'}
       `}>
-        Email Address
+        Name
       </div>
     </div>
   );

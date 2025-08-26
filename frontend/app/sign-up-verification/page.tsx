@@ -68,7 +68,7 @@ const SignUpVerification = () => {
       
       if (response.data.success) {
         successToast('OTP verified successfully');
-        router.push("/home");
+        router.push("/dashboard");
       } else {
         warningToast(response.data.message || 'OTP verification failed');
       }

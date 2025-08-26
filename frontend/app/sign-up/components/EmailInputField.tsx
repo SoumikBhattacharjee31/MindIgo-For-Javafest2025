@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 
 interface EmailInputFieldProps {
+  emailId?: string;
   setEmailId: (email: string) => void;
 }
 
-const EmailInputField: React.FC<EmailInputFieldProps> = ({ setEmailId }) => {
+const EmailInputField: React.FC<EmailInputFieldProps> = ({ emailId, setEmailId }) => {
   const [focused, setFocused] = useState(false);
-  const [value, setValue] = useState('');
+  const [value, setValue] = useState(emailId || '');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setValue(e.target.value);

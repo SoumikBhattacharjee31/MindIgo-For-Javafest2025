@@ -1,12 +1,13 @@
 import React, { useState } from "react";
 
 interface DOBInputFieldProps {
+  dob?: string;
   setDOB: (dob: string) => void;
 }
 
-const DOBInputField: React.FC<DOBInputFieldProps> = ({ setDOB }) => {
+const DOBInputField: React.FC<DOBInputFieldProps> = ({ dob, setDOB }) => {
   const [focused, setFocused] = useState(false);
-  const [value, setValue] = useState('');
+  const [value, setValue] = useState(dob || '');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setValue(e.target.value);
