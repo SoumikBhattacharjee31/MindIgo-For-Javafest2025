@@ -1,5 +1,6 @@
 package com.mindigo.auth_service.config;
 
+import com.mindigo.auth_service.entity.CounselorStatus;
 import com.mindigo.auth_service.entity.Gender;
 import com.mindigo.auth_service.entity.Role;
 import com.mindigo.auth_service.entity.User;
@@ -34,6 +35,7 @@ public class AuthServiceConfig {
                     .failedLoginAttempts(0)
                     .createdBy("SYSTEM")
                     .updatedBy("SYSTEM")
+                    .counselorStatus(CounselorStatus.APPROVED)
                     .build();
             userRepository.save(user);
             System.out.println("User created: " + email);

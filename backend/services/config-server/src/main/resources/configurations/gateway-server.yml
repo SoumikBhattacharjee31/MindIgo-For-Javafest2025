@@ -54,8 +54,12 @@ spring:
               uri: lb://ai-service
               predicates:
                 - Path=/api/v1/ai/**
-#              filters:
-#                - name: JwtAuth
+            - id: meeting-service
+              uri: lb://meeting-service
+              predicates:
+                - Path=/api/v1/meeting/**
+              filters:
+                - name: JwtAuth
 server:
   port: 8080
 

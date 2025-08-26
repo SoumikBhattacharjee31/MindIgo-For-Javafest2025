@@ -12,7 +12,7 @@
         <module name="eureka-server" />
         <module name="ai-service" />
       </profile>
-      <profile name="Annotation profile for routine-service" enabled="true">
+      <profile name="Annotation profile for meeting-service" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
@@ -23,6 +23,7 @@
         <module name="auth-service" />
         <module name="game-service" />
         <module name="content-service" />
+        <module name="meeting-service" />
         <module name="routine-service" />
         <module name="file-server" />
         <module name="assessment-service" />
@@ -47,6 +48,7 @@
       <module name="game-service" options="-parameters" />
       <module name="gateway-server" options="-parameters" />
       <module name="mail-service" options="-parameters" />
+      <module name="meeting-service" options="-parameters" />
       <module name="routine-service" options="-parameters" />
     </option>
   </component>
