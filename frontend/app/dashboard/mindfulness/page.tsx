@@ -45,7 +45,7 @@ const Mindfulness = () => {
     ];
 
     return (
-        <div className="h-full w-full p-4">
+        <div className="h-full w-full px-4 pb-4 pt-0">
             <NavigationTab
                 tabs={tabs}
                 currentPage={currentPage}

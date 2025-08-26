@@ -1,4 +1,4 @@
-import {  Mood, Description, Reason } from "./moodOptions";
+import {  Mood, Description, Reason } from "../dataTypes";
 import { Entry } from "./MoodCheckinCard";
 
 interface Props {

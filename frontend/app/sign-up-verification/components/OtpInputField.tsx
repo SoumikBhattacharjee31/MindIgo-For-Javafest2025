@@ -78,7 +78,7 @@ const OtpInputField: React.FC<OtpInputFieldProps> = ({
           value={otp[index]}
           onChange={(e) => handleChange(e, index)}
           onKeyDown={(e) => handleKeyDownInternal(index, e)}
-          className="w-12 h-12 border-2 border-gray-300 rounded-lg text-center text-xl font-semibold focus:border-blue-500 focus:outline-none"
+          className="w-12 h-12 border-2 border-gray-300 rounded-lg text-center text-xl text-blue-700 font-semibold focus:border-blue-500 focus:outline-none"
           style={{ 
             fontSize: '1.25rem',
             appearance: 'textfield',

@@ -1,7 +1,6 @@
 "use client";
 import React from "react";
 import { useRouter } from 'next/navigation';
-import UserTypeSelector from "../components/UserTypeSelector";
 import SignInButton from "./components/SignInButton";
 import EmailInputField from "./components/EmailInputField";
 import PasswordInputField from "./components/PasswordInputField";

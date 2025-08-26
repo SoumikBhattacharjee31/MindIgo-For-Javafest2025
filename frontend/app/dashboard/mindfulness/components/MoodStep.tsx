@@ -1,4 +1,4 @@
-import { Mood } from "./moodOptions";
+import { Mood } from "../dataTypes";
 
 interface Props {
   moods: Mood[];

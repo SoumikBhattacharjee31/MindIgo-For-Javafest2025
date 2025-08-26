@@ -1,12 +1,8 @@
+import { Entry } from '../dataTypes';
 import MoodCard from './MoodCard';
 
 interface MoodLogProps {
-    moodData: {
-        mood: string | null;
-        description: string | null;
-        reason: string | null;
-        date: string;
-    }[];
+    moodData: Entry[];
 }
 
 const MoodLog: React.FC<MoodLogProps> = ({ moodData }) => {

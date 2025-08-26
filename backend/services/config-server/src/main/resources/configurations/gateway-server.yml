@@ -18,6 +18,8 @@ spring:
               uri: lb://assessment-service
               predicates:
                 - Path=/api/v1/assessment/**
+              filters:
+                - name: JwtAuth
             - id: mail-service
               uri: lb://mail-service
               predicates:

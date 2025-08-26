@@ -1,6 +1,3 @@
-import Image from "next/image";
-import meditate from '@/public/Meditate.png'
-
 const MeditationCard = () => (
   <div className="bg-gradient-to-br from-green-50 to-emerald-100 p-8 rounded-xl shadow-lg border border-green-200">
     <h2 className="text-2xl font-bold text-emerald-800 mb-4">Meditation</h2>

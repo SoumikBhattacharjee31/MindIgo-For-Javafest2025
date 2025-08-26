@@ -1,4 +1,3 @@
-
 const BreathingCard = () => (
   <div className="bg-gradient-to-br from-purple-50 to-violet-100 p-8 rounded-xl shadow-lg border border-purple-200">
     <h2 className="text-2xl font-bold text-violet-800 mb-4">Breathing Exercise</h2>

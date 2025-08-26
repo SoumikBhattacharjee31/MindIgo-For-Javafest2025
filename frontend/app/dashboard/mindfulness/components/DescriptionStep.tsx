@@ -1,4 +1,4 @@
-import { Description } from "./moodOptions";
+import { Description } from "../dataTypes";
 
 interface Props {
   descriptions: Description[];

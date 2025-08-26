@@ -1,6 +1,6 @@
 [
     {
-        "mood": "good",
+        "mood": "happy",
         "date": "2025-08-10",
         "description": "Feeling great!",
         "reason": "Had a productive day."
@@ -60,25 +60,25 @@
         "reason": "Had a rough night."
     },
     {
-        "mood": "good",
+        "mood": "happy",
         "date": "2025-08-20",
         "description": "Feeling great!",
         "reason": "Had a productive day."
     },
     {
-        "mood": "awesome",
+        "mood": "amazing",
         "date": "2025-08-21",
         "description": "Feeling awesome!",
         "reason": "Had an amazing day."
     },
     {
-        "mood": "good",
+        "mood": "happy",
         "date": "2025-08-22",
         "description": "Feeling great!",
         "reason": "Had a productive day."
     },
     {
-        "mood": "good",
+        "mood": "happy",
         "date": "2025-08-23",
         "description": "Feeling great!",
         "reason": "Had a productive day."

@@ -5,18 +5,24 @@ import TodayEntryCard from "./TodayEntryCard";
 import MoodStep from "./MoodStep";
 import DescriptionStep from "./DescriptionStep";
 import ReasonStep from "./ReasonStep";
-import { Mood, Description, Reason, moods } from "./moodOptions";
+import { Mood, Description, Reason, Entry } from "../dataTypes";
+import { moods } from "../moods";
+import { descriptions } from "../description";
+import { reasons } from "../reason";
+import { 
+  moodApi, 
+  formatDateForApi, 
+  convertMoodResponseToEntry, 
+  convertEntryToMoodRequest 
+} from "../api/moodApi";
 
-import moodData from "../../mock/mood_data.json";
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
-export interface Entry {
-  date: string;
-  mood: string;
-  description: string;
-  reason: string;
-}
+import { successToast, errorToast } from '@/util/toastHelper';
 
 const MoodCheckinCard = () => {
+  const [moodData, setMoodData] = useState<Entry[]>([]);
   const [todayEntry, setTodayEntry] = useState<Entry | null>(null);
   const [step, setStep] = useState<number>(1);
   const [selectedMood, setSelectedMood] = useState<Mood | null>(null);
@@ -24,26 +30,60 @@ const MoodCheckinCard = () => {
     useState<Description | null>(null);
   const [selectedReason, setSelectedReason] = useState<Reason | null>(null);
   const [isAnimating, setIsAnimating] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Filter helpers
+  const filteredDescriptions: Description[] = selectedMood
+    ? descriptions.filter((d) => d.moods.includes(selectedMood.id))
+    : [];
+
+  const filteredReasons: Reason[] = selectedMood
+    ? reasons.filter((r) => r.moods.includes(selectedMood.id))
+    : [];
+
+  // Load mood data from API
+  const loadMoodData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const today = formatDateForApi(new Date());
+      const moodResponses = await moodApi.getMoods(7, today);
+      
+      // Convert API responses to Entry format
+      const entries = moodResponses.map(convertMoodResponseToEntry);
+      setMoodData(entries);
+
+      successToast('Mood data loaded successfully.');
+
+      // Check if today's entry exists
+      const todayEntryData = entries.find((e: Entry) => e.date === today);
+      setTodayEntry(todayEntryData || null);
+
+      if (todayEntryData) {
+        // Restore selection for today's entry
+        const mood = moods.find((m) => m.id === todayEntryData.mood) || null;
+        const description = descriptions.find((d) => d.text === todayEntryData.description) || null;
+        const reason = reasons.find((r) => r.text === todayEntryData.reason) || null;
+
+        setSelectedMood(mood);
+        setSelectedDescription(description);
+        setSelectedReason(reason);
+      }
+    } catch (err) {
+      console.error('Failed to load mood data:', err);
+      errorToast('Failed to load mood data. '+err);
+      setError('Failed to load mood data. Please try again.');
+      // Fallback to empty array if API fails
+      setMoodData([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const today = new Date().toISOString().split("T")[0];
-    const entry = moodData.find((e: Entry) => e.date === today) as
-      | Entry
-      | undefined;
-    setTodayEntry(entry ?? null);
-
-    if (entry) {
-      // restore selection
-      const mood = moods.find((m) => m.emoji === entry.mood) || null;
-      const description =
-        mood?.descriptions.find((d) => d.text === entry.description) || null;
-      const reason =
-        description?.reasons.find((r) => r.text === entry.reason) || null;
-
-      setSelectedMood(mood);
-      setSelectedDescription(description);
-      setSelectedReason(reason);
-    }
+    loadMoodData();
   }, []);
 
   const handleEdit = () => {
@@ -58,22 +98,43 @@ const MoodCheckinCard = () => {
     }, 300);
   };
 
-  const handleSubmit = (reason: Reason) => {
+  const handleSubmit = async (reason: Reason) => {
     if (!selectedMood || !selectedDescription) return;
 
-    setIsAnimating(true);
-    setTimeout(() => {
-      const today = new Date().toISOString().split("T")[0];
-      const newEntry: Entry = {
+    try {
+      setIsAnimating(true);
+      setError(null);
+      
+      const today = formatDateForApi(new Date());
+      const moodRequest = convertEntryToMoodRequest({
         date: today,
-        mood: selectedMood.emoji,
+        mood: selectedMood.id,
         description: selectedDescription.text,
         reason: reason.text,
-      };
-      setTodayEntry(newEntry);
-      setStep(1);
+      });
+
+      // Call API to set mood
+      const moodResponse = await moodApi.setMood(moodRequest);
+      
+      setTimeout(() => {
+        // Convert response back to Entry format
+        const newEntry = convertMoodResponseToEntry(moodResponse);
+        setTodayEntry(newEntry);
+        
+        // Update local mood data
+        const updatedMoodData = [...moodData.filter((e) => e.date !== today), newEntry];
+        setMoodData(updatedMoodData);
+        setStep(1);
+        setIsAnimating(false);
+      }, 300);
+      successToast('Mood saved successfully.');
+      console.log('Mood saved successfully:', selectedMood);
+    } catch (err) {
+      console.error('Failed to save mood:', err);
+      errorToast('Failed to save mood. '+err);
+      setError('Failed to save mood. Please try again.');
       setIsAnimating(false);
-    }, 300);
+    }
   };
 
   const nextStep = () => {
@@ -92,10 +153,33 @@ const MoodCheckinCard = () => {
     }, 200);
   };
 
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-300 via-blue-300 to-indigo-300 p-6 flex items-center justify-center relative rounded-2xl">
+        <div className="bg-white/10 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-white/2 w-full h-full relative overflow-hidden flex items-center justify-center">
+          <div className="text-white text-lg">Loading your mood data...</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-300 via-blue-300 to-indigo-300 p-6 flex items-center justify-center relative rounded-2xl">
       <div className="bg-white/10 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-white/2 w-full h-full relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none"></div>
+        
+        {/* Error message */}
+        {error && (
+          <div className="mb-4 p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-red-100 text-sm">
+            {error}
+            <button 
+              onClick={() => setError(null)} 
+              className="float-right text-red-200 hover:text-white"
+            >
+              ×
+            </button>
+          </div>
+        )}
 
         <MoodLog moodData={moodData} />
 
@@ -129,7 +213,7 @@ const MoodCheckinCard = () => {
               )}
               {step === 2 && selectedMood && (
                 <DescriptionStep
-                  descriptions={selectedMood.descriptions}
+                  descriptions={filteredDescriptions}
                   selectedDescription={selectedDescription}
                   setSelectedDescription={(d) => {
                     setSelectedDescription(d);
@@ -141,7 +225,7 @@ const MoodCheckinCard = () => {
               )}
               {step === 3 && selectedDescription && (
                 <ReasonStep
-                  reasons={selectedDescription.reasons}
+                  reasons={filteredReasons}
                   selectedReason={selectedReason}
                   setSelectedReason={setSelectedReason}
                   handleSubmit={handleSubmit}
@@ -153,6 +237,7 @@ const MoodCheckinCard = () => {
           )}
         </div>
       </div>
+      <ToastContainer />
     </div>
   );
 };

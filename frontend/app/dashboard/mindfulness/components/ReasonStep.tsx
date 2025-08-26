@@ -1,4 +1,4 @@
-import { Reason } from "./moodOptions";
+import { Reason } from "../dataTypes";
 
 interface Props {
   reasons: Reason[];
