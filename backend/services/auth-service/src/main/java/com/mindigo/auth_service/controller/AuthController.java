@@ -202,6 +202,20 @@ public class AuthController {
                 .build());
     }
 
+    @GetMapping("/profilebyid/{id}")
+    @Operation(summary = "Get user profile by ID")
+    public ResponseEntity<ApiResponseClass<UserProfileResponse>> getProfileFromId(
+            @PathVariable("id") Integer userId) {
+
+        UserProfileResponse profile = authenticationService.getUserProfileById(userId);System.out.println("==================================================");
+
+        return ResponseEntity.ok(ApiResponseClass.<UserProfileResponse>builder()
+                .success(true)
+                .data(profile)
+                .message("Profile retrieved successfully")
+                .build());
+    }
+
     // Add this endpoint to your existing AuthController class
 
     @PostMapping(value = "/register-counselor", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

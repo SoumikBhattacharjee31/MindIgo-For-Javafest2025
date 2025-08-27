@@ -53,7 +53,7 @@ public class MeetingService {
         }
 
         // Verify counselor exists
-        UserDto counselor = authService.getUserById(dto.getCounselorId());
+        UserProfileResponseFromAuth counselor = authService.getUserById(dto.getCounselorId());
         if (counselor == null || !"COUNSELOR".equals(counselor.getRole())) {
             throw new Exception("Invalid counselor");
         }
@@ -132,14 +132,14 @@ public class MeetingService {
         response.setRejectionReason(request.getRejectionReason());
 
         // Get user and counselor details
-        UserDto user = authService.getUserById(request.getUserId());
+        UserProfileResponseFromAuth user = authService.getUserById(request.getUserId());
         if (user != null) {
-            response.setUserUsername(user.getUsername());
+            response.setUserUsername(user.getName());
         }
 
-        UserDto counselor = authService.getUserById(request.getCounselorId());
+        UserProfileResponseFromAuth counselor = authService.getUserById(request.getCounselorId());
         if (counselor != null) {
-            response.setCounselorUsername(counselor.getUsername());
+            response.setCounselorUsername(counselor.getName());
         }
 
         return response;

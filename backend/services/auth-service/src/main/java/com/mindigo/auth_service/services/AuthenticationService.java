@@ -603,6 +603,19 @@ public class AuthenticationService {
         return UserProfileResponse.fromUser(user);
     }
 
+    public UserProfileResponse getUserProfileById(Integer id) {
+
+        if (id == null) {
+            throw new InvalidTokenException("Invalid session");
+        }
+
+        Optional<User> user = userRepository.findById(id);
+        if(user.isEmpty())
+            throw new UserNotFoundException("User not found");
+
+        return UserProfileResponse.fromUser(user.get());
+    }
+
     // Helper methods
     private String getClientIpFromRequest() {
         // This would typically come from a request context or be injected
