@@ -1,7 +1,5 @@
 "use client";
 import React from "react";
-import { useSelector, useDispatch } from 'react-redux';
-import { login_user } from "../store/features/userSlice";
 import { useRouter } from 'next/navigation';
 import SignInButton from "./components/SignInButton";
 import EmailInputField from "./components/EmailInputField";
@@ -18,6 +16,7 @@ import axios from 'axios';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { successToast, errorToast, warningToast } from '../../util/toastHelper';
+import useStore from "@/app/store/store";
 
 const Login = () => {
   
@@ -25,7 +24,8 @@ const Login = () => {
   const [password, setPassword] = React.useState("");
   const [loading, setLoading] = React.useState(false);
   const router = useRouter();
-  const dispatch = useDispatch();
+  // const dispatch = useDispatch();
+  const {user, setUser} = useStore();
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
@@ -49,7 +49,8 @@ const Login = () => {
         successToast('Login successful');
         const userData = response.data.data.user;
         const userRole = response.data.data.user.role;
-        dispatch(login_user(userData));
+        setUser(userData);
+        // dispatch(login_user(userData));
 
         if (userRole === 'COUNSELOR') {
           router.push("/dashboard");
