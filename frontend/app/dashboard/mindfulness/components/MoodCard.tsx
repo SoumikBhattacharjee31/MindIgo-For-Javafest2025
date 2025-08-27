@@ -21,7 +21,7 @@ const MoodCard: React.FC<MoodCardProps> = ({ mood, date }) => {
                 )}
             </div>
             <div className="text-xs text-pink-400">
-                {date.getDate()}/{date.getMonth()}
+                {date.getDate()}/{date.getMonth()+1}
             </div>
         </div>
     );
