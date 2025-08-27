@@ -16,13 +16,16 @@ import axios from 'axios';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { successToast, errorToast, warningToast } from '../../util/toastHelper';
+import useStore from "@/app/store/store";
 
 const Login = () => {
+  
   const [emailId, setEmailId] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [loading, setLoading] = React.useState(false);
-  const [userType, setUserType] = React.useState("CLIENT");
   const router = useRouter();
+  // const dispatch = useDispatch();
+  const {user, setUser} = useStore();
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
@@ -44,7 +47,11 @@ const Login = () => {
 
       if (response.data.success) {
         successToast('Login successful');
+        const userData = response.data.data.user;
         const userRole = response.data.data.user.role;
+        setUser(userData);
+        // dispatch(login_user(userData));
+
         if (userRole === 'COUNSELOR') {
           router.push("/dashboard");
         } else if (userRole === 'USER') {

@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/Mindigo?currentSchema=content_service
-    username: mindigo
-    password: 1234
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/${DB_NAME:Mindigo}?currentSchema=content_service
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -25,7 +25,7 @@ eureka:
     instance-id: ${spring.application.name}:${random.uuid}
 
 server:
-  port: 8086
+  port: ${CONTENT_SERVICE_PORT:8086}
 
 management:
   endpoints:

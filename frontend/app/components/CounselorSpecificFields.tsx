@@ -28,7 +28,7 @@ const CounselorSpecificFields: React.FC<CounselorSpecificFieldsProps> = ({
           type="text"
           value={licenseNumber}
           onChange={(e) => setLicenseNumber(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 text-blue-700 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           placeholder="Enter your professional license number"
           required
         />
@@ -43,7 +43,7 @@ const CounselorSpecificFields: React.FC<CounselorSpecificFieldsProps> = ({
           type="text"
           value={specialization}
           onChange={(e) => setSpecialization(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 text-blue-700  border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           placeholder="e.g., Clinical Psychology, Marriage Counseling"
           required
         />
@@ -58,7 +58,7 @@ const CounselorSpecificFields: React.FC<CounselorSpecificFieldsProps> = ({
           type="file"
           onChange={(e) => setVerificationDocument(e.target.files?.[0])}
           accept=".pdf,.jpg,.jpeg,.png"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 text-blue-700 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           required
         />
         <p className="text-xs text-gray-500 mt-1">
