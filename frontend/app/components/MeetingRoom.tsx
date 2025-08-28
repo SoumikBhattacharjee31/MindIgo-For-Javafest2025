@@ -17,7 +17,7 @@ const MeetingRoom = ({ meetingRoomId, meetingType, userRole, onEndMeeting }) => 
   const remoteVideoRef = useRef();
   const socketRef = useRef();
   const peerConnectionRef = useRef();
-  const localStreamRef = useRef(); // Add this ref to track localStream
+  const localStreamRef = useRef();
 
   const iceServers = {
     iceServers: [
@@ -31,11 +31,8 @@ const MeetingRoom = ({ meetingRoomId, meetingType, userRole, onEndMeeting }) => 
     
     const initialize = async () => {
       try {
-        // First initialize media
         await initializeMedia();
         if (!mounted) return;
-        
-        // Then initialize socket after media is ready
         initializeSocket();
       } catch (err) {
         if (mounted) {
@@ -53,6 +50,26 @@ const MeetingRoom = ({ meetingRoomId, meetingType, userRole, onEndMeeting }) => 
     };
   }, []);
 
+  // Update local video when localStream changes
+  useEffect(() => {
+    if (localStream && localVideoRef.current) {
+      localVideoRef.current.srcObject = localStream;
+      localVideoRef.current.play().catch(err => {
+        console.warn('Local video play failed:', err);
+      });
+    }
+  }, [localStream]);
+
+  // Update remote video when remoteStream changes
+  useEffect(() => {
+    if (remoteStream && remoteVideoRef.current) {
+      remoteVideoRef.current.srcObject = remoteStream;
+      remoteVideoRef.current.play().catch(err => {
+        console.warn('Remote video play failed:', err);
+      });
+    }
+  }, [remoteStream]);
+
   const initializeMedia = async () => {
     try {
       console.log('Initializing media with constraints:', {
@@ -61,20 +78,47 @@ const MeetingRoom = ({ meetingRoomId, meetingType, userRole, onEndMeeting }) => 
       });
 
       const constraints = {
-        video: meetingType === 'VIDEO',
-        audio: true
+        video: meetingType === 'VIDEO' ? {
+          width: { min: 320, ideal: 640, max: 1280 },
+          height: { min: 240, ideal: 480, max: 720 },
+          frameRate: { ideal: 30, max: 60 }
+        } : false,
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        }
       };
       
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
       console.log('Media stream obtained:', stream);
+      console.log('Local stream tracks:', stream.getTracks().map(t => ({
+        kind: t.kind,
+        id: t.id,
+        enabled: t.enabled,
+        muted: t.muted,
+        readyState: t.readyState,
+        label: t.label
+      })));
+      
+      // Verify video track is working for video meetings
+      if (meetingType === 'VIDEO') {
+        const videoTrack = stream.getVideoTracks()[0];
+        if (!videoTrack) {
+          throw new Error('No video track found');
+        }
+        console.log('Video track details:', {
+          enabled: videoTrack.enabled,
+          readyState: videoTrack.readyState,
+          muted: videoTrack.muted,
+          label: videoTrack.label,
+          settings: videoTrack.getSettings()
+        });
+      }
       
       setLocalStream(stream);
-      localStreamRef.current = stream; // Store in ref for immediate access
+      localStreamRef.current = stream;
       setMediaReady(true);
-      
-      if (localVideoRef.current) {
-        localVideoRef.current.srcObject = stream;
-      }
     } catch (err) {
       console.error('Error accessing media devices:', err);
       throw new Error('Unable to access camera/microphone. Please check permissions.');
@@ -115,42 +159,34 @@ const MeetingRoom = ({ meetingRoomId, meetingType, userRole, onEndMeeting }) => 
     socketConnection.on('initiate-call', () => {
       console.log('Initiating call as first user');
       setIsInitiator(true);
-      // Wait for media to be ready, then create peer connection
       if (localStreamRef.current) {
         setTimeout(() => {
           createPeerConnection(true);
         }, 1000);
       } else {
-        // Wait for media stream to be available
         const waitForMedia = setInterval(() => {
           if (localStreamRef.current) {
             clearInterval(waitForMedia);
             createPeerConnection(true);
           }
         }, 100);
-        
-        // Clear interval after 10 seconds to prevent infinite waiting
         setTimeout(() => clearInterval(waitForMedia), 10000);
       }
     });
     
     socketConnection.on('peer-joined', () => {
       console.log('Peer joined, preparing to receive call');
-      // Wait for media to be ready, then create peer connection
       if (localStreamRef.current) {
         setTimeout(() => {
           createPeerConnection(false);
         }, 1000);
       } else {
-        // Wait for media stream to be available
         const waitForMedia = setInterval(() => {
           if (localStreamRef.current) {
             clearInterval(waitForMedia);
             createPeerConnection(false);
           }
         }, 100);
-        
-        // Clear interval after 10 seconds to prevent infinite waiting
         setTimeout(() => clearInterval(waitForMedia), 10000);
       }
     });
@@ -209,7 +245,6 @@ const MeetingRoom = ({ meetingRoomId, meetingType, userRole, onEndMeeting }) => 
   };
 
   const createPeerConnection = async (initiator) => {
-    // Use the ref to get the current stream
     const currentStream = localStreamRef.current;
     
     if (!currentStream) {
@@ -232,28 +267,44 @@ const MeetingRoom = ({ meetingRoomId, meetingType, userRole, onEndMeeting }) => 
     });
     
     // Handle remote stream
-    // Add this in the ontrack event handler
     pc.ontrack = (event) => {
       console.log('Received remote stream');
       const [stream] = event.streams;
-      // In the remote stream handler for audio meetings
-      if (meetingType === 'AUDIO' && stream) {
+      
+      console.log('Remote stream details:', {
+        id: stream.id,
+        active: stream.active,
+        tracks: stream.getTracks().map(t => ({
+          kind: t.kind,
+          id: t.id,
+          enabled: t.enabled,
+          muted: t.muted,
+          readyState: t.readyState,
+          label: t.label
+        }))
+      });
+      
+      // For audio-only meetings, create audio element
+      if (meetingType === 'AUDIO') {
         const audio = new Audio();
         audio.srcObject = stream;
         audio.autoplay = true;
         audio.volume = 1.0;
+        audio.play().catch(console.error);
       }
-      console.log('Remote stream audio tracks:', stream.getAudioTracks().map(t => ({
-        id: t.id,
-        enabled: t.enabled,
-        muted: t.muted,
-        readyState: t.readyState
-      })));
       
       setRemoteStream(stream);
-      if (remoteVideoRef.current) {
-        remoteVideoRef.current.srcObject = stream;
-      }
+      
+      // Force video element update
+      setTimeout(() => {
+        if (remoteVideoRef.current) {
+          remoteVideoRef.current.srcObject = stream;
+          remoteVideoRef.current.load();
+          remoteVideoRef.current.play().catch(err => {
+            console.warn('Remote video play failed:', err);
+          });
+        }
+      }, 100);
     };
     
     // Handle ICE candidates
@@ -275,12 +326,10 @@ const MeetingRoom = ({ meetingRoomId, meetingType, userRole, onEndMeeting }) => 
         setIsConnected(false);
         if (pc.connectionState === 'failed') {
           console.log('Connection failed, attempting to restart...');
-          // Could implement connection restart logic here
         }
       }
     };
     
-    // Handle ICE connection state changes
     pc.oniceconnectionstatechange = () => {
       console.log('ICE connection state:', pc.iceConnectionState);
       if (pc.iceConnectionState === 'failed') {
@@ -354,7 +403,6 @@ const MeetingRoom = ({ meetingRoomId, meetingType, userRole, onEndMeeting }) => 
       socketRef.current = null;
     }
     
-    // Clear refs
     localStreamRef.current = null;
     
     setLocalStream(null);
@@ -421,11 +469,39 @@ const MeetingRoom = ({ meetingRoomId, meetingType, userRole, onEndMeeting }) => 
                 autoPlay
                 muted
                 playsInline
-                className="w-full h-full object-cover"
+                style={{ 
+                  width: '100%', 
+                  height: '100%', 
+                  objectFit: 'cover',
+                  transform: 'scaleX(-1)' // Mirror local video
+                }}
+                onLoadedMetadata={() => {
+                  console.log('Local video metadata loaded');
+                  console.log('Local video dimensions:', 
+                    localVideoRef.current?.videoWidth, 
+                    'x', 
+                    localVideoRef.current?.videoHeight
+                  );
+                }}
+                onError={(e) => {
+                  console.error('Local video error:', e);
+                }}
               />
               <div className="absolute bottom-4 left-4 bg-black bg-opacity-50 text-white px-2 py-1 rounded">
                 You {isMuted && '(Muted)'} {isVideoOff && '(Video Off)'}
               </div>
+              {!localStream && (
+                <div className="absolute inset-0 flex items-center justify-center text-white">
+                  <div className="text-center">
+                    <div className="w-16 h-16 bg-gray-600 rounded-full flex items-center justify-center mx-auto mb-2">
+                      <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <p>Camera initializing...</p>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Remote Video */}
@@ -435,7 +511,22 @@ const MeetingRoom = ({ meetingRoomId, meetingType, userRole, onEndMeeting }) => 
                   ref={remoteVideoRef}
                   autoPlay
                   playsInline
-                  className="w-full h-full object-cover"
+                  style={{ 
+                    width: '100%', 
+                    height: '100%', 
+                    objectFit: 'cover' 
+                  }}
+                  onLoadedMetadata={() => {
+                    console.log('Remote video metadata loaded');
+                    console.log('Remote video dimensions:', 
+                      remoteVideoRef.current?.videoWidth, 
+                      'x', 
+                      remoteVideoRef.current?.videoHeight
+                    );
+                  }}
+                  onError={(e) => {
+                    console.error('Remote video error:', e);
+                  }}
                 />
               ) : (
                 <div className="flex items-center justify-center h-full text-white">
@@ -530,6 +621,17 @@ const MeetingRoom = ({ meetingRoomId, meetingType, userRole, onEndMeeting }) => 
           </button>
         </div>
       </div>
+
+      {/* Debug info (remove in production) */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="bg-gray-700 p-2 text-white text-xs">
+          <div className="flex justify-between">
+            <span>Local: {localStream ? 'Ready' : 'Not ready'}</span>
+            <span>Remote: {remoteStream ? 'Ready' : 'Not ready'}</span>
+            <span>Connected: {isConnected ? 'Yes' : 'No'}</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
