@@ -232,9 +232,24 @@ const MeetingRoom = ({ meetingRoomId, meetingType, userRole, onEndMeeting }) => 
     });
     
     // Handle remote stream
+    // Add this in the ontrack event handler
     pc.ontrack = (event) => {
       console.log('Received remote stream');
       const [stream] = event.streams;
+      // In the remote stream handler for audio meetings
+      if (meetingType === 'AUDIO' && stream) {
+        const audio = new Audio();
+        audio.srcObject = stream;
+        audio.autoplay = true;
+        audio.volume = 1.0;
+      }
+      console.log('Remote stream audio tracks:', stream.getAudioTracks().map(t => ({
+        id: t.id,
+        enabled: t.enabled,
+        muted: t.muted,
+        readyState: t.readyState
+      })));
+      
       setRemoteStream(stream);
       if (remoteVideoRef.current) {
         remoteVideoRef.current.srcObject = stream;
