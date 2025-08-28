@@ -20,9 +20,9 @@ const UserMeetingRequest = ({ counselors = [] }) => {
     setMessage('');
 
     try {
-        console.log(selectedCounselor);
-        console.log(meetingType);
-      await meetingApi.createMeetingRequest(parseInt(selectedCounselor)+30, meetingType);
+      console.log('Selected counselor:', selectedCounselor);
+      console.log('Meeting type:', meetingType);
+      await meetingApi.createMeetingRequest(parseInt(selectedCounselor), meetingType);
       setMessage('Meeting request sent successfully!');
       setSelectedCounselor('');
       setTimeout(() => setMessage(''), 3000);

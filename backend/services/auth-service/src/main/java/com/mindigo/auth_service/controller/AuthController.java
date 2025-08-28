@@ -19,6 +19,8 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/auth")
@@ -290,6 +292,18 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponseClass.<Void>builder()
                 .success(true)
                 .message(result)
+                .build());
+    }
+
+    @GetMapping("/counselors")
+    @Operation(summary = "Get list of approved counselors")
+    @ApiResponse(responseCode = "200", description = "List of approved counselors retrieved successfully")
+    public ResponseEntity<ApiResponseClass<List<UserProfileResponse>>> getApprovedCounselors() {
+        List<UserProfileResponse> counselors = authenticationService.getApprovedCounselors();
+        return ResponseEntity.ok(ApiResponseClass.<List<UserProfileResponse>>builder()
+                .success(true)
+                .data(counselors)
+                .message("Approved counselors retrieved successfully")
                 .build());
     }
 }

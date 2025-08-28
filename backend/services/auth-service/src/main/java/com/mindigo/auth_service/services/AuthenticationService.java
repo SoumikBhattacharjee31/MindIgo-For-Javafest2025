@@ -30,8 +30,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -889,5 +891,15 @@ public class AuthenticationService {
             log.error("Failed to update counselor status for email: {}", email, e);
             throw e;
         }
+    }
+
+    public List<UserProfileResponse> getApprovedCounselors() {
+        log.info("Fetching list of approved counselors");
+
+        List<User> counselors = userRepository.findByRoleAndCounselorStatus(Role.COUNSELOR, CounselorStatus.APPROVED);
+
+        return counselors.stream()
+                .map(UserProfileResponse::fromUser)
+                .collect(Collectors.toList());
     }
 }

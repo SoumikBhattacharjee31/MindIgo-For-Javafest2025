@@ -26,7 +26,7 @@ public class DataSeeder {
     public CommandLineRunner initAdminUser(CounselorSettingsRepository counselorSettingsRepository) {
         return args -> {
             for(long i=1;i<=10;i++){
-                makeUser(counselorSettingsRepository,30+i*3);
+                makeUser(counselorSettingsRepository,i*3);
             }
         };
     }

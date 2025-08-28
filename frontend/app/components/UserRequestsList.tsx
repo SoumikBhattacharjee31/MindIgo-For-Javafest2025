@@ -1,10 +1,12 @@
 "use client"
 import React, { useState, useEffect } from 'react';
 import { meetingApi } from '../api/meetingService';
+import MeetingLauncher from './MeetingLauncher';
 
 const UserRequestsList = () => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedMeeting, setSelectedMeeting] = useState(null);
 
   useEffect(() => {
     fetchUserRequests();
@@ -42,10 +44,13 @@ const UserRequestsList = () => {
     return new Date(dateString).toLocaleString();
   };
 
-  const handleJoinMeeting = (meetingRoomId) => {
-    // Implement your meeting room logic here
-    alert(`Joining meeting room: ${meetingRoomId}`);
-    // You could redirect to a meeting room URL or open a video calling component
+  const handleJoinMeeting = (request) => {
+    setSelectedMeeting(request);
+  };
+
+  const closeMeetingLauncher = () => {
+    setSelectedMeeting(null);
+    fetchUserRequests(); // Refresh the list after meeting ends
   };
 
   if (loading) {
@@ -57,64 +62,75 @@ const UserRequestsList = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-6">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">My Meeting Requests</h2>
-      
-      {requests.length === 0 ? (
-        <div className="text-center py-8">
-          <p className="text-gray-500">No meeting requests found</p>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {requests.map((request) => (
-            <div key={request.id} className="border rounded-lg p-4 bg-gray-50">
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <div className="flex items-center space-x-4 mb-2">
-                    <h3 className="font-semibold text-lg text-gray-800">
-                      {request.counselorUsername || `Counselor ${request.counselorId}`}
-                    </h3>
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                      request.meetingType === 'VIDEO' 
-                        ? 'bg-purple-100 text-purple-800'
-                        : 'bg-blue-100 text-blue-800'
-                    }`}>
-                      {request.meetingType} Meeting
-                    </span>
-                    {getStatusBadge(request.status)}
-                  </div>
-                  <p className="text-gray-600 mb-2">
-                    Requested: {formatDateTime(request.createdAt)}
-                  </p>
-                  {request.updatedAt && request.updatedAt !== request.createdAt && (
-                    <p className="text-gray-600 mb-2">
-                      Updated: {formatDateTime(request.updatedAt)}
-                    </p>
-                  )}
-                  {request.rejectionReason && (
-                    <div className="bg-red-50 border border-red-200 rounded p-3 mt-2">
-                      <p className="text-red-800 font-medium">Rejection Reason:</p>
-                      <p className="text-red-700">{request.rejectionReason}</p>
+    <>
+      <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-6">
+        <h2 className="text-2xl font-bold text-gray-800 mb-6">My Meeting Requests</h2>
+        
+        {requests.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-gray-500">No meeting requests found</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {requests.map((request) => (
+              <div key={request.id} className="border rounded-lg p-4 bg-gray-50">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-4 mb-2">
+                      <h3 className="font-semibold text-lg text-gray-800">
+                        {request.counselorUsername || `Counselor ${request.counselorId}`}
+                      </h3>
+                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                        request.meetingType === 'VIDEO' 
+                          ? 'bg-purple-100 text-purple-800'
+                          : 'bg-blue-100 text-blue-800'
+                      }`}>
+                        {request.meetingType} Meeting
+                      </span>
+                      {getStatusBadge(request.status)}
                     </div>
-                  )}
-                </div>
-                
-                <div className="flex space-x-2">
-                  {request.status === 'ACCEPTED' && request.meetingRoomId && (
-                    <button
-                      onClick={() => handleJoinMeeting(request.meetingRoomId)}
-                      className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition duration-200"
-                    >
-                      Join Meeting
-                    </button>
-                  )}
+                    <p className="text-gray-600 mb-2">
+                      Requested: {formatDateTime(request.createdAt)}
+                    </p>
+                    {request.updatedAt && request.updatedAt !== request.createdAt && (
+                      <p className="text-gray-600 mb-2">
+                        Updated: {formatDateTime(request.updatedAt)}
+                      </p>
+                    )}
+                    {request.rejectionReason && (
+                      <div className="bg-red-50 border border-red-200 rounded p-3 mt-2">
+                        <p className="text-red-800 font-medium">Rejection Reason:</p>
+                        <p className="text-red-700">{request.rejectionReason}</p>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="flex space-x-2">
+                    {request.status === 'ACCEPTED' && request.meetingRoomId && (
+                      <button
+                        onClick={() => handleJoinMeeting(request)}
+                        className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition duration-200"
+                      >
+                        Join Meeting
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Meeting Launcher Modal */}
+      {selectedMeeting && (
+        <MeetingLauncher
+          meetingRequest={selectedMeeting}
+          userRole="USER"
+          onClose={closeMeetingLauncher}
+        />
       )}
-    </div>
+    </>
   );
 };
 
