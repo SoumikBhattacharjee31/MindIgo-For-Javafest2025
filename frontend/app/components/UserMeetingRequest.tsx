@@ -20,8 +20,8 @@ const UserMeetingRequest = ({ counselors = [] }) => {
     setMessage('');
 
     try {
-        console.log(selectedCounselor);
-        console.log(meetingType);
+      console.log('Selected counselor:', selectedCounselor);
+      console.log('Meeting type:', meetingType);
       await meetingApi.createMeetingRequest(parseInt(selectedCounselor), meetingType);
       setMessage('Meeting request sent successfully!');
       setSelectedCounselor('');

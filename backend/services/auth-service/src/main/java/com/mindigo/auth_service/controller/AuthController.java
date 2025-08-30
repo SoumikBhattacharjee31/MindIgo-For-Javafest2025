@@ -19,6 +19,8 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/auth")
@@ -202,6 +204,20 @@ public class AuthController {
                 .build());
     }
 
+    @GetMapping("/profilebyid/{id}")
+    @Operation(summary = "Get user profile by ID")
+    public ResponseEntity<ApiResponseClass<UserProfileResponse>> getProfileFromId(
+            @PathVariable("id") Integer userId) {
+
+        UserProfileResponse profile = authenticationService.getUserProfileById(userId);System.out.println("==================================================");
+
+        return ResponseEntity.ok(ApiResponseClass.<UserProfileResponse>builder()
+                .success(true)
+                .data(profile)
+                .message("Profile retrieved successfully")
+                .build());
+    }
+
     // Add this endpoint to your existing AuthController class
 
     @PostMapping(value = "/register-counselor", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -276,6 +292,18 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponseClass.<Void>builder()
                 .success(true)
                 .message(result)
+                .build());
+    }
+
+    @GetMapping("/counselors")
+    @Operation(summary = "Get list of approved counselors")
+    @ApiResponse(responseCode = "200", description = "List of approved counselors retrieved successfully")
+    public ResponseEntity<ApiResponseClass<List<UserProfileResponse>>> getApprovedCounselors() {
+        List<UserProfileResponse> counselors = authenticationService.getApprovedCounselors();
+        return ResponseEntity.ok(ApiResponseClass.<List<UserProfileResponse>>builder()
+                .success(true)
+                .data(counselors)
+                .message("Approved counselors retrieved successfully")
                 .build());
     }
 }

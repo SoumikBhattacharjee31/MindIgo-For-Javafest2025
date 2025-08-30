@@ -12,7 +12,7 @@ interface GameProps {
 const Game: React.FC<GameProps> = ({ setCurPage, sound, arr , setArr}) => {
   
   return (
-    <div className="flex items-center justify-center min-h-screen">
+    <div className="flex items-center justify-center">
       <BackButton setCurPage={setCurPage} sound={sound}/>
       <ButtonTable sound={sound} arr={arr} setArr={setArr}/>
     </div>

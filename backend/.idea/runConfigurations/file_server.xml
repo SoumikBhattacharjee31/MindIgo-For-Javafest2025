@@ -1,0 +1,12 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="file-server" type="Application" factoryName="Application">
+    <option name="envFilePaths">
+      <option value="$PROJECT_DIR$/.env" />
+    </option>
+    <option name="MAIN_CLASS_NAME" value="com.mindigo.file_server.FileServerApplication" />
+    <module name="file-server" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

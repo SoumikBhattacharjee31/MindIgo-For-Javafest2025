@@ -2,26 +2,46 @@
 import React, { useState, useEffect } from 'react';
 import UserMeetingRequest from '../../../components/UserMeetingRequest';
 import UserRequestsList from '../../../components/UserRequestsList';
+import { authApi } from '../../../api/authService';
 
 const UserMeetingDashboard = () => {
   const [activeTab, setActiveTab] = useState('request');
   const [counselors, setCounselors] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch counselors from your auth service
     fetchCounselors();
   }, []);
 
   const fetchCounselors = async () => {
-    // This would be an API call to get all counselors
-    // For now, using dummy data - replace with actual API call
-    const dummyCounselors = [
-      { id: 1, username: 'Dr. Smith', email: 'dr.smith@example.com' },
-      { id: 2, username: 'Dr. Johnson', email: 'dr.johnson@example.com' },
-      { id: 3, username: 'Dr. Brown', email: 'dr.brown@example.com' },
-    ];
-    setCounselors(dummyCounselors);
+    try {
+      // Fetch counselors from auth service
+      const response = await authApi.getCounselors();
+      setCounselors(response.data.data || []);
+    } catch (error) {
+      console.error('Error fetching counselors:', error);
+      // Use dummy data if API fails - replace this with proper error handling
+      const dummyCounselors = [
+        { id: 31, username: 'Dr. Smith', email: 'dr.smith@example.com' },
+        { id: 32, username: 'Dr. Johnson', email: 'dr.johnson@example.com' },
+        { id: 33, username: 'Dr. Brown', email: 'dr.brown@example.com' },
+      ];
+      setCounselors(dummyCounselors);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-100 py-8">

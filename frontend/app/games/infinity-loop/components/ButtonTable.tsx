@@ -597,13 +597,16 @@ const ButtonTable: React.FC<ButtonTableProps> = ({ sound, arr, setArr }) => {
     <>
       {won && <Win />}
       {!won && (
-        <div className="flex justify-center items-center h-screen">
-          <table className="table-auto border-collapse">
+        <div className="flex justify-center items-center">
+          <table className="table-fixed border-collapse w-[400px] h-[400px]">
             <tbody>
               {arr.map((row, rowIndex) => (
                 <tr key={rowIndex}>
                   {row.map((val, colIndex) => (
-                    <td key={colIndex} className="p-0 aspect-square">
+                    <td
+                      key={colIndex}
+                      className="p-0 w-[100px] h-[100px] align-middle text-center"
+                    >
                       <RotatingButton
                         buttonType={val[0]}
                         state={val[1]}
