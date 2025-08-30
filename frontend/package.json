@@ -14,6 +14,7 @@
     "cookies-next": "^6.1.0",
     "framer-motion": "^12.23.12",
     "js-cookie": "^3.0.5",
+    "jszip": "^3.10.1",
     "lucide-react": "^0.540.0",
     "next": "15.4.5",
     "peerjs": "^1.5.5",
