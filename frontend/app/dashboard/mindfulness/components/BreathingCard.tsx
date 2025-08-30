@@ -49,7 +49,7 @@ const BreathingCard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-500 via-blue-500 to-indigo-500  text-white p-4">
+    <div className="min-h-screen bg-gradient-to-br from-purple-500 via-blue-500 to-indigo-500  text-white p-4 rounded-b-2xl shadow-md">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center space-x-4">
