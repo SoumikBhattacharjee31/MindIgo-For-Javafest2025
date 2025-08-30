@@ -1,16 +1,90 @@
-const BreathingCard = () => (
-  <div className="bg-gradient-to-br from-purple-50 to-violet-100 p-8 rounded-xl shadow-lg border border-purple-200">
-    <h2 className="text-2xl font-bold text-violet-800 mb-4">Breathing Exercise</h2>
-    <p className="text-violet-600 mb-6">Control your breath, control your mind.</p>
-    <div className="flex flex-col items-center space-y-4">
-      <div className="w-24 h-24 bg-violet-200 rounded-full flex items-center justify-center">
-        <div className="w-16 h-16 bg-violet-400 rounded-full animate-pulse"></div>
+'use client'
+import { useState } from 'react';
+import { Info } from 'lucide-react';
+import { BreathingExercise, LastSession } from '../dataTypes';
+
+import BreathingExerciseCard from './breathing-components/BreathingExerciseCard';
+import SettingsModal from './breathing-components/SettingsModal';
+import MindigoRecommendation from './breathing-components/MindigoRecommedation';
+import LastSessionCard from './breathing-components/LastSessionCard';
+import BreathingSession from './breathing-components/BreathingSession';
+import breathingExercisesData from '../../mock/breathing_exercise_data.json';
+
+const BreathingCard = () => {
+  const [exercises, setExercises] = useState<BreathingExercise[]>(breathingExercisesData as BreathingExercise[]);
+  const [selectedExercise, setSelectedExercise] = useState<BreathingExercise | null>(null);
+  const [settingsExercise, setSettingsExercise] = useState<BreathingExercise | null>(null);
+  const [showSettings, setShowSettings] = useState<boolean>(false);
+  const [showSession, setShowSession] = useState<boolean>(false);
+  const [lastSession, setLastSession] = useState<LastSession | null>(null);
+
+  const handleCardClick = (exercise: BreathingExercise) => {
+    setSelectedExercise(exercise);
+    setShowSession(true);
+  };
+
+  const handleSettingsClick = (exercise: BreathingExercise) => {
+    console.table(exercise)
+    setSettingsExercise(exercise);
+    setShowSettings(true);
+  };
+
+  const handleSettingsSave = (updatedExercise: BreathingExercise) => {
+    setExercises(prev =>
+      prev.map(ex => ex.title === updatedExercise.title ? updatedExercise : ex)
+    );
+  };
+
+  const handleBackFromSession = () => {
+    setShowSession(false);
+    setSelectedExercise(null);
+  };
+
+  const handleSessionComplete = (session: LastSession) => {
+    setLastSession(session);
+  };
+
+  if (showSession && selectedExercise) {
+    return <BreathingSession exercise={selectedExercise} onBack={handleBackFromSession} onSessionComplete={handleSessionComplete} />;
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-500 via-blue-500 to-indigo-500  text-white p-4">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center space-x-4">
+          <h1 className="text-xl font-medium">Choose a breathing exercise</h1>
+        </div>
+        <Info className="w-6 h-6" />
       </div>
-      <button className="bg-violet-600 text-white px-6 py-2 rounded-full hover:bg-violet-700 transition-colors">
-        Start Breathing
-      </button>
+
+      {/* 3-Column Layout */}
+      <div className="grid grid-cols-2 gap-6">
+        <div className="space-y-6">
+          <MindigoRecommendation />
+          <LastSessionCard session={lastSession} />
+        </div>
+        <div className='grid grid-cols-2 gap-6'>
+          {exercises.map((exercise, index) => (
+            <BreathingExerciseCard
+              key={index}
+              exercise={exercise}
+              onCardClick={handleCardClick}
+              onSettingsClick={handleSettingsClick}
+            />
+          ))}
+        </div>
+
+      </div>
+
+      <SettingsModal
+        exercise={settingsExercise}
+        isOpen={showSettings}
+        onClose={() => setShowSettings(false)}
+        onSave={handleSettingsSave}
+      />
     </div>
-  </div>
-);
+  );
+};
 
 export default BreathingCard;
