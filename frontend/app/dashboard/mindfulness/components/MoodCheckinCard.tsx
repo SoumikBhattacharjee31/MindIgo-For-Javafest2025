@@ -155,8 +155,10 @@ const MoodCheckinCard = () => {
     }, 200);
   };
 
+  // TODO: maybe backdrop is messing with tooltip in sidebar
+  
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-300 via-blue-300 to-indigo-300 p-6 flex items-center justify-center relative rounded-2xl">
+    <div className="min-h-screen bg-gradient-to-br from-purple-300 via-blue-300 to-indigo-300 p-6 flex items-center justify-center relative rounded-b-2xl">
       {loading ? (
         <div className="bg-white/10 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-white/2 w-full h-full relative overflow-hidden flex items-center justify-center">
           <div className="text-white text-lg">Loading your mood data...</div>

@@ -24,12 +24,12 @@ const Profile = () => {
   ]);
 
   // Demo audio URL (replace with actual link when available)
-  const demoAudioUrl = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3";
+  const demoAudioUrl = null;//"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3";
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-gray-100">
+    <div className="flex h-screen w-full overflow-hidden bg-gradient-to-br from-purple-300 via-blue-300 to-indigo-300">
       {/* Left: Profile Card (40% width) */}
-      <div className="w-[40%] p-8 bg-white shadow-lg overflow-y-auto">
+      <div className="w-[40%] p-8 shadow-lg overflow-y-auto">
         <h2 className="text-2xl font-bold mb-4 text-blue-600">Profile</h2>
         <div className="flex flex-col items-center">
           <Image
@@ -55,14 +55,14 @@ const Profile = () => {
       {/* Right: Last Heard Story (top) and Recent Activities (bottom) */}
       <div className="w-[60%] flex flex-col">
         {/* Top Right: Last Heard Story */}
-        <div className="h-[50%] p-8 bg-white shadow-lg">
+        {demoAudioUrl && (<div className="h-[50%] p-8 bg-white shadow-lg">
           <h2 className="text-2xl font-bold mb-4 text-blue-600">Last Heard Story</h2>
           <p className="mb-4 text-gray-600">Demo audio story (replace with actual link)</p>
           <audio controls className="w-full">
             <source src={demoAudioUrl} type="audio/mpeg" />
             Your browser does not support the audio element.
           </audio>
-        </div>
+        </div>)}
 
         {/* Bottom Right: Scrollable Recent Activities */}
         <div className="h-[50%] p-8 bg-white shadow-lg overflow-y-auto">
