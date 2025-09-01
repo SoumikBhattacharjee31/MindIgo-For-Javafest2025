@@ -32,6 +32,13 @@ elevenlabs:
   voice:
     fileName: ${ELEVENLABS_VOICE_FILENAME:voices.json}
 
+spring:
+  ai:
+    openai:
+      api-key: ${OPEN_AI_API_KEY}
+      chat:
+        options:
+          model: gpt-4o
 rest:
   template:
     connection-timeout: 15000

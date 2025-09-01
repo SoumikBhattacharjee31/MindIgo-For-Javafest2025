@@ -2,10 +2,7 @@ package com.mindigo.content_service.models;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Data
 @Builder
@@ -22,7 +19,7 @@ public class BreathingTask {
     @JoinColumn(name = "cycle_id", referencedColumnName = "id")
     private Cycle cycle;
 
-    @NotNull
+    @Column(name = "task_order", nullable = false)
     private Integer order;
 
     @NotNull

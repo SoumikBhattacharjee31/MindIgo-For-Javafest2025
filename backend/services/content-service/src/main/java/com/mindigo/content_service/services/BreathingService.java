@@ -23,8 +23,6 @@ public class BreathingService {
     private final UserSpecificExerciseRepository userSpecificExerciseRepository;
     private final BreathingSessionRepository breathingSessionRepository;
 
-    /* ---------- Private Mapping Helpers ---------- */
-
     private BreathingTaskResponse mapToBreathingTaskResponse(BreathingTask task) {
         return BreathingTaskResponse.builder()
                 .duration(task.getDuration())
@@ -73,8 +71,6 @@ public class BreathingService {
                 .map(task -> String.valueOf(task.getDuration()))
                 .collect(Collectors.joining("-"));
     }
-
-    /* ---------- Validation Helpers ---------- */
 
     private static List<CustomTaskRequest> validateCustomTasks(CustomCycleRequest request) {
         List<CustomTaskRequest> tasks = request.getTask();
@@ -125,8 +121,6 @@ public class BreathingService {
         }
     }
 
-    /* ---------- Public Service Methods ---------- */
-
     @Transactional
     public List<BreathingResponse> getBreathingOptions(Long userId) {
         List<UserSpecificExercise> userExercises = userSpecificExerciseRepository.findAllByUserId(userId);
@@ -171,21 +165,27 @@ public class BreathingService {
                 .duration(cycleRequest.getDuration())
                 .build();
 
-        List<CustomTaskRequest> tasks = validateCustomTasks(cycleRequest);
+        if (exercise.getIsCustomizable()) {
+            List<CustomTaskRequest> tasks = validateCustomTasks(cycleRequest);
+            Integer totalDuration = tasks.stream().mapToInt(CustomTaskRequest::getDuration).sum();
 
-        if (Boolean.TRUE.equals(exercise.getIsCustomizable())) {
+            if(!totalDuration.equals(cycleRequest.getDuration()))
+                throw new InvalidRequestException("Sum of all tasks should add upto cycle duration" + request.getId());
+
             List<BreathingTask> newTasks = tasks.stream()
                     .map(task -> BreathingTask.builder()
                             .duration(task.getDuration())
                             .type(BreathingType.valueOf(task.getType().toUpperCase()))
+                            .order(task.getOrder())
                             .build())
                     .toList();
 
-            newCycle.setBreathingTasks(new HashSet<>(newTasks));
+            newCycle.setBreathingTasks(newTasks);
             exercise.setPattern(buildPattern(newTasks));
         }
 
         exercise.setCycle(newCycle);
+        exercise.setIsCustom(true);
         breathingExerciseRepository.save(exercise);
 
         return buildResponse(exercise);

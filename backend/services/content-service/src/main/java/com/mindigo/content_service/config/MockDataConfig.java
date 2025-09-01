@@ -10,7 +10,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.util.List;
-import java.util.Set;
 
 @Configuration
 public class MockDataConfig {
@@ -32,7 +31,7 @@ public class MockDataConfig {
                     .duration(16)
                     .build();
 
-            Set<BreathingTask> boxTasks = Set.of(
+            List<BreathingTask> boxTasks = List.of(
                     BreathingTask.builder().order(1).type(BreathingType.INHALE).duration(4).cycle(boxCycle).build(),
                     BreathingTask.builder().order(2).type(BreathingType.HOLD).duration(4).cycle(boxCycle).build(),
                     BreathingTask.builder().order(3).type(BreathingType.EXHALE).duration(4).cycle(boxCycle).build(),
@@ -54,7 +53,7 @@ public class MockDataConfig {
                     .duration(19)
                     .build();
 
-            Set<BreathingTask> longExhaleTasks = Set.of(
+            List<BreathingTask> longExhaleTasks = List.of(
                     BreathingTask.builder().order(1).type(BreathingType.INHALE).duration(4).cycle(longExhaleCycle).build(),
                     BreathingTask.builder().order(2).type(BreathingType.HOLD).duration(7).cycle(longExhaleCycle).build(),
                     BreathingTask.builder().order(3).type(BreathingType.EXHALE).duration(8).cycle(longExhaleCycle).build()
@@ -75,7 +74,7 @@ public class MockDataConfig {
                     .duration(10)
                     .build();
 
-            Set<BreathingTask> equalTasks = Set.of(
+            List<BreathingTask> equalTasks = List.of(
                     BreathingTask.builder().order(1).type(BreathingType.INHALE).duration(5).cycle(equalCycle).build(),
                     BreathingTask.builder().order(2).type(BreathingType.HOLD).duration(0).cycle(equalCycle).build(),
                     BreathingTask.builder().order(3).type(BreathingType.EXHALE).duration(5).cycle(equalCycle).build()
@@ -96,7 +95,7 @@ public class MockDataConfig {
                     .duration(10)
                     .build();
 
-            Set<BreathingTask> customTasks = Set.of(
+            List<BreathingTask> customTasks = List.of(
                     BreathingTask.builder().order(1).type(BreathingType.INHALE).duration(3).cycle(customCycle).build(),
                     BreathingTask.builder().order(2).type(BreathingType.HOLD).duration(2).cycle(customCycle).build(),
                     BreathingTask.builder().order(3).type(BreathingType.EXHALE).duration(5).cycle(customCycle).build()

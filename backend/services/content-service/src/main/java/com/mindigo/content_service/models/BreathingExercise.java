@@ -9,7 +9,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Set;
+import java.util.List;
 
 @Data
 @Builder
@@ -35,17 +35,17 @@ public class BreathingExercise {
     private Integer duration; // minutes
 
     @Builder.Default
-    private Boolean isCustom = false;
+    private Boolean isCustom = false; // this is false indicates that default exercises for all users
 
-    private Boolean isCustomizable;
+    private Boolean isCustomizable; // if true then the breathing tasks can be changed, otherwise only cycle duration changeable
 
     @OneToOne(cascade = CascadeType.ALL,orphanRemoval = true,fetch = FetchType.EAGER)
     @JoinColumn(name = "cycle_id", referencedColumnName = "id")
     private Cycle cycle;
 
     @OneToMany(mappedBy = "exercise", cascade = CascadeType.ALL,orphanRemoval = true,fetch = FetchType.LAZY)
-    private Set<UserSpecificExercise> userSpecificExercise;
+    private List<UserSpecificExercise> userSpecificExercise;
 
     @OneToMany(mappedBy = "exercise", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private Set<BreathingSession> breathingSession;
+    private List<BreathingSession> breathingSession;
 }
