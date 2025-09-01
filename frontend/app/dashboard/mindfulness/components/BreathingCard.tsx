@@ -24,7 +24,6 @@ const BreathingCard = () => {
   };
 
   const handleSettingsClick = (exercise: BreathingExercise) => {
-    console.table(exercise)
     setSettingsExercise(exercise);
     setShowSettings(true);
   };
@@ -58,7 +57,6 @@ const BreathingCard = () => {
         <Info className="w-6 h-6" />
       </div>
 
-      {/* 3-Column Layout */}
       <div className="grid grid-cols-2 gap-6">
         <div className="space-y-6">
           <MindigoRecommendation />

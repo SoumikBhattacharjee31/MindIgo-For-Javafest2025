@@ -16,8 +16,8 @@ import {
   convertEntryToMoodRequest 
 } from "../api/moodApi";
 
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+// import { ToastContainer } from 'react-toastify';
+// import 'react-toastify/dist/ReactToastify.css';
 
 import { successToast, errorToast } from '@/util/toastHelper';
 
@@ -236,7 +236,7 @@ const MoodCheckinCard = () => {
           </div>
         </div>
       )}
-      <ToastContainer />
+      {/* <ToastContainer /> */}
     </div>
   );
 };

@@ -13,8 +13,8 @@ import ForgotPasswordLink from "./components/ForgotPasswordLink";
 import TitleWithGifIcon from "./components/TitleWithGifIcon";
 import MeditationGif from "./components/MeditationGif";
 import axios from 'axios';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+// import { ToastContainer } from 'react-toastify';
+// import 'react-toastify/dist/ReactToastify.css';
 import { successToast, errorToast, warningToast } from '../../util/toastHelper';
 import useStore from "@/app/store/store";
 
@@ -129,7 +129,7 @@ const Login = () => {
           </div>
         </div>
       </div>
-      <ToastContainer />
+      {/* <ToastContainer /> */}
     </div>
   );
 };
