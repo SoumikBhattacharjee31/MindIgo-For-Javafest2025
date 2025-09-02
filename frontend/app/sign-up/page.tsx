@@ -16,8 +16,8 @@ import DOBInputField from "./components/DOBInputField";
 import GenderInputField from "./components/GenderInputField";
 import ProfilePicInputField from "./components/ProfilePicInputField";
 import Loader from "./components/Loader";
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+// import { ToastContainer } from 'react-toastify';
+// import 'react-toastify/dist/ReactToastify.css';
 import { successToast, errorToast, warningToast } from '../../util/toastHelper'
 import axios from 'axios';
 import UserTypeSelector from "../components/UserTypeSelector";
@@ -428,7 +428,7 @@ const SignUp = () => {
           animation: slide-in-left 0.5s ease-out;
         }
       `}</style>
-      <ToastContainer />
+      {/* <ToastContainer /> */}
     </div>
   );
 };

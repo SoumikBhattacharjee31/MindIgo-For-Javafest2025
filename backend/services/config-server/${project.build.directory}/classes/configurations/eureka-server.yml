@@ -1,0 +1,16 @@
+eureka:
+  instance:
+    hostname: ${EUREKA_HOSTNAME:localhost}
+    prefer-ip-address: true
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+
+server:
+  port: ${EUREKA_SERVER_PORT:8761}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health

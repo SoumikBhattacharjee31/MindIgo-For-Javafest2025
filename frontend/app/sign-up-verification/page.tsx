@@ -4,9 +4,9 @@ import { useRouter } from 'next/navigation';
 import axios from "axios";
 import OtpInputField from "./components/OtpInputField";
 
-import { ToastContainer } from 'react-toastify';
+// import { ToastContainer } from 'react-toastify';
+// import 'react-toastify/dist/ReactToastify.css';
 import { successToast, errorToast, warningToast, infoToast } from '../../util/toastHelper'
-import 'react-toastify/dist/ReactToastify.css';
 
 const length = 6;
 const RESEND_OTP_TIMEOUT = 30; // 30 seconds (in seconds, not milliseconds)
@@ -195,7 +195,7 @@ const SignUpVerification = () => {
           </div>
         </div>
       </div>
-      <ToastContainer />
+      {/* <ToastContainer /> */}
     </div>
   );
 };

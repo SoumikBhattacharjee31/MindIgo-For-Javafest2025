@@ -94,15 +94,11 @@ const BreathingExerciseCard = ({
     className={`${getGradient(exercise.title)} w-60 h-60 p-6 rounded-3xl shadow-xl relative overflow-hidden group cursor-pointer hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 border border-white/10`}
     onClick={() => onCardClick(exercise)}
   >
-    {/* Background decoration */}
     <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
     
-    {/* Overlapping circles decoration */}
     {getOverlappingCircles(exercise.title)}
     
-    {/* Content */}
     <div className="relative z-10 h-full flex flex-col">
-      {/* Title and Pattern */}
       <div className="mb-auto">
         <h3 className="text-2xl font-bold text-white mb-2 tracking-tight">{exercise.title}</h3>
         <div className="inline-block bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full mb-3">

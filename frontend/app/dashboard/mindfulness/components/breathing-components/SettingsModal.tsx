@@ -44,12 +44,12 @@ const SettingsModal = ({ exercise, isOpen, onClose, onSave }: SettingsModalProps
       { order: 3, type: 'exhale', duration: exhale },
     ]
 
-    const cycleDuration = inhale + hold + exhale
-
+    const cycleDuration = inhale + hold + exhale + holdAfterExhale
+    const extra = holdAfterExhale > 0 ? `-${holdAfterExhale}` : '';
     const updatedExercise: BreathingExercise = {
       ...exercise,
       duration,
-      pattern: `${inhale}-${hold}-${exhale}`,
+      pattern: `${inhale}-${hold}-${exhale}${extra}`,
       cycle: {
         duration: cycleDuration,
         task: newTasks

@@ -47,11 +47,11 @@ export interface BreathingExercise{
 }
 
 export interface LastSession {
+  exerciseId: number;
   exerciseTitle: string;
   completedCycles: number;
   totalCycles: number;
   date: string;
   duration: number;
-  gradient: string;
 }
 

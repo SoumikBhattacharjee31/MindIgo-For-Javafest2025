@@ -1,0 +1,34 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/${DB_NAME:Mindigo}?currentSchema=routine_service
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        default_schema: routine_service
+    database: postgresql
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka/}
+  instance:
+    prefer-ip-address: true
+    hostname: ${EUREKA_HOSTNAME:localhost}
+    instance-id: ${spring.application.name}:${random.uuid}
+
+server:
+  port: ${ROUTINE_SERVICE_PORT:8087}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
