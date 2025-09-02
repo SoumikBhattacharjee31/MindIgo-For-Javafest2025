@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 
 import ProgressBar from './ProgressBar';
 import BreathingSessionHeader from './BreathingSessionHeader';
@@ -28,91 +28,120 @@ const BreathingSession = ({
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [sessionEnded, setSessionEnded] = useState<boolean>(false);
   const [musicEnabled, setMusicEnabled] = useState<boolean>(true);
+  
+  // Track if session has been saved to prevent duplicate saves
+  const sessionSavedRef = useRef<boolean>(false);
 
-  const phases = exercise.cycle.task;
-  const totalCycleTime = exercise.cycle.duration;
-  const totalCycles = Math.ceil((exercise.duration * 60) / totalCycleTime);
-  const targetEndTime = exercise.duration * 60;
+  // Memoize calculated values to avoid recalculation on every render
+  const { phases, totalCycleTime, totalCycles, targetEndTime } = useMemo(() => ({
+    phases: exercise.cycle.task,
+    totalCycleTime: exercise.cycle.duration,
+    totalCycles: Math.ceil((exercise.duration * 60) / exercise.cycle.duration),
+    targetEndTime: exercise.duration * 60
+  }), [exercise]);
 
+  // Memoize current phase to avoid array access on every render
+  const currentPhase = useMemo(() => phases[phaseIndex], [phases, phaseIndex]);
+  
+  // Memoize progress calculation
+  const progress = useMemo(() => (totalTime / targetEndTime) * 100, [totalTime, targetEndTime]);
 
+  // Create session object - memoized to avoid recreation
+  const createSession = useCallback((completedCycles: number): LastSession => ({
+    exerciseId: exercise.id,
+    exerciseTitle: exercise.title,
+    completedCycles,
+    totalCycles,
+    date: new Date().toISOString().split('T')[0],
+    duration: Math.ceil(totalTime / 60)
+  }), [exercise.id, exercise.title, totalCycles, totalTime]);
+
+  // Save session helper
+  const saveSession = useCallback((completedCycles: number, showToast = false) => {
+    if (sessionSavedRef.current) return; // Prevent duplicate saves
+    
+    sessionSavedRef.current = true;
+    const session = createSession(completedCycles);
+    onSessionComplete(session);
+    
+    if (showToast) {
+      infoToast(`Session ended. You completed ${completedCycles} ${completedCycles === 1 ? 'cycle' : 'cycles'}.`);
+    }
+  }, [createSession, onSessionComplete]);
+
+  // Timer effect with optimized dependencies
   useEffect(() => {
-    let timer: NodeJS.Timeout;
+    if (!isPlaying || timeLeft <= 0 || sessionEnded) return;
 
-    if (isPlaying && timeLeft > 0 && !sessionEnded) {
-      timer = setInterval(() => {
-        setTimeLeft((t) => t - 1);
-        setTotalTime((t) => t + 1);
-      }, 1000);
-    } else if (isPlaying && timeLeft === 0 && !sessionEnded) {
-      const next = (phaseIndex + 1) % phases.length;
+    const timer = setInterval(() => {
+      setTimeLeft((t) => t - 1);
+      setTotalTime((t) => t + 1);
+    }, 1000);
 
-      if (next === 0) {
-        const newCount = cycleCount + 1;
-        setCycleCount(newCount);
-        const session: LastSession = {
-          exerciseId: exercise.id,
-          exerciseTitle: exercise.title,
-          completedCycles: newCount,
-          totalCycles,
-          date: new Date().toLocaleDateString(),
-          duration: Math.ceil(totalTime / 60)
-        };
-        onSessionComplete(session);
+    return () => clearInterval(timer);
+  }, [isPlaying, timeLeft, sessionEnded]);
+
+  // Phase transition effect
+  useEffect(() => {
+    if (isPlaying && timeLeft === 0 && !sessionEnded) {
+      const nextPhaseIndex = (phaseIndex + 1) % phases.length;
+
+      if (nextPhaseIndex === 0) {
+        const newCycleCount = cycleCount + 1;
+        setCycleCount(newCycleCount);
+        
+        // Check if session should end
         if (totalTime >= targetEndTime) {
           setSessionEnded(true);
           setIsPlaying(false);
+          saveSession(newCycleCount);
           return;
         }
       }
 
-      setPhaseIndex(next);
-      setTimeLeft(phases[next].duration);
+      setPhaseIndex(nextPhaseIndex);
+      setTimeLeft(phases[nextPhaseIndex].duration);
     }
-
-    return () => clearInterval(timer);
   }, [
-    isPlaying, timeLeft, phaseIndex, phases,
-    cycleCount, totalCycles, exercise, onSessionComplete,
-    totalTime, targetEndTime, sessionEnded, musicEnabled
+    isPlaying, timeLeft, sessionEnded, phaseIndex, phases,
+    cycleCount, totalTime, targetEndTime, saveSession
   ]);
 
-  const togglePlayPause = () => {
-    setIsPlaying(!isPlaying);
-  };
+  const togglePlayPause = useCallback(() => {
+    setIsPlaying(prev => !prev);
+  }, []);
 
-  const reset = () => {
+  const reset = useCallback(() => {
     setIsPlaying(false);
     setPhaseIndex(0);
     setTimeLeft(phases[0].duration);
     setCycleCount(0);
     setTotalTime(0);
     setSessionEnded(false);
-  };
+    sessionSavedRef.current = false; // Reset save flag
+  }, [phases]);
 
-  const toggleMusic = () => {
-    setMusicEnabled(!musicEnabled);
-  };
+  const toggleMusic = useCallback(() => {
+    setMusicEnabled(prev => !prev);
+  }, []);
 
-  const handleBack = () => {
-    if (cycleCount === 0) {
+  const handleBack = useCallback(() => {
+    // Only save if session hasn't been saved and at least one cycle is completed
+    if (!sessionSavedRef.current && cycleCount > 0 && totalTime > 0) {
+      saveSession(cycleCount, true);
+    } else if (cycleCount === 0) {
       infoToast("You haven't completed any cycles. So the session is not saved.");
     } else if (totalTime === 0) {
       infoToast("You haven't spent any time on this session. So the session is not saved.");
     }
-    else {
-      infoToast(`Session ended. You completed ${cycleCount} ${cycleCount === 1 ? 'cycle' : 'cycles'}.`);
-    }
-    setTimeout(() => {
-      onBack();
-    }, 1000);
-  }
-
-  const currentPhase = phases[phaseIndex];
-  const progress = ((totalTime) / targetEndTime) * 100;
+    
+    // Use shorter timeout or immediate navigation
+    const delay = sessionSavedRef.current || cycleCount === 0 || totalTime === 0 ? 0 : 1000;
+    setTimeout(onBack, delay);
+  }, [cycleCount, totalTime, saveSession, onBack]);
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-slate-900 via-purple-900 to-indigo-900 text-white">
-
       <BreathingSessionHeader
         onBack={handleBack}
         musicEnabled={musicEnabled}
@@ -123,7 +152,7 @@ const BreathingSession = ({
       <ProgressBar
         progress={progress}
         totalTime={totalTime}
-        duration={currentPhase.duration}
+        duration={exercise.duration}
       />
 
       <SessionMainBody
