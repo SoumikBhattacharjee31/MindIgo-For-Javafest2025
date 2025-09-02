@@ -7,201 +7,84 @@ import com.mindigo.content_service.models.*;
 import com.mindigo.content_service.repositories.BreathingExerciseRepository;
 import com.mindigo.content_service.repositories.BreathingSessionRepository;
 import com.mindigo.content_service.repositories.UserSpecificExerciseRepository;
+import com.mindigo.content_service.utils.BreathingServiceUtil;
+import com.mindigo.content_service.utils.CloneUtil;
+import com.mindigo.content_service.utils.MappingUtil;
+import com.mindigo.content_service.utils.ValidatorUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class BreathingService {
-
     private final BreathingExerciseRepository breathingExerciseRepository;
     private final UserSpecificExerciseRepository userSpecificExerciseRepository;
     private final BreathingSessionRepository breathingSessionRepository;
 
-    private BreathingTaskResponse mapToBreathingTaskResponse(BreathingTask task) {
-        return BreathingTaskResponse.builder()
-                .duration(task.getDuration())
-                .type(task.getType().toString().toLowerCase())
-                .order(task.getOrder())
-                .build();
-    }
-
-    private CycleResponse buildCycleResponse(Cycle cycle) {
-        List<BreathingTaskResponse> taskResponses = cycle.getBreathingTasks()
-                .stream()
-                .map(this::mapToBreathingTaskResponse)
-                .toList();
-
-        return CycleResponse.builder()
-                .duration(cycle.getDuration())
-                .task(taskResponses)
-                .build();
-    }
-
-    private BreathingResponse buildResponse(BreathingExercise exercise) {
-        return BreathingResponse.builder()
-                .id(exercise.getId())
-                .title(exercise.getTitle())
-                .description(exercise.getDescription())
-                .pattern(exercise.getPattern())
-                .duration(exercise.getDuration())
-                .cycle(buildCycleResponse(exercise.getCycle()))
-                .build();
-    }
-
-    private BreathingSessionResponse mapToBreathingSessionResponse(BreathingSession session) {
-        return BreathingSessionResponse.builder()
-                .exerciseId(session.getExercise().getId())
-                .exerciseTitle(session.getExercise().getTitle())
-                .totalCycles(session.getTotalCycles())
-                .completedCycles(session.getCompletedCycles())
-                .date(session.getDate())
-                .duration(session.getDuration())
-                .build();
-    }
-
-    private String buildPattern(List<BreathingTask> tasks) {
-        return tasks.stream()
-                .sorted(Comparator.comparingInt(BreathingTask::getOrder))
-                .map(task -> String.valueOf(task.getDuration()))
-                .collect(Collectors.joining("-"));
-    }
-
-    private static List<CustomTaskRequest> validateCustomTasks(CustomCycleRequest request) {
-        List<CustomTaskRequest> tasks = request.getTask();
-        if (tasks == null || tasks.isEmpty()) {
-            throw new InvalidRequestException("Task list cannot be null or empty");
-        }
-
-        List<String> validTypes = List.of("INHALE", "EXHALE", "HOLD");
-        Set<Integer> visitedOrders = new HashSet<>();
-
-        for (CustomTaskRequest task : tasks) {
-            if (task.getType() == null || task.getDuration() == null || task.getOrder() == null) {
-                throw new InvalidRequestException("Task type, duration, and order must be non-null");
-            }
-
-            if (task.getDuration() <= 0 ||
-                    task.getOrder() < 0 ||
-                    task.getOrder() > tasks.size() ||
-                    !validTypes.contains(task.getType().toUpperCase())) {
-                throw new InvalidRequestException("Invalid task: duration must be positive, order valid, and type one of " + validTypes);
-            }
-
-            if (!visitedOrders.add(task.getOrder())) {
-                throw new InvalidRequestException("Duplicate task order: " + task.getOrder());
-            }
-        }
-        return tasks;
-    }
-
-    private void validateBreathingSessionRequest(BreathingSessionRequest request) {
-        if (request.getExerciseId() == null ||
-                request.getCompletedCycles() == null ||
-                request.getTotalCycles() == null ||
-                request.getDate() == null ||
-                request.getDuration() == null) {
-            throw new InvalidRequestException("All fields must be non-null");
-        }
-
-        if (request.getExerciseId() < 1 ||
-                request.getCompletedCycles() < 1 ||
-                request.getTotalCycles() < 1 ||
-                request.getDuration() < 1) {
-            throw new InvalidRequestException("All numeric fields must be > 0");
-        }
-
-        if (request.getCompletedCycles() > request.getTotalCycles()) {
-            throw new InvalidRequestException("completedCycles cannot exceed totalCycles");
-        }
-    }
+    private final ValidatorUtil validatorUtil;
+    private final MappingUtil mappingUtil;
+    private final BreathingServiceUtil util;
+    private final CloneUtil cloneUtil;
 
     @Transactional
     public List<BreathingResponse> getBreathingOptions(Long userId) {
         List<UserSpecificExercise> userExercises = userSpecificExerciseRepository.findAllByUserId(userId);
 
+        // Initialize default exercises for new users
         if (userExercises.isEmpty()) {
-            List<BreathingExercise> defaultExercises = breathingExerciseRepository.findAllByIsCustomFalse();
-            List<BreathingResponse> responses = new ArrayList<>();
-
-            for (BreathingExercise exercise : defaultExercises) {
-                exercise.getUserSpecificExercise().add(
-                        UserSpecificExercise.builder()
-                                .userId(userId)
-                                .exercise(exercise)
-                                .build()
-                );
-                responses.add(buildResponse(exercise));
-            }
-            breathingExerciseRepository.saveAll(defaultExercises);
-            return responses;
+            log.info("Initializing default breathing exercises for user: {}", userId);
+            userExercises = initializeDefaultExercisesForUser(userId);
         }
 
         return userExercises.stream()
-                .map(ue -> buildResponse(ue.getExercise()))
+                .map(userExercise -> mappingUtil.mapToBreathingResponse(userExercise.getExercise()))
                 .toList();
     }
 
     @Transactional
-    public BreathingResponse customizeBreathingExercise(Long userId, CustomBreathingRequest request) {
-        if (request == null || request.getCycle() == null || request.getId() == null) {
-            throw new InvalidRequestException("Request, cycle, or exercise ID cannot be null");
+    public BreathingResponse customizeBreathingExercise(Long userId,
+                                                        CustomBreathingRequest request) {
+        validatorUtil.validateCustomizationRequest(request);
+
+        UserSpecificExercise userSpecificExercise = util.findUserExerciseOrThrow(userId, request.getId(),userSpecificExerciseRepository);
+        BreathingExercise originalExercise = userSpecificExercise.getExercise();
+
+        log.debug("Customizing exercise {} for user {}. IsCustom: {}, IsCustomizable: {}",
+                originalExercise.getId(), userId, originalExercise.getIsCustom(), originalExercise.getIsCustomizable());
+
+        // Create or update the customized exercise
+        BreathingExercise customizedExercise = createCustomizedExercise(originalExercise, request);
+
+        // Update the relationship if we created a new exercise
+        if (!originalExercise.getIsCustom()) {
+            log.debug("Creating new custom exercise from default template for user {}", userId);
+            userSpecificExercise.setExercise(customizedExercise);
+            customizedExercise.setUserSpecificExercise(List.of(userSpecificExercise));
+        } else {
+            log.debug("Updating existing custom exercise {} for user {}", originalExercise.getId(), userId);
         }
 
-        BreathingExercise exercise = breathingExerciseRepository.findById(request.getId())
-                .orElseThrow(() -> new ExerciseNotFound("Exercise with id " + request.getId() + " not found"));
+        BreathingExercise savedExercise = breathingExerciseRepository.save(customizedExercise);
 
-        CustomCycleRequest cycleRequest = request.getCycle();
-        if (cycleRequest.getDuration() <= 0) {
-            throw new InvalidRequestException("Invalid cycle duration for exercise " + request.getId());
-        }
-
-        Cycle newCycle = Cycle.builder()
-                .duration(cycleRequest.getDuration())
-                .build();
-
-        if (exercise.getIsCustomizable()) {
-            List<CustomTaskRequest> tasks = validateCustomTasks(cycleRequest);
-            Integer totalDuration = tasks.stream().mapToInt(CustomTaskRequest::getDuration).sum();
-
-            if(!totalDuration.equals(cycleRequest.getDuration()))
-                throw new InvalidRequestException("Sum of all tasks should add upto cycle duration" + request.getId());
-
-            List<BreathingTask> newTasks = tasks.stream()
-                    .map(task -> BreathingTask.builder()
-                            .duration(task.getDuration())
-                            .type(BreathingType.valueOf(task.getType().toUpperCase()))
-                            .order(task.getOrder())
-                            .build())
-                    .toList();
-
-            newCycle.setBreathingTasks(newTasks);
-            exercise.setPattern(buildPattern(newTasks));
-        }
-
-        exercise.setCycle(newCycle);
-        exercise.setIsCustom(true);
-        breathingExerciseRepository.save(exercise);
-
-        return buildResponse(exercise);
+        log.info("Successfully customized breathing exercise {} for user {}", savedExercise.getId(), userId);
+        return mappingUtil.mapToBreathingResponse(savedExercise);
     }
 
     @Transactional
     public BreathingSessionResponse saveBreathingSession(Long userId, BreathingSessionRequest request) {
-        validateBreathingSessionRequest(request);
+        validatorUtil.validateBreathingSessionRequest(request);
 
-        BreathingExercise exercise = breathingExerciseRepository.findById(request.getExerciseId())
-                .orElseThrow(() -> new ExerciseNotFound("Exercise with id " + request.getExerciseId() + " not found"));
-
-        boolean exists = userSpecificExerciseRepository.existsByUserIdAndExerciseId(userId, request.getExerciseId());
-        if (!exists) {
-            throw new InvalidRequestException("User is not certified for exercise " + request.getExerciseId());
-        }
+        // Verify exercise exists and user has access
+        BreathingExercise exercise = util.findExerciseOrThrow(request.getExerciseId(),breathingExerciseRepository);
+        verifyUserExerciseAccess(userId, request.getExerciseId());
 
         BreathingSession session = BreathingSession.builder()
                 .userId(userId)
@@ -212,15 +95,93 @@ public class BreathingService {
                 .date(request.getDate())
                 .build();
 
-        BreathingSession saved = breathingSessionRepository.save(session);
-        return mapToBreathingSessionResponse(saved);
+        BreathingSession savedSession = breathingSessionRepository.save(session);
+        log.info("Saved breathing session for user {} with exercise {}", userId, exercise.getId());
+
+        return mappingUtil.mapToSessionResponse(savedSession);
     }
 
+    @Transactional(readOnly = true)
     public BreathingSessionResponse getLastSession(Long userId, LocalDate date) {
-        BreathingSession lastSession = breathingSessionRepository
-                .findTopByUserIdAndDateOrderByCreatedAtDesc(userId, date)
-                .orElseThrow(() -> new InvalidRequestException("No session found for user " + userId + " on " + date));
+        Optional<BreathingSession> lastSession = breathingSessionRepository
+                .findTopByUserIdAndDateOrderByCreatedAtDesc(userId, date);
+        return lastSession.map(mappingUtil::mapToSessionResponse).orElse(null);
+    }
 
-        return mapToBreathingSessionResponse(lastSession);
+    // ============ Private Helper Methods ============
+
+    private List<UserSpecificExercise> initializeDefaultExercisesForUser(Long userId) {
+        List<BreathingExercise> defaultExercises = breathingExerciseRepository.findAllByIsCustomFalse();
+
+        List<UserSpecificExercise> userExercises = defaultExercises.stream()
+                .map(exercise -> UserSpecificExercise.builder()
+                        .userId(userId)
+                        .exercise(exercise)
+                        .build())
+                .toList();
+
+        return userSpecificExerciseRepository.saveAll(userExercises);
+    }
+
+    private BreathingExercise createCustomizedExercise(BreathingExercise originalExercise,
+                                                       CustomBreathingRequest request) {
+        CustomCycleRequest cycleRequest = request.getCycle();
+
+        // Create new exercise if original is not custom
+        BreathingExercise targetExercise = originalExercise.getIsCustom() ?
+                originalExercise : cloneUtil.cloneExerciseAsCustom(originalExercise);
+
+        // Create new cycle with proper task handling
+        Cycle newCycle = createCustomCycle(cycleRequest,
+                originalExercise.getIsCustomizable(),
+                originalExercise.getCycle().getBreathingTasks());
+
+        // Update exercise with new cycle and pattern
+        targetExercise.setCycle(newCycle);
+        targetExercise.setDuration(request.getDuration());
+
+        if (originalExercise.getIsCustomizable()) {
+            targetExercise.setPattern(util.buildPatternFromTasks(newCycle.getBreathingTasks()));
+        }
+
+        return targetExercise;
+    }
+
+    private List<BreathingTask> createTasksFromRequest(List<CustomTaskRequest> taskRequests, Cycle cycle) {
+        return taskRequests.stream()
+                .map(taskRequest -> BreathingTask.builder()
+                        .duration(taskRequest.getDuration())
+                        .type(BreathingType.valueOf(taskRequest.getType().toUpperCase()))
+                        .order(taskRequest.getOrder())
+                        .cycle(cycle)
+                        .build())
+                .toList();
+    }
+
+    private Cycle createCustomCycle(CustomCycleRequest cycleRequest,
+                                    Boolean isCustomizable,
+                                    List<BreathingTask> originalTasks) {
+        Cycle cycle = Cycle.builder().build();
+
+        List<BreathingTask> tasks;
+
+        if (!isCustomizable || CollectionUtils.isEmpty(cycleRequest.getTask())) {
+            tasks = cloneUtil.cloneTasksForNewCycle(originalTasks, cycle);
+        } else {
+            validatorUtil.validateCustomTasks(cycleRequest.getTask());
+            tasks = createTasksFromRequest(cycleRequest.getTask(), cycle);
+        }
+
+        int calculatedDuration = tasks.stream().mapToInt(BreathingTask::getDuration).sum();
+        cycle.setDuration(calculatedDuration);
+        cycle.setBreathingTasks(tasks);
+        return cycle;
+    }
+
+    private void verifyUserExerciseAccess(Long userId, Long exerciseId) {
+        if (!userSpecificExerciseRepository.existsByUserIdAndExerciseId(userId, exerciseId)) {
+            throw new InvalidRequestException(
+                    String.format("User %d does not have access to exercise %d", userId, exerciseId));
+        }
     }
 }

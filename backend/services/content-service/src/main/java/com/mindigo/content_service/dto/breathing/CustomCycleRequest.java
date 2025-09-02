@@ -6,6 +6,5 @@ import java.util.List;
 
 @Data
 public class CustomCycleRequest {
-    private Integer duration;
     private List<CustomTaskRequest> task;
 }

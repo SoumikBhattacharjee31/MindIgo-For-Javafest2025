@@ -31,7 +31,7 @@ const BreathingSession = ({
 
   const phases = exercise.cycle.task;
   const totalCycleTime = exercise.cycle.duration;
-  const totalCycles = Math.floor((exercise.duration * 60) / totalCycleTime);
+  const totalCycles = Math.ceil((exercise.duration * 60) / totalCycleTime);
   const targetEndTime = exercise.duration * 60;
 
 
@@ -50,12 +50,12 @@ const BreathingSession = ({
         const newCount = cycleCount + 1;
         setCycleCount(newCount);
         const session: LastSession = {
+          exerciseId: exercise.id,
           exerciseTitle: exercise.title,
           completedCycles: newCount,
           totalCycles,
           date: new Date().toLocaleDateString(),
-          duration: Math.ceil(totalTime / 60),
-          gradient: 'from-indigo-500 to-purple-700'
+          duration: Math.ceil(totalTime / 60)
         };
         onSessionComplete(session);
         if (totalTime >= targetEndTime) {
