@@ -22,16 +22,6 @@
         </processorPath>
         <module name="admin-service" />
       </profile>
-      <profile name="Annotation profile for routine-service" enabled="true">
-        <sourceOutputDir name="target/generated-sources/annotations" />
-        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
-        <outputRelativeToContentRoot value="true" />
-        <processorPath useClasspath="false">
-          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.38/lombok-1.18.38.jar" />
-        </processorPath>
-        <module name="routine-service" />
-        <module name="mail-service" />
-      </profile>
       <profile name="Annotation profile for assessment-service" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
@@ -46,6 +36,17 @@
         <module name="game-service" />
         <module name="content-service" />
       </profile>
+      <profile name="Annotation profile for discussion-service" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.38/lombok-1.18.38.jar" />
+        </processorPath>
+        <module name="discussion-service" />
+        <module name="routine-service" />
+        <module name="mail-service" />
+      </profile>
     </annotationProcessing>
   </component>
   <component name="JavacSettings">
@@ -57,12 +58,13 @@
       <module name="auth-service" options="-parameters" />
       <module name="config-server" options="-parameters" />
       <module name="content-service" options="-parameters" />
+      <module name="discussion-service" options="-parameters" />
       <module name="eureka-server" options="-parameters" />
       <module name="file-server" options="-parameters" />
       <module name="game-service" options="-parameters" />
       <module name="gateway-server" options="-parameters" />
       <module name="mail-service" options="-parameters" />
-      <module name="meeting-service" options="" />
+      <module name="meeting-service" options="-parameters" />
       <module name="mindigo" options="-parameters" />
       <module name="routine-service" options="-parameters" />
     </option>
