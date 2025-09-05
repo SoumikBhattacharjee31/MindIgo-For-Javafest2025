@@ -5,15 +5,17 @@ import { toast } from 'react-toastify';
 import { CommentResponse, discussionApi, REACTION_TYPES } from '../../api/discussionService';
 import CommentForm from './CommentForm';
 import ReportModal from './ReportModal';
+import UpdateCommentModal from './UpdateCommentModal';
 
 interface CommentSectionProps {
   comment: CommentResponse;
   onCommentDeleted: (commentId: number) => void;
+  onCommentUpdated: (updatedComment: CommentResponse) => void;
   postId: number;
   level?: number;
 }
 
-const CommentSection = ({ comment, onCommentDeleted, postId, level = 0 }: CommentSectionProps) => {
+const CommentSection = ({ comment, onCommentDeleted, onCommentUpdated, postId, level = 0 }: CommentSectionProps) => {
   const [showReplyForm, setShowReplyForm] = useState(false);
   const [showReplies, setShowReplies] = useState(true);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
@@ -129,6 +131,22 @@ const CommentSection = ({ comment, onCommentDeleted, postId, level = 0 }: Commen
     setReplies(prev => prev.filter(reply => reply.id !== commentId));
   };
 
+  const handleNestedCommentUpdated = (updatedComment: CommentResponse) => {
+    const updateRecursive = (comments: CommentResponse[]): CommentResponse[] => {
+      return comments.map(c => {
+        if (c.id === updatedComment.id) {
+          return updatedComment;
+        }
+        if (c.replies && c.replies.length > 0) {
+          return { ...c, replies: updateRecursive(c.replies) };
+        }
+        return c;
+      });
+    };
+
+    setReplies(prev => updateRecursive(prev));
+  };
+
   const indentationClass = level > 0 ? `ml-${Math.min(level * 6, 18)} pl-4 border-l-2 border-gray-200` : '';
 
   return (
@@ -165,12 +183,12 @@ const CommentSection = ({ comment, onCommentDeleted, postId, level = 0 }: Commen
           {/* Actions Bar */}
           <div className="flex items-center justify-between">
             {/* Reactions */}
-            <div className="flex items-center space-x-2">
-              {Object.entries(REACTION_TYPES).map(([key, value]) => (
+            <div className="flex items-center space-x-1">
+              {Object.entries(REACTION_TYPES).slice(0, 4).map(([key, value]) => ( // Show only first 3 reactions to save space
                 <button
                   key={key}
                   onClick={() => handleReaction(value)}
-                  className={`flex items-center gap-1 px-2 py-1 rounded-full text-sm transition-colors ${
+                  className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs transition-colors ${
                     currentReaction === value
                       ? 'bg-blue-100 text-blue-700'
                       : 'text-gray-600 hover:bg-gray-100'
@@ -180,11 +198,34 @@ const CommentSection = ({ comment, onCommentDeleted, postId, level = 0 }: Commen
                   <span>{reactions[value] || 0}</span>
                 </button>
               ))}
+              
+              {totalReactions > 0 && (
+                <span className="text-xs text-gray-500 ml-2">
+                  {totalReactions} reactions
+                </span>
+              )}
             </div>
 
             {/* Comment Actions */}
-            <div className="flex items-center space-x-4 text-sm text-gray-500">
-              <span>{comment.replyCount} replies</span>
+            <div className="flex items-center space-x-3 text-xs text-gray-500">
+              {level < maxNestingLevel && (
+                <button
+                  onClick={() => setShowReplyForm(!showReplyForm)}
+                  className="text-blue-600 hover:text-blue-800"
+                >
+                  Reply
+                </button>
+              )}
+              
+              {replies.length > 0 && (
+                <button
+                  onClick={() => setShowReplies(!showReplies)}
+                  className="text-gray-600 hover:text-gray-800"
+                >
+                  {showReplies ? 'Hide' : 'Show'} {replies.length} replies
+                </button>
+              )}
+              
               {comment.canEdit && (
                 <>
                   <button
@@ -202,6 +243,7 @@ const CommentSection = ({ comment, onCommentDeleted, postId, level = 0 }: Commen
                   </button>
                 </>
               )}
+              
               <button
                 onClick={() => setIsReportModalOpen(true)}
                 className="text-gray-600 hover:text-gray-800"
@@ -213,9 +255,9 @@ const CommentSection = ({ comment, onCommentDeleted, postId, level = 0 }: Commen
 
           {/* Reply Form */}
           {showReplyForm && (
-            <div className="mt-4">
+            <div className="mt-4 pt-4 border-t border-gray-200">
               <CommentForm
-                postId={post.id}
+                postId={postId}
                 parentCommentId={comment.id}
                 onCommentCreated={handleReplyCreated}
                 onCancel={() => setShowReplyForm(false)}
@@ -227,13 +269,14 @@ const CommentSection = ({ comment, onCommentDeleted, postId, level = 0 }: Commen
         </div>
 
         {/* Nested Replies */}
-        {replies.length > 0 && (
-          <div className="space-y-4 mt-4">
+        {showReplies && replies.length > 0 && (
+          <div className="space-y-3">
             {replies.map((reply) => (
               <CommentSection
                 key={reply.id}
                 comment={reply}
                 onCommentDeleted={handleNestedCommentDeleted}
+                onCommentUpdated={handleNestedCommentUpdated}
                 postId={postId}
                 level={level + 1}
               />
@@ -241,6 +284,16 @@ const CommentSection = ({ comment, onCommentDeleted, postId, level = 0 }: Commen
           </div>
         )}
       </div>
+
+      {/* Update Modal */}
+      {isUpdateModalOpen && (
+        <UpdateCommentModal
+          isOpen={isUpdateModalOpen}
+          onClose={() => setIsUpdateModalOpen(false)}
+          comment={comment}
+          onCommentUpdated={onCommentUpdated}
+        />
+      )}
 
       {/* Report Modal */}
       {isReportModalOpen && (

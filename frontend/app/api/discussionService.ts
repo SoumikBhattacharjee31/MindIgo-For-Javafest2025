@@ -111,11 +111,19 @@ export const discussionApi = {
 
   updatePost: (id: number, postData: UpdatePostRequest, newImages?: FileList) => {
     const formData = new FormData();
-    formData.append('post', JSON.stringify(postData));
+
+    // Create a Blob from the JSON data with the correct MIME type
+    const postBlob = new Blob([JSON.stringify(postData)], {
+      type: 'application/json'
+    });
+    
+    // Append the Blob instead of the string
+    formData.append('post', postBlob);
     
     if (newImages && newImages.length > 0) {
       Array.from(newImages).forEach((image) => {
-        formData.append('newImages', image);
+        // The key for new images should match your backend controller
+        formData.append('newImages', image); 
       });
     }
     
@@ -190,6 +198,9 @@ export const discussionApi = {
 
   restrictUser: (userId: number, restrictionData: RestrictUserRequest) =>
     axios.post(`${API_BASE_URL}/admin/users/${userId}/restrict`, restrictionData, axiosConfig),
+
+  updateComment: (id: number, commentData: UpdateCommentRequest) =>
+    axios.put(`${API_BASE_URL}/comments/${id}`, commentData, axiosConfig),
 };
 
 // Types for responses
@@ -315,3 +326,7 @@ export const RESTRICTION_TYPES = {
   COMMENT_ONLY: 'COMMENT_ONLY',
   FULL_RESTRICTION: 'FULL_RESTRICTION'
 };
+
+export interface UpdateCommentRequest {
+  content: string;
+}

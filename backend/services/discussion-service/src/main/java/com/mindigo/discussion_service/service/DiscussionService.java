@@ -221,25 +221,19 @@ public class DiscussionService {
         Long userId = getUserId(httpRequest);
 
         Pageable pageable = PageRequest.of(page, size);
-        Page<Comment> comments;
 
-        switch (sortType) {
-            case MOST_REACTIONS:
-                comments = commentRepository.findByPostIdAndIsActiveTrueAndParentCommentIdIsNullOrderByReactionCountDesc(postId, pageable);
-                break;
-            case MOST_REPLIES:
-                comments = commentRepository.findByPostIdAndIsActiveTrueAndParentCommentIdIsNullOrderByReplyCountDesc(postId, pageable);
-                break;
-            case OLDEST:
+        Page<Comment> comments = switch (sortType) {
+            case MOST_REACTIONS ->
+                    commentRepository.findByPostIdAndIsActiveTrueAndParentCommentIdIsNullOrderByReactionCountDesc(postId, pageable);
+            case MOST_REPLIES ->
+                    commentRepository.findByPostIdAndIsActiveTrueAndParentCommentIdIsNullOrderByReplyCountDesc(postId, pageable);
+            case OLDEST -> {
                 pageable = PageRequest.of(page, size, Sort.by("createdAt").ascending());
-                comments = commentRepository.findByPostIdAndIsActiveTrueAndParentCommentIdIsNullOrderByCreatedAtDesc(postId, pageable);
-                break;
-            case NEWEST:
-            case RELEVANT:
-            default:
-                comments = commentRepository.findByPostIdAndIsActiveTrueAndParentCommentIdIsNullOrderByCreatedAtDesc(postId, pageable);
-                break;
-        }
+                yield commentRepository.findByPostIdAndIsActiveTrueAndParentCommentIdIsNullOrderByCreatedAtDesc(postId, pageable);
+            }
+            default ->
+                    commentRepository.findByPostIdAndIsActiveTrueAndParentCommentIdIsNullOrderByCreatedAtDesc(postId, pageable);
+        };
 
         return comments.map(comment -> convertToCommentResponse(comment, userId, true));
     }
@@ -611,10 +605,10 @@ public class DiscussionService {
         Optional<CommentReaction> userReaction = commentReactionRepository.findByCommentIdAndUserId(comment.getId(), currentUserId);
 
         List<CommentResponse> replies = new ArrayList<>();
-        if (includeReplies && comment.getParentCommentId() == null) {
+        if (includeReplies) {
             List<Comment> replyComments = commentRepository.findByParentCommentIdAndIsActiveTrueOrderByCreatedAtAsc(comment.getId());
             replies = replyComments.stream()
-                    .map(reply -> convertToCommentResponse(reply, currentUserId, false))
+                    .map(reply -> convertToCommentResponse(reply, currentUserId, true))
                     .collect(Collectors.toList());
         }
 
@@ -843,5 +837,26 @@ public class DiscussionService {
         if (role != UserRole.ADMIN) {
             throw new DiscussionServiceException("Admin access required");
         }
+    }
+
+    @Transactional
+    public CommentResponse updateComment(Long commentId, UpdateCommentRequest request, HttpServletRequest httpRequest) {
+        Long userId = getUserId(httpRequest);
+
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new DiscussionServiceException("Comment not found"));
+
+        if (!comment.getAuthorId().equals(userId)) {
+            throw new DiscussionServiceException("You can only edit your own comments");
+        }
+
+        if (!comment.getIsActive()) {
+            throw new DiscussionServiceException("Cannot edit inactive comment");
+        }
+
+        comment.setContent(request.getContent());
+
+        comment = commentRepository.save(comment);
+        return convertToCommentResponse(comment, userId, true);
     }
 }

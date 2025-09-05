@@ -292,4 +292,23 @@ public class DiscussionController {
                 .message("Comment reported successfully")
                 .build());
     }
+
+    @PutMapping("/comments/{id}")
+    @Operation(summary = "Update a comment")
+    @ApiResponse(responseCode = "200", description = "Comment updated successfully")
+    @ApiResponse(responseCode = "403", description = "Not authorized to edit this comment")
+    @ApiResponse(responseCode = "404", description = "Comment not found")
+    public ResponseEntity<ApiResponseClass<CommentResponse>> updateComment(
+            @PathVariable Long id,
+            @RequestBody @Valid UpdateCommentRequest request,
+            HttpServletRequest httpRequest) {
+
+        CommentResponse updatedComment = discussionService.updateComment(id, request, httpRequest);
+
+        return ResponseEntity.ok(ApiResponseClass.<CommentResponse>builder()
+                .success(true)
+                .data(updatedComment)
+                .message("Comment updated successfully")
+                .build());
+    }
 }

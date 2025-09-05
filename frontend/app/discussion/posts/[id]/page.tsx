@@ -141,6 +141,23 @@ const PostDetailPage = () => {
     setSortBy(newSortBy);
   };
 
+  const handleCommentUpdated = (updatedComment: CommentResponse) => {
+    const updateRecursive = (comments: CommentResponse[]): CommentResponse[] => {
+        return comments.map(c => {
+        if (c.id === updatedComment.id) {
+            return updatedComment;
+        }
+        if (c.replies && c.replies.length > 0) {
+            return { ...c, replies: updateRecursive(c.replies) };
+        }
+        return c;
+        });
+    };
+
+    setComments(prev => updateRecursive(prev));
+    toast.success('Comment updated successfully!');
+    };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex justify-center items-center">
@@ -246,6 +263,7 @@ const PostDetailPage = () => {
                     key={comment.id}
                     comment={comment}
                     onCommentDeleted={handleCommentDeleted}
+                    onCommentUpdated={handleCommentUpdated}
                     postId={post.id}
                   />
                 ))}
