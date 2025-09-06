@@ -209,7 +209,9 @@ public class AuthController {
     public ResponseEntity<ApiResponseClass<UserProfileResponse>> getProfileFromId(
             @PathVariable("id") Integer userId) {
 
-        UserProfileResponse profile = authenticationService.getUserProfileById(userId);System.out.println("==================================================");
+        System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++");
+        UserProfileResponse profile = authenticationService.getUserProfileById(userId);
+        System.out.println("==================================================");
 
         return ResponseEntity.ok(ApiResponseClass.<UserProfileResponse>builder()
                 .success(true)
