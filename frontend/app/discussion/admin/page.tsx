@@ -1,31 +1,41 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { toast } from 'react-toastify';
-import { discussionApi, DiscussionStatsResponse, ReportResponse, ApiResponse, Page, ModerationRequest, RestrictUserRequest } from '../../api/discussionService';
-import StatsCard from '../../components/discussion/StatsCard';
-import ReportsTable from '../../components/discussion/ReportsTable';
-import ModerationModal from '../../components/discussion/ModerationModal';
-import UserRestrictionModal from '../../components/discussion/UserRestrictionModal';
+import { useState, useEffect } from "react";
+import { toast } from "react-toastify";
+import {
+  discussionApi,
+  DiscussionStatsResponse,
+  ReportResponse,
+  ApiResponse,
+  Page,
+  ModerationRequest,
+  RestrictUserRequest,
+} from "../../api/discussionService";
+import StatsCard from "../../components/discussion/StatsCard";
+import ReportsTable from "../../components/discussion/ReportsTable";
+import ModerationModal from "../../components/discussion/ModerationModal";
+import UserRestrictionModal from "../../components/discussion/UserRestrictionModal";
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState<DiscussionStatsResponse | null>(null);
   const [postReports, setPostReports] = useState<ReportResponse[]>([]);
   const [commentReports, setCommentReports] = useState<ReportResponse[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'stats' | 'post-reports' | 'comment-reports'>('stats');
-  
+  const [activeTab, setActiveTab] = useState<
+    "stats" | "post-reports" | "comment-reports"
+  >("stats");
+
   // Moderation Modal States
   const [moderationModal, setModerationModal] = useState<{
     isOpen: boolean;
-    type: 'post' | 'comment' | null;
+    type: "post" | "comment" | null;
     id: number | null;
     title: string;
   }>({
     isOpen: false,
     type: null,
     id: null,
-    title: ''
+    title: "",
   });
 
   // User Restriction Modal State
@@ -36,7 +46,7 @@ const AdminDashboard = () => {
   }>({
     isOpen: false,
     userId: null,
-    userName: ''
+    userName: "",
   });
 
   // Pagination states
@@ -55,27 +65,30 @@ const AdminDashboard = () => {
     try {
       const response = await discussionApi.getDiscussionStats();
       const apiResponse: ApiResponse<DiscussionStatsResponse> = response.data;
-      
+
       if (apiResponse.success) {
         setStats(apiResponse.data);
       } else {
         toast.error(apiResponse.message);
       }
     } catch (error) {
-      console.error('Error fetching stats:', error);
-      toast.error('Failed to fetch statistics');
+      console.error("Error fetching stats:", error);
+      toast.error("Failed to fetch statistics");
     }
   };
 
-  const fetchPostReports = async (page: number = 0, append: boolean = false) => {
+  const fetchPostReports = async (
+    page: number = 0,
+    append: boolean = false
+  ) => {
     try {
       setLoading(!append);
       const response = await discussionApi.getPostReports({ page, size: 10 });
       const apiResponse: ApiResponse<Page<ReportResponse>> = response.data;
-      
+
       if (apiResponse.success) {
         if (append) {
-          setPostReports(prev => [...prev, ...apiResponse.data.content]);
+          setPostReports((prev) => [...prev, ...apiResponse.data.content]);
         } else {
           setPostReports(apiResponse.data.content);
         }
@@ -85,22 +98,28 @@ const AdminDashboard = () => {
         toast.error(apiResponse.message);
       }
     } catch (error) {
-      console.error('Error fetching post reports:', error);
-      toast.error('Failed to fetch post reports');
+      console.error("Error fetching post reports:", error);
+      toast.error("Failed to fetch post reports");
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchCommentReports = async (page: number = 0, append: boolean = false) => {
+  const fetchCommentReports = async (
+    page: number = 0,
+    append: boolean = false
+  ) => {
     try {
       setLoading(!append);
-      const response = await discussionApi.getCommentReports({ page, size: 10 });
+      const response = await discussionApi.getCommentReports({
+        page,
+        size: 10,
+      });
       const apiResponse: ApiResponse<Page<ReportResponse>> = response.data;
-      
+
       if (apiResponse.success) {
         if (append) {
-          setCommentReports(prev => [...prev, ...apiResponse.data.content]);
+          setCommentReports((prev) => [...prev, ...apiResponse.data.content]);
         } else {
           setCommentReports(apiResponse.data.content);
         }
@@ -110,8 +129,8 @@ const AdminDashboard = () => {
         toast.error(apiResponse.message);
       }
     } catch (error) {
-      console.error('Error fetching comment reports:', error);
-      toast.error('Failed to fetch comment reports');
+      console.error("Error fetching comment reports:", error);
+      toast.error("Failed to fetch comment reports");
     } finally {
       setLoading(false);
     }
@@ -121,20 +140,23 @@ const AdminDashboard = () => {
     if (!moderationModal.id) return;
 
     try {
-      const response = await discussionApi.moderatePost(moderationModal.id, data);
+      const response = await discussionApi.moderatePost(
+        moderationModal.id,
+        data
+      );
       const apiResponse: ApiResponse<void> = response.data;
-      
+
       if (apiResponse.success) {
-        toast.success('Post moderated successfully');
-        setModerationModal({ isOpen: false, type: null, id: null, title: '' });
+        toast.success("Post moderated successfully");
+        setModerationModal({ isOpen: false, type: null, id: null, title: "" });
         fetchPostReports(); // Refresh reports
         fetchStats(); // Refresh stats
       } else {
         toast.error(apiResponse.message);
       }
     } catch (error) {
-      console.error('Error moderating post:', error);
-      toast.error('Failed to moderate post');
+      console.error("Error moderating post:", error);
+      toast.error("Failed to moderate post");
     }
   };
 
@@ -142,20 +164,23 @@ const AdminDashboard = () => {
     if (!moderationModal.id) return;
 
     try {
-      const response = await discussionApi.moderateComment(moderationModal.id, data);
+      const response = await discussionApi.moderateComment(
+        moderationModal.id,
+        data
+      );
       const apiResponse: ApiResponse<void> = response.data;
-      
+
       if (apiResponse.success) {
-        toast.success('Comment moderated successfully');
-        setModerationModal({ isOpen: false, type: null, id: null, title: '' });
+        toast.success("Comment moderated successfully");
+        setModerationModal({ isOpen: false, type: null, id: null, title: "" });
         fetchCommentReports(); // Refresh reports
         fetchStats(); // Refresh stats
       } else {
         toast.error(apiResponse.message);
       }
     } catch (error) {
-      console.error('Error moderating comment:', error);
-      toast.error('Failed to moderate comment');
+      console.error("Error moderating comment:", error);
+      toast.error("Failed to moderate comment");
     }
   };
 
@@ -163,28 +188,35 @@ const AdminDashboard = () => {
     if (!restrictionModal.userId) return;
 
     try {
-      const response = await discussionApi.restrictUser(restrictionModal.userId, data);
+      const response = await discussionApi.restrictUser(
+        restrictionModal.userId,
+        data
+      );
       const apiResponse: ApiResponse<void> = response.data;
-      
+
       if (apiResponse.success) {
-        toast.success('User restricted successfully');
-        setRestrictionModal({ isOpen: false, userId: null, userName: '' });
+        toast.success("User restricted successfully");
+        setRestrictionModal({ isOpen: false, userId: null, userName: "" });
         fetchStats(); // Refresh stats
       } else {
         toast.error(apiResponse.message);
       }
     } catch (error) {
-      console.error('Error restricting user:', error);
-      toast.error('Failed to restrict user');
+      console.error("Error restricting user:", error);
+      toast.error("Failed to restrict user");
     }
   };
 
-  const openModerationModal = (type: 'post' | 'comment', id: number, title: string) => {
+  const openModerationModal = (
+    type: "post" | "comment",
+    id: number,
+    title: string
+  ) => {
     setModerationModal({
       isOpen: true,
       type,
       id,
-      title
+      title,
     });
   };
 
@@ -192,7 +224,7 @@ const AdminDashboard = () => {
     setRestrictionModal({
       isOpen: true,
       userId,
-      userName
+      userName,
     });
   };
 
@@ -202,7 +234,9 @@ const AdminDashboard = () => {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-          <p className="text-gray-600 mt-2">Manage discussions, reports, and user restrictions</p>
+          <p className="text-gray-600 mt-2">
+            Manage discussions, reports, and user restrictions
+          </p>
         </div>
 
         {/* Navigation Tabs */}
@@ -210,21 +244,21 @@ const AdminDashboard = () => {
           <div className="border-b border-gray-200">
             <nav className="-mb-px flex space-x-8 px-6">
               <button
-                onClick={() => setActiveTab('stats')}
+                onClick={() => setActiveTab("stats")}
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'stats'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  activeTab === "stats"
+                    ? "border-blue-500 text-blue-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                 }`}
               >
                 Statistics
               </button>
               <button
-                onClick={() => setActiveTab('post-reports')}
+                onClick={() => setActiveTab("post-reports")}
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'post-reports'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  activeTab === "post-reports"
+                    ? "border-blue-500 text-blue-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                 }`}
               >
                 Post Reports
@@ -235,11 +269,11 @@ const AdminDashboard = () => {
                 )}
               </button>
               <button
-                onClick={() => setActiveTab('comment-reports')}
+                onClick={() => setActiveTab("comment-reports")}
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'comment-reports'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  activeTab === "comment-reports"
+                    ? "border-blue-500 text-blue-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                 }`}
               >
                 Comment Reports
@@ -249,7 +283,7 @@ const AdminDashboard = () => {
         </div>
 
         {/* Content based on active tab */}
-        {activeTab === 'stats' && (
+        {activeTab === "stats" && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {stats && (
               <>
@@ -300,34 +334,44 @@ const AdminDashboard = () => {
           </div>
         )}
 
-        {activeTab === 'post-reports' && (
+        {activeTab === "post-reports" && (
           <div className="bg-white rounded-lg shadow-md">
             <div className="p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Post Reports</h2>
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                Post Reports
+              </h2>
               <ReportsTable
                 reports={postReports}
                 type="post"
                 loading={loading}
                 hasMore={hasMorePostReports}
                 onLoadMore={() => fetchPostReports(postReportsPage + 1, true)}
-                onModerate={(id, title) => openModerationModal('post', id, title)}
+                onModerate={(id, title) =>
+                  openModerationModal("post", id, title)
+                }
                 onRestrictUser={openRestrictionModal}
               />
             </div>
           </div>
         )}
 
-        {activeTab === 'comment-reports' && (
+        {activeTab === "comment-reports" && (
           <div className="bg-white rounded-lg shadow-md">
             <div className="p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Comment Reports</h2>
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                Comment Reports
+              </h2>
               <ReportsTable
                 reports={commentReports}
                 type="comment"
                 loading={loading}
                 hasMore={hasMoreCommentReports}
-                onLoadMore={() => fetchCommentReports(commentReportsPage + 1, true)}
-                onModerate={(id, title) => openModerationModal('comment', id, title)}
+                onLoadMore={() =>
+                  fetchCommentReports(commentReportsPage + 1, true)
+                }
+                onModerate={(id, title) =>
+                  openModerationModal("comment", id, title)
+                }
                 onRestrictUser={openRestrictionModal}
               />
             </div>
@@ -338,16 +382,24 @@ const AdminDashboard = () => {
       {/* Moderation Modal */}
       <ModerationModal
         isOpen={moderationModal.isOpen}
-        onClose={() => setModerationModal({ isOpen: false, type: null, id: null, title: '' })}
+        onClose={() =>
+          setModerationModal({ isOpen: false, type: null, id: null, title: "" })
+        }
         type={moderationModal.type}
         title={moderationModal.title}
-        onSubmit={moderationModal.type === 'post' ? handleModeratePost : handleModerateComment}
+        onSubmit={
+          moderationModal.type === "post"
+            ? handleModeratePost
+            : handleModerateComment
+        }
       />
 
       {/* User Restriction Modal */}
       <UserRestrictionModal
         isOpen={restrictionModal.isOpen}
-        onClose={() => setRestrictionModal({ isOpen: false, userId: null, userName: '' })}
+        onClose={() =>
+          setRestrictionModal({ isOpen: false, userId: null, userName: "" })
+        }
         userName={restrictionModal.userName}
         onSubmit={handleRestrictUser}
       />

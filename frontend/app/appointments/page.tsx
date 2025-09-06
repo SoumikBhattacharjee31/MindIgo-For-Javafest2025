@@ -1,12 +1,21 @@
-"use client"
-import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, User, Settings, Plus, X, Check, AlertCircle } from 'lucide-react';
-import { appointmentApi } from '../api/appointmentService';
-import { toast } from 'react-toastify';
+"use client";
+import React, { useState, useEffect } from "react";
+import {
+  Calendar,
+  Clock,
+  User,
+  Settings,
+  Plus,
+  X,
+  Check,
+  AlertCircle,
+} from "lucide-react";
+import { appointmentApi } from "../api/appointmentService";
+import { toast } from "react-toastify";
 
 const AppointmentDashboard = () => {
-  const [activeTab, setActiveTab] = useState('appointments');
-  const [userRole, setUserRole] = useState('CLIENT'); // This would come from auth context
+  const [activeTab, setActiveTab] = useState("appointments");
+  const [userRole, setUserRole] = useState("CLIENT"); // This would come from auth context
   const [appointments, setAppointments] = useState([]);
   const [counselors, setCounselors] = useState([]);
   const [availability, setAvailability] = useState([]);
@@ -20,55 +29,65 @@ const AppointmentDashboard = () => {
   const fetchInitialData = async () => {
     try {
       setLoading(true);
-      
+
       // Fetch appointments
       const appointmentsResponse = await appointmentApi.getMyAppointments();
       setAppointments(appointmentsResponse.data.data || []);
 
       // Fetch counselors if client
-      if (userRole === 'CLIENT') {
+      if (userRole === "CLIENT") {
         const counselorsResponse = await appointmentApi.getApprovedCounselors();
         setCounselors(counselorsResponse.data.data || []);
       }
 
       // Fetch availability if counselor
-      if (userRole === 'COUNSELOR') {
+      if (userRole === "COUNSELOR") {
         const availabilityResponse = await appointmentApi.getMyAvailability();
         setAvailability(availabilityResponse.data.data || []);
       }
     } catch (error) {
-      console.error('Error fetching data:', error);
-      toast.error('Failed to load dashboard data');
+      console.error("Error fetching data:", error);
+      toast.error("Failed to load dashboard data");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleStatusUpdate = async (appointmentId, status, notes = '', rejectionReason = '') => {
+  const handleStatusUpdate = async (
+    appointmentId,
+    status,
+    notes = "",
+    rejectionReason = ""
+  ) => {
     try {
       await appointmentApi.updateAppointmentStatus({
         appointmentId,
         status,
         notes,
-        rejectionReason
+        rejectionReason,
       });
-      
+
       toast.success(`Appointment ${status.toLowerCase()} successfully`);
       fetchInitialData(); // Refresh data
     } catch (error) {
-      console.error('Error updating appointment status:', error);
-      toast.error('Failed to update appointment status');
+      console.error("Error updating appointment status:", error);
+      toast.error("Failed to update appointment status");
     }
   };
 
   const AppointmentCard = ({ appointment }) => {
     const getStatusColor = (status) => {
       switch (status) {
-        case 'CONFIRMED': return 'bg-green-100 text-green-800';
-        case 'PENDING': return 'bg-yellow-100 text-yellow-800';
-        case 'REJECTED': return 'bg-red-100 text-red-800';
-        case 'CANCELLED': return 'bg-gray-100 text-gray-800';
-        default: return 'bg-blue-100 text-blue-800';
+        case "CONFIRMED":
+          return "bg-green-100 text-green-800";
+        case "PENDING":
+          return "bg-yellow-100 text-yellow-800";
+        case "REJECTED":
+          return "bg-red-100 text-red-800";
+        case "CANCELLED":
+          return "bg-gray-100 text-gray-800";
+        default:
+          return "bg-blue-100 text-blue-800";
       }
     };
 
@@ -76,7 +95,10 @@ const AppointmentDashboard = () => {
       const date = new Date(dateTimeString);
       return {
         date: date.toLocaleDateString(),
-        time: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        time: date.toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
       };
     };
 
@@ -91,14 +113,22 @@ const AppointmentDashboard = () => {
             </div>
             <div>
               <h3 className="font-semibold text-lg">
-                {userRole === 'CLIENT' ? appointment.counselorName : appointment.clientName}
+                {userRole === "CLIENT"
+                  ? appointment.counselorName
+                  : appointment.clientName}
               </h3>
               <p className="text-gray-600">
-                {userRole === 'CLIENT' ? appointment.counselorEmail : appointment.clientEmail}
+                {userRole === "CLIENT"
+                  ? appointment.counselorEmail
+                  : appointment.clientEmail}
               </p>
             </div>
           </div>
-          <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(appointment.status)}`}>
+          <span
+            className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(
+              appointment.status
+            )}`}
+          >
             {appointment.status}
           </span>
         </div>
@@ -117,28 +147,34 @@ const AppointmentDashboard = () => {
         {appointment.clientNotes && (
           <div className="mb-4">
             <p className="text-sm text-gray-600 mb-1">Client Notes:</p>
-            <p className="text-gray-800 bg-gray-50 p-2 rounded">{appointment.clientNotes}</p>
+            <p className="text-gray-800 bg-gray-50 p-2 rounded">
+              {appointment.clientNotes}
+            </p>
           </div>
         )}
 
         {appointment.counselorNotes && (
           <div className="mb-4">
             <p className="text-sm text-gray-600 mb-1">Counselor Notes:</p>
-            <p className="text-gray-800 bg-gray-50 p-2 rounded">{appointment.counselorNotes}</p>
+            <p className="text-gray-800 bg-gray-50 p-2 rounded">
+              {appointment.counselorNotes}
+            </p>
           </div>
         )}
 
         {appointment.rejectionReason && (
           <div className="mb-4">
             <p className="text-sm text-red-600 mb-1">Rejection Reason:</p>
-            <p className="text-red-800 bg-red-50 p-2 rounded">{appointment.rejectionReason}</p>
+            <p className="text-red-800 bg-red-50 p-2 rounded">
+              {appointment.rejectionReason}
+            </p>
           </div>
         )}
 
-        {userRole === 'COUNSELOR' && appointment.status === 'PENDING' && (
+        {userRole === "COUNSELOR" && appointment.status === "PENDING" && (
           <div className="flex space-x-2 mt-4">
             <button
-              onClick={() => handleStatusUpdate(appointment.id, 'CONFIRMED')}
+              onClick={() => handleStatusUpdate(appointment.id, "CONFIRMED")}
               className="flex items-center space-x-1 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition"
             >
               <Check className="w-4 h-4" />
@@ -146,9 +182,9 @@ const AppointmentDashboard = () => {
             </button>
             <button
               onClick={() => {
-                const reason = prompt('Please provide a rejection reason:');
+                const reason = prompt("Please provide a rejection reason:");
                 if (reason) {
-                  handleStatusUpdate(appointment.id, 'REJECTED', '', reason);
+                  handleStatusUpdate(appointment.id, "REJECTED", "", reason);
                 }
               }}
               className="flex items-center space-x-1 bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition"
@@ -163,10 +199,10 @@ const AppointmentDashboard = () => {
   };
 
   const CreateAppointmentModal = () => {
-    const [selectedCounselor, setSelectedCounselor] = useState('');
-    const [selectedDate, setSelectedDate] = useState('');
-    const [selectedSlot, setSelectedSlot] = useState('');
-    const [notes, setNotes] = useState('');
+    const [selectedCounselor, setSelectedCounselor] = useState("");
+    const [selectedDate, setSelectedDate] = useState("");
+    const [selectedSlot, setSelectedSlot] = useState("");
+    const [notes, setNotes] = useState("");
     const [availableSlots, setAvailableSlots] = useState([]);
     const [availableDates, setAvailableDates] = useState([]);
 
@@ -184,29 +220,34 @@ const AppointmentDashboard = () => {
 
     const fetchAvailableDates = async () => {
       try {
-        const response = await appointmentApi.getAvailableDates(selectedCounselor);
+        const response = await appointmentApi.getAvailableDates(
+          selectedCounselor
+        );
         setAvailableDates(response.data.data || []);
       } catch (error) {
-        console.error('Error fetching available dates:', error);
-        toast.error('Failed to fetch available dates');
+        console.error("Error fetching available dates:", error);
+        toast.error("Failed to fetch available dates");
       }
     };
 
     const fetchAvailableSlots = async () => {
       try {
-        const response = await appointmentApi.getAvailableSlots(selectedCounselor, selectedDate);
+        const response = await appointmentApi.getAvailableSlots(
+          selectedCounselor,
+          selectedDate
+        );
         setAvailableSlots(response.data.data || []);
       } catch (error) {
-        console.error('Error fetching available slots:', error);
-        toast.error('Failed to fetch available slots');
+        console.error("Error fetching available slots:", error);
+        toast.error("Failed to fetch available slots");
       }
     };
 
     const handleSubmit = async (e) => {
       e.preventDefault();
-      
+
       if (!selectedCounselor || !selectedSlot || !notes.trim()) {
-        toast.error('Please fill in all required fields');
+        toast.error("Please fill in all required fields");
         return;
       }
 
@@ -214,21 +255,21 @@ const AppointmentDashboard = () => {
         await appointmentApi.createAppointment({
           counselorId: parseInt(selectedCounselor),
           startTime: selectedSlot,
-          notes: notes.trim()
+          notes: notes.trim(),
         });
 
-        toast.success('Appointment request created successfully');
+        toast.success("Appointment request created successfully");
         setShowCreateModal(false);
         fetchInitialData();
-        
+
         // Reset form
-        setSelectedCounselor('');
-        setSelectedDate('');
-        setSelectedSlot('');
-        setNotes('');
+        setSelectedCounselor("");
+        setSelectedDate("");
+        setSelectedSlot("");
+        setNotes("");
       } catch (error) {
-        console.error('Error creating appointment:', error);
-        toast.error('Failed to create appointment');
+        console.error("Error creating appointment:", error);
+        toast.error("Failed to create appointment");
       }
     };
 
@@ -301,15 +342,17 @@ const AppointmentDashboard = () => {
                 >
                   <option value="">Choose a time slot...</option>
                   {availableSlots
-                    .filter(slot => slot.isAvailable)
+                    .filter((slot) => slot.isAvailable)
                     .map((slot, index) => (
                       <option key={index} value={slot.startTime}>
-                        {new Date(slot.startTime).toLocaleTimeString([], { 
-                          hour: '2-digit', 
-                          minute: '2-digit' 
-                        })} - {new Date(slot.endTime).toLocaleTimeString([], { 
-                          hour: '2-digit', 
-                          minute: '2-digit' 
+                        {new Date(slot.startTime).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}{" "}
+                        -{" "}
+                        {new Date(slot.endTime).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
                         })}
                       </option>
                     ))}
@@ -330,7 +373,9 @@ const AppointmentDashboard = () => {
                 className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
               />
-              <p className="text-xs text-gray-500 mt-1">{notes.length}/500 characters</p>
+              <p className="text-xs text-gray-500 mt-1">
+                {notes.length}/500 characters
+              </p>
             </div>
 
             <div className="flex space-x-3 pt-4">
@@ -357,10 +402,10 @@ const AppointmentDashboard = () => {
   const AvailabilityManager = () => {
     const [showCreateAvailability, setShowCreateAvailability] = useState(false);
     const [newAvailability, setNewAvailability] = useState({
-      dayOfWeek: '',
-      startTime: '',
-      endTime: '',
-      slotDurationMinutes: 60
+      dayOfWeek: "",
+      startTime: "",
+      endTime: "",
+      slotDurationMinutes: 60,
     });
 
     const handleCreateAvailability = async (e) => {
@@ -370,54 +415,64 @@ const AppointmentDashboard = () => {
         const availabilityPayload = {
           ...newAvailability,
           startTime: `${newAvailability.startTime}:00`,
-          endTime: `${newAvailability.endTime}:00`
+          endTime: `${newAvailability.endTime}:00`,
         };
 
         // Pass the corrected payload to the API call
         await appointmentApi.createAvailability(availabilityPayload);
-        
-        toast.success('Availability created successfully');
+
+        toast.success("Availability created successfully");
         setShowCreateAvailability(false);
         setNewAvailability({
-          dayOfWeek: '',
-          startTime: '',
-          endTime: '',
-          slotDurationMinutes: 60
+          dayOfWeek: "",
+          startTime: "",
+          endTime: "",
+          slotDurationMinutes: 60,
         });
-        
+
         // Refresh availability
         const response = await appointmentApi.getMyAvailability();
         setAvailability(response.data.data || []);
       } catch (error) {
-        console.error('Error creating availability:', error);
-        toast.error('Failed to create availability');
+        console.error("Error creating availability:", error);
+        toast.error("Failed to create availability");
       }
     };
 
     const handleDeleteAvailability = async (availabilityId) => {
-      if (window.confirm('Are you sure you want to delete this availability?')) {
+      if (
+        window.confirm("Are you sure you want to delete this availability?")
+      ) {
         try {
           await appointmentApi.deleteAvailability(availabilityId);
-          toast.success('Availability deleted successfully');
-          
+          toast.success("Availability deleted successfully");
+
           // Refresh availability
           const response = await appointmentApi.getMyAvailability();
           setAvailability(response.data.data || []);
         } catch (error) {
-          console.error('Error deleting availability:', error);
-          toast.error('Failed to delete availability');
+          console.error("Error deleting availability:", error);
+          toast.error("Failed to delete availability");
         }
       }
     };
 
     const dayOptions = [
-      'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'
+      "MONDAY",
+      "TUESDAY",
+      "WEDNESDAY",
+      "THURSDAY",
+      "FRIDAY",
+      "SATURDAY",
+      "SUNDAY",
     ];
 
     return (
       <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-bold text-gray-800">Manage Availability</h2>
+          <h2 className="text-2xl font-bold text-gray-800">
+            Manage Availability
+          </h2>
           <button
             onClick={() => setShowCreateAvailability(true)}
             className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition"
@@ -429,28 +484,49 @@ const AppointmentDashboard = () => {
 
         {showCreateAvailability && (
           <div className="bg-gray-50 p-6 rounded-lg">
-            <h3 className="text-lg font-semibold mb-4">Create New Availability</h3>
-            <form onSubmit={handleCreateAvailability} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <h3 className="text-lg font-semibold mb-4">
+              Create New Availability
+            </h3>
+            <form
+              onSubmit={handleCreateAvailability}
+              className="grid grid-cols-1 md:grid-cols-2 gap-4"
+            >
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Day of Week</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Day of Week
+                </label>
                 <select
                   value={newAvailability.dayOfWeek}
-                  onChange={(e) => setNewAvailability({...newAvailability, dayOfWeek: e.target.value})}
+                  onChange={(e) =>
+                    setNewAvailability({
+                      ...newAvailability,
+                      dayOfWeek: e.target.value,
+                    })
+                  }
                   className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
                   required
                 >
                   <option value="">Select day...</option>
-                  {dayOptions.map(day => (
-                    <option key={day} value={day}>{day}</option>
+                  {dayOptions.map((day) => (
+                    <option key={day} value={day}>
+                      {day}
+                    </option>
                   ))}
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Slot Duration (minutes)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Slot Duration (minutes)
+                </label>
                 <select
                   value={newAvailability.slotDurationMinutes}
-                  onChange={(e) => setNewAvailability({...newAvailability, slotDurationMinutes: parseInt(e.target.value)})}
+                  onChange={(e) =>
+                    setNewAvailability({
+                      ...newAvailability,
+                      slotDurationMinutes: parseInt(e.target.value),
+                    })
+                  }
                   className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
                 >
                   <option value={30}>30 minutes</option>
@@ -462,22 +538,36 @@ const AppointmentDashboard = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Start Time
+                </label>
                 <input
                   type="time"
                   value={newAvailability.startTime}
-                  onChange={(e) => setNewAvailability({...newAvailability, startTime: e.target.value})}
+                  onChange={(e) =>
+                    setNewAvailability({
+                      ...newAvailability,
+                      startTime: e.target.value,
+                    })
+                  }
                   className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">End Time</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  End Time
+                </label>
                 <input
                   type="time"
                   value={newAvailability.endTime}
-                  onChange={(e) => setNewAvailability({...newAvailability, endTime: e.target.value})}
+                  onChange={(e) =>
+                    setNewAvailability({
+                      ...newAvailability,
+                      endTime: e.target.value,
+                    })
+                  }
                   className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
                   required
                 />
@@ -518,10 +608,14 @@ const AppointmentDashboard = () => {
                   </p>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <span className={`px-2 py-1 rounded text-xs font-medium ${
-                    avail.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                  }`}>
-                    {avail.isActive ? 'Active' : 'Inactive'}
+                  <span
+                    className={`px-2 py-1 rounded text-xs font-medium ${
+                      avail.isActive
+                        ? "bg-green-100 text-green-800"
+                        : "bg-gray-100 text-gray-800"
+                    }`}
+                  >
+                    {avail.isActive ? "Active" : "Inactive"}
                   </span>
                   <button
                     onClick={() => handleDeleteAvailability(avail.id)}
@@ -542,7 +636,7 @@ const AppointmentDashboard = () => {
     const [settings, setSettings] = useState({
       maxBookingDays: 10,
       defaultSlotDurationMinutes: 60,
-      autoAcceptAppointments: false
+      autoAcceptAppointments: false,
     });
 
     useEffect(() => {
@@ -554,7 +648,7 @@ const AppointmentDashboard = () => {
         const response = await appointmentApi.getCounselorSettings();
         setSettings(response.data.data || settings);
       } catch (error) {
-        console.error('Error fetching settings:', error);
+        console.error("Error fetching settings:", error);
       }
     };
 
@@ -562,17 +656,19 @@ const AppointmentDashboard = () => {
       e.preventDefault();
       try {
         await appointmentApi.updateCounselorSettings(settings);
-        toast.success('Settings updated successfully');
+        toast.success("Settings updated successfully");
       } catch (error) {
-        console.error('Error updating settings:', error);
-        toast.error('Failed to update settings');
+        console.error("Error updating settings:", error);
+        toast.error("Failed to update settings");
       }
     };
 
     return (
       <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-2xl font-bold text-gray-800 mb-6">Counselor Settings</h2>
-        
+        <h2 className="text-2xl font-bold text-gray-800 mb-6">
+          Counselor Settings
+        </h2>
+
         <form onSubmit={handleUpdateSettings} className="space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -583,10 +679,17 @@ const AppointmentDashboard = () => {
               min="1"
               max="30"
               value={settings.maxBookingDays}
-              onChange={(e) => setSettings({...settings, maxBookingDays: parseInt(e.target.value)})}
+              onChange={(e) =>
+                setSettings({
+                  ...settings,
+                  maxBookingDays: parseInt(e.target.value),
+                })
+              }
               className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
             />
-            <p className="text-xs text-gray-500 mt-1">Clients can book appointments up to this many days in advance</p>
+            <p className="text-xs text-gray-500 mt-1">
+              Clients can book appointments up to this many days in advance
+            </p>
           </div>
 
           <div>
@@ -595,7 +698,12 @@ const AppointmentDashboard = () => {
             </label>
             <select
               value={settings.defaultSlotDurationMinutes}
-              onChange={(e) => setSettings({...settings, defaultSlotDurationMinutes: parseInt(e.target.value)})}
+              onChange={(e) =>
+                setSettings({
+                  ...settings,
+                  defaultSlotDurationMinutes: parseInt(e.target.value),
+                })
+              }
               className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
             >
               <option value={30}>30 minutes</option>
@@ -611,10 +719,18 @@ const AppointmentDashboard = () => {
               type="checkbox"
               id="autoAccept"
               checked={settings.autoAcceptAppointments}
-              onChange={(e) => setSettings({...settings, autoAcceptAppointments: e.target.checked})}
+              onChange={(e) =>
+                setSettings({
+                  ...settings,
+                  autoAcceptAppointments: e.target.checked,
+                })
+              }
               className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
             />
-            <label htmlFor="autoAccept" className="text-sm font-medium text-gray-700">
+            <label
+              htmlFor="autoAccept"
+              className="text-sm font-medium text-gray-700"
+            >
               Auto-accept appointment requests
             </label>
           </div>
@@ -646,12 +762,12 @@ const AppointmentDashboard = () => {
       <div className="max-w-7xl mx-auto px-4">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">
-            {userRole === 'CLIENT' ? 'My Appointments' : 'Counselor Dashboard'}
+            {userRole === "CLIENT" ? "My Appointments" : "Counselor Dashboard"}
           </h1>
           <p className="text-gray-600">
-            {userRole === 'CLIENT' 
-              ? 'Book and manage your therapy appointments' 
-              : 'Manage your appointments and availability'}
+            {userRole === "CLIENT"
+              ? "Book and manage your therapy appointments"
+              : "Manage your appointments and availability"}
           </p>
         </div>
 
@@ -659,33 +775,33 @@ const AppointmentDashboard = () => {
         <div className="flex justify-center mb-8">
           <div className="bg-white rounded-lg shadow-sm p-1">
             <button
-              onClick={() => setActiveTab('appointments')}
+              onClick={() => setActiveTab("appointments")}
               className={`px-6 py-2 rounded-md font-medium transition duration-200 ${
-                activeTab === 'appointments'
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-600 hover:text-gray-800'
+                activeTab === "appointments"
+                  ? "bg-blue-600 text-white"
+                  : "text-gray-600 hover:text-gray-800"
               }`}
             >
               Appointments
             </button>
-            {userRole === 'COUNSELOR' && (
+            {userRole === "COUNSELOR" && (
               <>
                 <button
-                  onClick={() => setActiveTab('availability')}
+                  onClick={() => setActiveTab("availability")}
                   className={`px-6 py-2 rounded-md font-medium transition duration-200 ${
-                    activeTab === 'availability'
-                      ? 'bg-blue-600 text-white'
-                      : 'text-gray-600 hover:text-gray-800'
+                    activeTab === "availability"
+                      ? "bg-blue-600 text-white"
+                      : "text-gray-600 hover:text-gray-800"
                   }`}
                 >
                   Availability
                 </button>
                 <button
-                  onClick={() => setActiveTab('settings')}
+                  onClick={() => setActiveTab("settings")}
                   className={`px-6 py-2 rounded-md font-medium transition duration-200 ${
-                    activeTab === 'settings'
-                      ? 'bg-blue-600 text-white'
-                      : 'text-gray-600 hover:text-gray-800'
+                    activeTab === "settings"
+                      ? "bg-blue-600 text-white"
+                      : "text-gray-600 hover:text-gray-800"
                   }`}
                 >
                   Settings
@@ -696,13 +812,15 @@ const AppointmentDashboard = () => {
         </div>
 
         {/* Main Content */}
-        {activeTab === 'appointments' && (
+        {activeTab === "appointments" && (
           <div>
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-gray-800">
-                {userRole === 'CLIENT' ? 'My Appointments' : 'Appointment Requests'}
+                {userRole === "CLIENT"
+                  ? "My Appointments"
+                  : "Appointment Requests"}
               </h2>
-              {userRole === 'CLIENT' && (
+              {userRole === "CLIENT" && (
                 <button
                   onClick={() => setShowCreateModal(true)}
                   className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition"
@@ -716,28 +834,33 @@ const AppointmentDashboard = () => {
             {appointments.length === 0 ? (
               <div className="bg-white rounded-lg shadow-md p-8 text-center">
                 <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-700 mb-2">No Appointments Found</h3>
+                <h3 className="text-lg font-semibold text-gray-700 mb-2">
+                  No Appointments Found
+                </h3>
                 <p className="text-gray-500">
-                  {userRole === 'CLIENT' 
+                  {userRole === "CLIENT"
                     ? 'You haven\'t booked any appointments yet. Click "Book Appointment" to get started.'
-                    : 'No appointment requests at the moment.'}
+                    : "No appointment requests at the moment."}
                 </p>
               </div>
             ) : (
               <div className="space-y-4">
                 {appointments.map((appointment) => (
-                  <AppointmentCard key={appointment.id} appointment={appointment} />
+                  <AppointmentCard
+                    key={appointment.id}
+                    appointment={appointment}
+                  />
                 ))}
               </div>
             )}
           </div>
         )}
 
-        {activeTab === 'availability' && userRole === 'COUNSELOR' && (
+        {activeTab === "availability" && userRole === "COUNSELOR" && (
           <AvailabilityManager />
         )}
 
-        {activeTab === 'settings' && userRole === 'COUNSELOR' && (
+        {activeTab === "settings" && userRole === "COUNSELOR" && (
           <CounselorSettings />
         )}
 
@@ -749,7 +872,7 @@ const AppointmentDashboard = () => {
               value={userRole}
               onChange={(e) => {
                 setUserRole(e.target.value);
-                setActiveTab('appointments');
+                setActiveTab("appointments");
                 fetchInitialData();
               }}
               className="w-full p-2 border border-gray-300 rounded-md text-sm"

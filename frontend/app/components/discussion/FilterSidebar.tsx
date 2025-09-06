@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { POST_CATEGORIES, USER_ROLES } from '../../api/discussionService';
+import { POST_CATEGORIES, USER_ROLES } from "../../api/discussionService";
 
 interface FilterSidebarProps {
   filters: {
@@ -16,16 +16,16 @@ const FilterSidebar = ({ filters, onFilterChange }: FilterSidebarProps) => {
   const handleInputChange = (key: string, value: string) => {
     onFilterChange({
       ...filters,
-      [key]: value
+      [key]: value,
     });
   };
 
   const clearFilters = () => {
     onFilterChange({
-      category: '',
-      authorRole: '',
-      keyword: '',
-      sortBy: 'newest'
+      category: "",
+      authorRole: "",
+      keyword: "",
+      sortBy: "newest",
     });
   };
 
@@ -51,7 +51,7 @@ const FilterSidebar = ({ filters, onFilterChange }: FilterSidebarProps) => {
             type="text"
             placeholder="Search posts..."
             value={filters.keyword}
-            onChange={(e) => handleInputChange('keyword', e.target.value)}
+            onChange={(e) => handleInputChange("keyword", e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
@@ -63,7 +63,7 @@ const FilterSidebar = ({ filters, onFilterChange }: FilterSidebarProps) => {
           </label>
           <select
             value={filters.category}
-            onChange={(e) => handleInputChange('category', e.target.value)}
+            onChange={(e) => handleInputChange("category", e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="">All Categories</option>
@@ -80,7 +80,7 @@ const FilterSidebar = ({ filters, onFilterChange }: FilterSidebarProps) => {
           </label>
           <select
             value={filters.authorRole}
-            onChange={(e) => handleInputChange('authorRole', e.target.value)}
+            onChange={(e) => handleInputChange("authorRole", e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="">All Roles</option>
@@ -97,7 +97,7 @@ const FilterSidebar = ({ filters, onFilterChange }: FilterSidebarProps) => {
           </label>
           <select
             value={filters.sortBy}
-            onChange={(e) => handleInputChange('sortBy', e.target.value)}
+            onChange={(e) => handleInputChange("sortBy", e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="newest">Newest First</option>
@@ -114,19 +114,25 @@ const FilterSidebar = ({ filters, onFilterChange }: FilterSidebarProps) => {
           </label>
           <div className="space-y-2">
             <button
-              onClick={() => handleInputChange('authorRole', USER_ROLES.COUNSELOR)}
+              onClick={() =>
+                handleInputChange("authorRole", USER_ROLES.COUNSELOR)
+              }
               className="w-full text-left px-3 py-2 text-sm bg-purple-50 text-purple-700 rounded-md hover:bg-purple-100 transition-colors"
             >
               Counselor Posts
             </button>
             <button
-              onClick={() => handleInputChange('category', POST_CATEGORIES.PROBLEM)}
+              onClick={() =>
+                handleInputChange("category", POST_CATEGORIES.PROBLEM)
+              }
               className="w-full text-left px-3 py-2 text-sm bg-red-50 text-red-700 rounded-md hover:bg-red-100 transition-colors"
             >
               Problems Only
             </button>
             <button
-              onClick={() => handleInputChange('category', POST_CATEGORIES.SOLUTION)}
+              onClick={() =>
+                handleInputChange("category", POST_CATEGORIES.SOLUTION)
+              }
               className="w-full text-left px-3 py-2 text-sm bg-green-50 text-green-700 rounded-md hover:bg-green-100 transition-colors"
             >
               Solutions Only

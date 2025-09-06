@@ -27,7 +27,6 @@ export class Preloader extends Scene {
     //  Load the assets for the game - Replace with your own assets
     // this.load.setPath("../../../public/assets");
 
-    
     this.load.image("snowybg", "/snowybg.png");
     this.load.image("snowboarder", "/snowboarder.png");
     this.load.image("bird", "/bird.png");

@@ -1,10 +1,8 @@
-'use client';
+"use client";
 
 // Basic skeleton loading component
-export const Skeleton = ({ className = '' }: { className?: string }) => {
-  return (
-    <div className={`animate-pulse bg-gray-300 rounded ${className}`} />
-  );
+export const Skeleton = ({ className = "" }: { className?: string }) => {
+  return <div className={`animate-pulse bg-gray-300 rounded ${className}`} />;
 };
 
 // Post card skeleton
@@ -64,7 +62,10 @@ export const PostCardSkeleton = () => {
 
 // Comment skeleton
 export const CommentSkeleton = ({ level = 0 }: { level?: number }) => {
-  const indentationClass = level > 0 ? `ml-${Math.min(level * 6, 18)} pl-4 border-l-2 border-gray-200` : '';
+  const indentationClass =
+    level > 0
+      ? `ml-${Math.min(level * 6, 18)} pl-4 border-l-2 border-gray-200`
+      : "";
 
   return (
     <div className={`${indentationClass}`}>
@@ -120,22 +121,32 @@ export const StatsCardSkeleton = () => {
 };
 
 // Loading spinner
-export const LoadingSpinner = ({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) => {
+export const LoadingSpinner = ({
+  size = "md",
+}: {
+  size?: "sm" | "md" | "lg";
+}) => {
   const sizeClasses = {
-    sm: 'h-4 w-4',
-    md: 'h-8 w-8', 
-    lg: 'h-12 w-12'
+    sm: "h-4 w-4",
+    md: "h-8 w-8",
+    lg: "h-12 w-12",
   };
 
   return (
     <div className="flex justify-center items-center">
-      <div className={`animate-spin rounded-full border-b-2 border-blue-600 ${sizeClasses[size]}`} />
+      <div
+        className={`animate-spin rounded-full border-b-2 border-blue-600 ${sizeClasses[size]}`}
+      />
     </div>
   );
 };
 
 // Full page loading
-export const FullPageLoading = ({ message = 'Loading...' }: { message?: string }) => {
+export const FullPageLoading = ({
+  message = "Loading...",
+}: {
+  message?: string;
+}) => {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center items-center">
       <LoadingSpinner size="lg" />

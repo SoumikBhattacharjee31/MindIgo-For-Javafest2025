@@ -16,7 +16,12 @@ interface RotatingButtonProps {
   col: number;
   setWinCount: (winCount: number) => void;
   checkWin: () => void;
-  newWinCount: (buttonType: number, rotateState: number, row: number, col: number) => number;
+  newWinCount: (
+    buttonType: number,
+    rotateState: number,
+    row: number,
+    col: number
+  ) => number;
   setArrVal: (row: number, col: number, value: number) => void;
   sound: boolean;
 }

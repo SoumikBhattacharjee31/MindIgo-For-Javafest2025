@@ -1,8 +1,13 @@
-'use client';
+"use client";
 
-import { useState, useRef } from 'react';
-import { toast } from 'react-toastify';
-import { discussionApi, PostResponse, POST_CATEGORIES, CreatePostRequest } from '../../api/discussionService';
+import { useState, useRef } from "react";
+import { toast } from "react-toastify";
+import {
+  discussionApi,
+  PostResponse,
+  POST_CATEGORIES,
+  CreatePostRequest,
+} from "../../api/discussionService";
 
 interface CreatePostModalProps {
   isOpen: boolean;
@@ -10,22 +15,30 @@ interface CreatePostModalProps {
   onPostCreated: (post: PostResponse) => void;
 }
 
-const CreatePostModal = ({ isOpen, onClose, onPostCreated }: CreatePostModalProps) => {
+const CreatePostModal = ({
+  isOpen,
+  onClose,
+  onPostCreated,
+}: CreatePostModalProps) => {
   const [formData, setFormData] = useState<CreatePostRequest>({
-    title: '',
-    content: '',
-    category: POST_CATEGORIES.PROBLEM
+    title: "",
+    content: "",
+    category: POST_CATEGORIES.PROBLEM,
   });
   const [images, setImages] = useState<FileList | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [previewImages, setPreviewImages] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -34,14 +47,14 @@ const CreatePostModal = ({ isOpen, onClose, onPostCreated }: CreatePostModalProp
     if (files && files.length > 0) {
       // Validate file count (max 5 images)
       if (files.length > 5) {
-        toast.error('Maximum 5 images allowed');
+        toast.error("Maximum 5 images allowed");
         return;
       }
 
       // Validate file sizes (max 5MB each)
       for (let i = 0; i < files.length; i++) {
         if (files[i].size > 5 * 1024 * 1024) {
-          toast.error('Each image must be less than 5MB');
+          toast.error("Each image must be less than 5MB");
           return;
         }
       }
@@ -50,7 +63,7 @@ const CreatePostModal = ({ isOpen, onClose, onPostCreated }: CreatePostModalProp
 
       // Create preview URLs
       const previews: string[] = [];
-      Array.from(files).forEach(file => {
+      Array.from(files).forEach((file) => {
         const reader = new FileReader();
         reader.onload = (e) => {
           previews.push(e.target?.result as string);
@@ -68,10 +81,10 @@ const CreatePostModal = ({ isOpen, onClose, onPostCreated }: CreatePostModalProp
 
     const fileArray = Array.from(images);
     fileArray.splice(index, 1);
-    
+
     // Create new FileList
     const dt = new DataTransfer();
-    fileArray.forEach(file => dt.items.add(file));
+    fileArray.forEach((file) => dt.items.add(file));
     setImages(dt.files);
 
     // Update preview
@@ -84,13 +97,16 @@ const CreatePostModal = ({ isOpen, onClose, onPostCreated }: CreatePostModalProp
     e.preventDefault();
 
     if (!formData.title.trim() || !formData.content.trim()) {
-      toast.error('Title and content are required');
+      toast.error("Title and content are required");
       return;
     }
 
     try {
       setIsSubmitting(true);
-      const response = await discussionApi.createPost(formData, images || undefined);
+      const response = await discussionApi.createPost(
+        formData,
+        images || undefined
+      );
 
       if (response.data.success) {
         onPostCreated(response.data.data);
@@ -99,8 +115,8 @@ const CreatePostModal = ({ isOpen, onClose, onPostCreated }: CreatePostModalProp
         toast.error(response.data.message);
       }
     } catch (error) {
-      console.error('Error creating post:', error);
-      toast.error('Failed to create post');
+      console.error("Error creating post:", error);
+      toast.error("Failed to create post");
     } finally {
       setIsSubmitting(false);
     }
@@ -108,14 +124,14 @@ const CreatePostModal = ({ isOpen, onClose, onPostCreated }: CreatePostModalProp
 
   const resetForm = () => {
     setFormData({
-      title: '',
-      content: '',
-      category: POST_CATEGORIES.PROBLEM
+      title: "",
+      content: "",
+      category: POST_CATEGORIES.PROBLEM,
     });
     setImages(null);
     setPreviewImages([]);
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = "";
     }
   };
 
@@ -130,13 +146,25 @@ const CreatePostModal = ({ isOpen, onClose, onPostCreated }: CreatePostModalProp
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">Create New Post</h2>
+          <h2 className="text-xl font-semibold text-gray-900">
+            Create New Post
+          </h2>
           <button
             onClick={handleClose}
             className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -175,7 +203,9 @@ const CreatePostModal = ({ isOpen, onClose, onPostCreated }: CreatePostModalProp
               maxLength={200}
               required
             />
-            <p className="text-xs text-gray-500 mt-1">{formData.title.length}/200 characters</p>
+            <p className="text-xs text-gray-500 mt-1">
+              {formData.title.length}/200 characters
+            </p>
           </div>
 
           {/* Content */}
@@ -193,7 +223,9 @@ const CreatePostModal = ({ isOpen, onClose, onPostCreated }: CreatePostModalProp
               maxLength={5000}
               required
             />
-            <p className="text-xs text-gray-500 mt-1">{formData.content.length}/5000 characters</p>
+            <p className="text-xs text-gray-500 mt-1">
+              {formData.content.length}/5000 characters
+            </p>
           </div>
 
           {/* Images */}
@@ -209,7 +241,9 @@ const CreatePostModal = ({ isOpen, onClose, onPostCreated }: CreatePostModalProp
               onChange={handleImageChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-            <p className="text-xs text-gray-500 mt-1">Maximum 5 images, 5MB each</p>
+            <p className="text-xs text-gray-500 mt-1">
+              Maximum 5 images, 5MB each
+            </p>
 
             {/* Image Previews */}
             {previewImages.length > 0 && (
@@ -248,7 +282,7 @@ const CreatePostModal = ({ isOpen, onClose, onPostCreated }: CreatePostModalProp
               disabled={isSubmitting}
               className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
             >
-              {isSubmitting ? 'Creating...' : 'Create Post'}
+              {isSubmitting ? "Creating..." : "Create Post"}
             </button>
           </div>
         </form>

@@ -1,18 +1,18 @@
-import axios from 'axios';
+import axios from "axios";
 
-const API_BASE_URL = 'http://localhost:8080/api/v1/discussion';
+const API_BASE_URL = "http://localhost:8080/api/v1/discussion";
 
 const axiosConfig = {
   withCredentials: true,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 };
 
 const multipartConfig = {
   withCredentials: true,
   headers: {
-    'Content-Type': 'multipart/form-data',
+    "Content-Type": "multipart/form-data",
   },
 };
 
@@ -63,8 +63,7 @@ export interface RestrictUserRequest {
 
 export const discussionApi = {
   // Health check
-  healthCheck: () =>
-    axios.get(`${API_BASE_URL}/health`, axiosConfig),
+  healthCheck: () => axios.get(`${API_BASE_URL}/health`, axiosConfig),
 
   // Post APIs
   createPost: (postData: CreatePostRequest, images?: FileList) => {
@@ -72,18 +71,18 @@ export const discussionApi = {
 
     // 1. Create a Blob from your JSON data with the correct MIME type.
     const postBlob = new Blob([JSON.stringify(postData)], {
-      type: 'application/json'
+      type: "application/json",
     });
 
     // 2. Append the Blob instead of the raw string.
-    formData.append('post', postBlob);
-    
+    formData.append("post", postBlob);
+
     if (images && images.length > 0) {
       Array.from(images).forEach((image, index) => {
-        formData.append('images', image);
+        formData.append("images", image);
       });
     }
-    
+
     return axios.post(`${API_BASE_URL}/posts`, formData, multipartConfig);
   },
 
@@ -96,37 +95,46 @@ export const discussionApi = {
     size?: number;
   }) => {
     const queryParams = new URLSearchParams();
-    if (params?.category) queryParams.append('category', params.category);
-    if (params?.authorRole) queryParams.append('authorRole', params.authorRole);
-    if (params?.keyword) queryParams.append('keyword', params.keyword);
-    if (params?.sortBy) queryParams.append('sortBy', params.sortBy);
-    if (params?.page !== undefined) queryParams.append('page', params.page.toString());
-    if (params?.size !== undefined) queryParams.append('size', params.size.toString());
-    
-    return axios.get(`${API_BASE_URL}/posts?${queryParams.toString()}`, axiosConfig);
+    if (params?.category) queryParams.append("category", params.category);
+    if (params?.authorRole) queryParams.append("authorRole", params.authorRole);
+    if (params?.keyword) queryParams.append("keyword", params.keyword);
+    if (params?.sortBy) queryParams.append("sortBy", params.sortBy);
+    if (params?.page !== undefined)
+      queryParams.append("page", params.page.toString());
+    if (params?.size !== undefined)
+      queryParams.append("size", params.size.toString());
+
+    return axios.get(
+      `${API_BASE_URL}/posts?${queryParams.toString()}`,
+      axiosConfig
+    );
   },
 
   getPostById: (id: number) =>
     axios.get(`${API_BASE_URL}/posts/${id}`, axiosConfig),
 
-  updatePost: (id: number, postData: UpdatePostRequest, newImages?: FileList) => {
+  updatePost: (
+    id: number,
+    postData: UpdatePostRequest,
+    newImages?: FileList
+  ) => {
     const formData = new FormData();
 
     // Create a Blob from the JSON data with the correct MIME type
     const postBlob = new Blob([JSON.stringify(postData)], {
-      type: 'application/json'
+      type: "application/json",
     });
-    
+
     // Append the Blob instead of the string
-    formData.append('post', postBlob);
-    
+    formData.append("post", postBlob);
+
     if (newImages && newImages.length > 0) {
       Array.from(newImages).forEach((image) => {
         // The key for new images should match your backend controller
-        formData.append('newImages', image); 
+        formData.append("newImages", image);
       });
     }
-    
+
     return axios.put(`${API_BASE_URL}/posts/${id}`, formData, multipartConfig);
   },
 
@@ -135,19 +143,31 @@ export const discussionApi = {
 
   // Comment APIs
   createComment: (postId: number, commentData: CreateCommentRequest) =>
-    axios.post(`${API_BASE_URL}/posts/${postId}/comments`, commentData, axiosConfig),
+    axios.post(
+      `${API_BASE_URL}/posts/${postId}/comments`,
+      commentData,
+      axiosConfig
+    ),
 
-  getComments: (postId: number, params?: {
-    sortBy?: string;
-    page?: number;
-    size?: number;
-  }) => {
+  getComments: (
+    postId: number,
+    params?: {
+      sortBy?: string;
+      page?: number;
+      size?: number;
+    }
+  ) => {
     const queryParams = new URLSearchParams();
-    if (params?.sortBy) queryParams.append('sortBy', params.sortBy);
-    if (params?.page !== undefined) queryParams.append('page', params.page.toString());
-    if (params?.size !== undefined) queryParams.append('size', params.size.toString());
-    
-    return axios.get(`${API_BASE_URL}/posts/${postId}/comments?${queryParams.toString()}`, axiosConfig);
+    if (params?.sortBy) queryParams.append("sortBy", params.sortBy);
+    if (params?.page !== undefined)
+      queryParams.append("page", params.page.toString());
+    if (params?.size !== undefined)
+      queryParams.append("size", params.size.toString());
+
+    return axios.get(
+      `${API_BASE_URL}/posts/${postId}/comments?${queryParams.toString()}`,
+      axiosConfig
+    );
   },
 
   getCommentReplies: (commentId: number) =>
@@ -158,17 +178,33 @@ export const discussionApi = {
 
   // Reaction APIs
   reactToPost: (postId: number, reactionData: ReactToPostRequest) =>
-    axios.post(`${API_BASE_URL}/posts/${postId}/react`, reactionData, axiosConfig),
+    axios.post(
+      `${API_BASE_URL}/posts/${postId}/react`,
+      reactionData,
+      axiosConfig
+    ),
 
   reactToComment: (commentId: number, reactionData: ReactToCommentRequest) =>
-    axios.post(`${API_BASE_URL}/comments/${commentId}/react`, reactionData, axiosConfig),
+    axios.post(
+      `${API_BASE_URL}/comments/${commentId}/react`,
+      reactionData,
+      axiosConfig
+    ),
 
   // Report APIs
   reportPost: (postId: number, reportData: ReportPostRequest) =>
-    axios.post(`${API_BASE_URL}/posts/${postId}/report`, reportData, axiosConfig),
+    axios.post(
+      `${API_BASE_URL}/posts/${postId}/report`,
+      reportData,
+      axiosConfig
+    ),
 
   reportComment: (commentId: number, reportData: ReportCommentRequest) =>
-    axios.post(`${API_BASE_URL}/comments/${commentId}/report`, reportData, axiosConfig),
+    axios.post(
+      `${API_BASE_URL}/comments/${commentId}/report`,
+      reportData,
+      axiosConfig
+    ),
 
   // Admin APIs
   getDiscussionStats: () =>
@@ -176,28 +212,50 @@ export const discussionApi = {
 
   getPostReports: (params?: { page?: number; size?: number }) => {
     const queryParams = new URLSearchParams();
-    if (params?.page !== undefined) queryParams.append('page', params.page.toString());
-    if (params?.size !== undefined) queryParams.append('size', params.size.toString());
-    
-    return axios.get(`${API_BASE_URL}/admin/reports/posts?${queryParams.toString()}`, axiosConfig);
+    if (params?.page !== undefined)
+      queryParams.append("page", params.page.toString());
+    if (params?.size !== undefined)
+      queryParams.append("size", params.size.toString());
+
+    return axios.get(
+      `${API_BASE_URL}/admin/reports/posts?${queryParams.toString()}`,
+      axiosConfig
+    );
   },
 
   getCommentReports: (params?: { page?: number; size?: number }) => {
     const queryParams = new URLSearchParams();
-    if (params?.page !== undefined) queryParams.append('page', params.page.toString());
-    if (params?.size !== undefined) queryParams.append('size', params.size.toString());
-    
-    return axios.get(`${API_BASE_URL}/admin/reports/comments?${queryParams.toString()}`, axiosConfig);
+    if (params?.page !== undefined)
+      queryParams.append("page", params.page.toString());
+    if (params?.size !== undefined)
+      queryParams.append("size", params.size.toString());
+
+    return axios.get(
+      `${API_BASE_URL}/admin/reports/comments?${queryParams.toString()}`,
+      axiosConfig
+    );
   },
 
   moderatePost: (postId: number, moderationData: ModerationRequest) =>
-    axios.post(`${API_BASE_URL}/admin/posts/${postId}/moderate`, moderationData, axiosConfig),
+    axios.post(
+      `${API_BASE_URL}/admin/posts/${postId}/moderate`,
+      moderationData,
+      axiosConfig
+    ),
 
   moderateComment: (commentId: number, moderationData: ModerationRequest) =>
-    axios.post(`${API_BASE_URL}/admin/comments/${commentId}/moderate`, moderationData, axiosConfig),
+    axios.post(
+      `${API_BASE_URL}/admin/comments/${commentId}/moderate`,
+      moderationData,
+      axiosConfig
+    ),
 
   restrictUser: (userId: number, restrictionData: RestrictUserRequest) =>
-    axios.post(`${API_BASE_URL}/admin/users/${userId}/restrict`, restrictionData, axiosConfig),
+    axios.post(
+      `${API_BASE_URL}/admin/users/${userId}/restrict`,
+      restrictionData,
+      axiosConfig
+    ),
 
   updateComment: (id: number, commentData: UpdateCommentRequest) =>
     axios.put(`${API_BASE_URL}/comments/${id}`, commentData, axiosConfig),
@@ -287,44 +345,44 @@ export interface ReportResponse {
 
 // Constants
 export const POST_CATEGORIES = {
-  PROBLEM: 'PROBLEM',
-  SUGGESTION: 'SUGGESTION',
-  SOLUTION: 'SOLUTION'
+  PROBLEM: "PROBLEM",
+  SUGGESTION: "SUGGESTION",
+  SOLUTION: "SOLUTION",
 };
 
 export const REACTION_TYPES = {
-  LIKE: 'LIKE',
-  LOVE: 'LOVE',
-  HELPFUL: 'HELPFUL',
-  INSIGHTFUL: 'INSIGHTFUL'
+  LIKE: "LIKE",
+  LOVE: "LOVE",
+  HELPFUL: "HELPFUL",
+  INSIGHTFUL: "INSIGHTFUL",
 };
 
 export const REPORT_REASONS = {
-  SPAM: 'SPAM',
-  HARASSMENT: 'HARASSMENT',
-  INAPPROPRIATE_CONTENT: 'INAPPROPRIATE_CONTENT',
-  MISINFORMATION: 'MISINFORMATION',
-  HATE_SPEECH: 'HATE_SPEECH',
-  OTHER: 'OTHER'
+  SPAM: "SPAM",
+  HARASSMENT: "HARASSMENT",
+  INAPPROPRIATE_CONTENT: "INAPPROPRIATE_CONTENT",
+  MISINFORMATION: "MISINFORMATION",
+  HATE_SPEECH: "HATE_SPEECH",
+  OTHER: "OTHER",
 };
 
 export const USER_ROLES = {
-  USER: 'USER',
-  COUNSELOR: 'COUNSELOR',
-  ADMIN: 'ADMIN'
+  USER: "USER",
+  COUNSELOR: "COUNSELOR",
+  ADMIN: "ADMIN",
 };
 
 export const COMMENT_SORT_TYPES = {
-  NEWEST: 'NEWEST',
-  OLDEST: 'OLDEST',
-  MOST_REACTIONS: 'MOST_REACTIONS',
-  MOST_REPLIES: 'MOST_REPLIES'
+  NEWEST: "NEWEST",
+  OLDEST: "OLDEST",
+  MOST_REACTIONS: "MOST_REACTIONS",
+  MOST_REPLIES: "MOST_REPLIES",
 };
 
 export const RESTRICTION_TYPES = {
-  POST_ONLY: 'POST_ONLY',
-  COMMENT_ONLY: 'COMMENT_ONLY',
-  FULL_RESTRICTION: 'FULL_RESTRICTION'
+  POST_ONLY: "POST_ONLY",
+  COMMENT_ONLY: "COMMENT_ONLY",
+  FULL_RESTRICTION: "FULL_RESTRICTION",
 };
 
 export interface UpdateCommentRequest {

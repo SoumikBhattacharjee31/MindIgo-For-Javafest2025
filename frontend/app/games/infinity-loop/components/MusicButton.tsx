@@ -8,7 +8,10 @@ interface MusicButtonProps {
   setIsPlaying: (isPlaying: boolean) => void;
 }
 
-const MusicButton: React.FC<MusicButtonProps> = ({ isPlaying, setIsPlaying }) => {
+const MusicButton: React.FC<MusicButtonProps> = ({
+  isPlaying,
+  setIsPlaying,
+}) => {
   const [volume, setVolume] = useState(0.5);
   const [showSlider, setShowSlider] = useState(false);
   const [fadeOut, setFadeOut] = useState(false);
@@ -24,8 +27,7 @@ const MusicButton: React.FC<MusicButtonProps> = ({ isPlaying, setIsPlaying }) =>
       }
       setIsPlaying(!isPlaying);
       const audio = new Audio("/old-computer-click-152513.mp3");
-    if(!isPlaying)
-        audio.play();
+      if (!isPlaying) audio.play();
     }
   };
 
@@ -83,8 +85,12 @@ const MusicButton: React.FC<MusicButtonProps> = ({ isPlaying, setIsPlaying }) =>
           </div>
         )}
       </div>
-      <audio autoPlay={true} loop={true} ref={audioRef} src="/perfect-beauty-191271.mp3" />
-      
+      <audio
+        autoPlay={true}
+        loop={true}
+        ref={audioRef}
+        src="/perfect-beauty-191271.mp3"
+      />
     </div>
   );
 };

@@ -79,7 +79,10 @@ export class TestScene extends Scene {
     );
 
     // Add score text
-    this.scoreText = this.add.text(16, 16, 'Score: 0', { fontSize: '32px', color: '#fff' });
+    this.scoreText = this.add.text(16, 16, "Score: 0", {
+      fontSize: "32px",
+      color: "#fff",
+    });
 
     // Emit scene ready event
     EventBus.emit("current-scene-ready", this);
@@ -105,8 +108,8 @@ export class TestScene extends Scene {
     obstacle.body.setAllowGravity(false);
 
     // Set a smaller hitbox for the obstacle
-    const hitboxWidth = obstacle.displayWidth * 5;  // 50% of the sprite's width
-    const hitboxHeight = obstacle.displayHeight * 8;  // 50% of the sprite's height
+    const hitboxWidth = obstacle.displayWidth * 5; // 50% of the sprite's width
+    const hitboxHeight = obstacle.displayHeight * 8; // 50% of the sprite's height
     obstacle.body.setSize(hitboxWidth, hitboxHeight);
 
     // Set velocity based on delta time
@@ -151,7 +154,7 @@ export class TestScene extends Scene {
 
   updateScore(delta: number) {
     this.score += delta * 0.01;
-    this.scoreText.setText('Score: ' + Math.floor(this.score));
+    this.scoreText.setText("Score: " + Math.floor(this.score));
   }
 
   jump() {

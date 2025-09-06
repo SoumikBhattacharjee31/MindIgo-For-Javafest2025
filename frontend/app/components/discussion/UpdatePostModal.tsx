@@ -1,8 +1,13 @@
-'use client';
+"use client";
 
-import { useState, useRef, useEffect } from 'react';
-import { toast } from 'react-toastify';
-import { discussionApi, PostResponse, POST_CATEGORIES, UpdatePostRequest } from '../../api/discussionService';
+import { useState, useRef, useEffect } from "react";
+import { toast } from "react-toastify";
+import {
+  discussionApi,
+  PostResponse,
+  POST_CATEGORIES,
+  UpdatePostRequest,
+} from "../../api/discussionService";
 
 interface UpdatePostModalProps {
   isOpen: boolean;
@@ -11,11 +16,16 @@ interface UpdatePostModalProps {
   onPostUpdated: (post: PostResponse) => void;
 }
 
-const UpdatePostModal = ({ isOpen, onClose, post, onPostUpdated }: UpdatePostModalProps) => {
+const UpdatePostModal = ({
+  isOpen,
+  onClose,
+  post,
+  onPostUpdated,
+}: UpdatePostModalProps) => {
   const [formData, setFormData] = useState<UpdatePostRequest>({
-    title: '',
-    content: '',
-    category: POST_CATEGORIES.PROBLEM
+    title: "",
+    content: "",
+    category: POST_CATEGORIES.PROBLEM,
   });
   const [newImages, setNewImages] = useState<FileList | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -27,16 +37,20 @@ const UpdatePostModal = ({ isOpen, onClose, post, onPostUpdated }: UpdatePostMod
       setFormData({
         title: post.title,
         content: post.content,
-        category: post.category
+        category: post.category,
       });
     }
   }, [isOpen, post]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -45,14 +59,14 @@ const UpdatePostModal = ({ isOpen, onClose, post, onPostUpdated }: UpdatePostMod
     if (files && files.length > 0) {
       // Validate file count (max 5 images)
       if (files.length > 5) {
-        toast.error('Maximum 5 images allowed');
+        toast.error("Maximum 5 images allowed");
         return;
       }
 
       // Validate file sizes (max 5MB each)
       for (let i = 0; i < files.length; i++) {
         if (files[i].size > 5 * 1024 * 1024) {
-          toast.error('Each image must be less than 5MB');
+          toast.error("Each image must be less than 5MB");
           return;
         }
       }
@@ -61,7 +75,7 @@ const UpdatePostModal = ({ isOpen, onClose, post, onPostUpdated }: UpdatePostMod
 
       // Create preview URLs
       const previews: string[] = [];
-      Array.from(files).forEach(file => {
+      Array.from(files).forEach((file) => {
         const reader = new FileReader();
         reader.onload = (e) => {
           previews.push(e.target?.result as string);
@@ -79,10 +93,10 @@ const UpdatePostModal = ({ isOpen, onClose, post, onPostUpdated }: UpdatePostMod
 
     const fileArray = Array.from(newImages);
     fileArray.splice(index, 1);
-    
+
     // Create new FileList
     const dt = new DataTransfer();
-    fileArray.forEach(file => dt.items.add(file));
+    fileArray.forEach((file) => dt.items.add(file));
     setNewImages(dt.files);
 
     // Update preview
@@ -95,13 +109,17 @@ const UpdatePostModal = ({ isOpen, onClose, post, onPostUpdated }: UpdatePostMod
     e.preventDefault();
 
     if (!formData.title.trim() || !formData.content.trim()) {
-      toast.error('Title and content are required');
+      toast.error("Title and content are required");
       return;
     }
 
     try {
       setIsSubmitting(true);
-      const response = await discussionApi.updatePost(post.id, formData, newImages || undefined);
+      const response = await discussionApi.updatePost(
+        post.id,
+        formData,
+        newImages || undefined
+      );
 
       if (response.data.success) {
         onPostUpdated(response.data.data);
@@ -110,8 +128,8 @@ const UpdatePostModal = ({ isOpen, onClose, post, onPostUpdated }: UpdatePostMod
         toast.error(response.data.message);
       }
     } catch (error) {
-      console.error('Error updating post:', error);
-      toast.error('Failed to update post');
+      console.error("Error updating post:", error);
+      toast.error("Failed to update post");
     } finally {
       setIsSubmitting(false);
     }
@@ -119,14 +137,14 @@ const UpdatePostModal = ({ isOpen, onClose, post, onPostUpdated }: UpdatePostMod
 
   const resetForm = () => {
     setFormData({
-      title: '',
-      content: '',
-      category: POST_CATEGORIES.PROBLEM
+      title: "",
+      content: "",
+      category: POST_CATEGORIES.PROBLEM,
     });
     setNewImages(null);
     setPreviewImages([]);
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = "";
     }
   };
 
@@ -146,8 +164,18 @@ const UpdatePostModal = ({ isOpen, onClose, post, onPostUpdated }: UpdatePostMod
             onClick={handleClose}
             className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -186,7 +214,9 @@ const UpdatePostModal = ({ isOpen, onClose, post, onPostUpdated }: UpdatePostMod
               maxLength={200}
               required
             />
-            <p className="text-xs text-gray-500 mt-1">{formData.title.length}/200 characters</p>
+            <p className="text-xs text-gray-500 mt-1">
+              {formData.title.length}/200 characters
+            </p>
           </div>
 
           {/* Content */}
@@ -204,7 +234,9 @@ const UpdatePostModal = ({ isOpen, onClose, post, onPostUpdated }: UpdatePostMod
               maxLength={5000}
               required
             />
-            <p className="text-xs text-gray-500 mt-1">{formData.content.length}/5000 characters</p>
+            <p className="text-xs text-gray-500 mt-1">
+              {formData.content.length}/5000 characters
+            </p>
           </div>
 
           {/* Current Images */}
@@ -224,7 +256,9 @@ const UpdatePostModal = ({ isOpen, onClose, post, onPostUpdated }: UpdatePostMod
                   </div>
                 ))}
               </div>
-              <p className="text-xs text-gray-500 mt-1">Adding new images will append or replace as per backend logic</p>
+              <p className="text-xs text-gray-500 mt-1">
+                Adding new images will append or replace as per backend logic
+              </p>
             </div>
           )}
 
@@ -241,7 +275,9 @@ const UpdatePostModal = ({ isOpen, onClose, post, onPostUpdated }: UpdatePostMod
               onChange={handleImageChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-            <p className="text-xs text-gray-500 mt-1">Maximum 5 images, 5MB each</p>
+            <p className="text-xs text-gray-500 mt-1">
+              Maximum 5 images, 5MB each
+            </p>
 
             {/* New Image Previews */}
             {previewImages.length > 0 && (
@@ -280,7 +316,7 @@ const UpdatePostModal = ({ isOpen, onClose, post, onPostUpdated }: UpdatePostMod
               disabled={isSubmitting}
               className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
             >
-              {isSubmitting ? 'Updating...' : 'Update Post'}
+              {isSubmitting ? "Updating..." : "Update Post"}
             </button>
           </div>
         </form>

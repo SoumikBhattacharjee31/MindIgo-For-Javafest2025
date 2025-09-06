@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
+import { useState } from "react";
 
 interface ImageGalleryProps {
   images: string[];
@@ -21,22 +21,23 @@ const ImageGallery = ({ images }: ImageGalleryProps) => {
     setSelectedImage(null);
   };
 
-  const navigateImage = (direction: 'prev' | 'next') => {
-    const newIndex = direction === 'prev' 
-      ? (currentIndex - 1 + images.length) % images.length
-      : (currentIndex + 1) % images.length;
-    
+  const navigateImage = (direction: "prev" | "next") => {
+    const newIndex =
+      direction === "prev"
+        ? (currentIndex - 1 + images.length) % images.length
+        : (currentIndex + 1) % images.length;
+
     setCurrentIndex(newIndex);
     setSelectedImage(images[newIndex]);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') {
+    if (e.key === "Escape") {
       closeLightbox();
-    } else if (e.key === 'ArrowLeft') {
-      navigateImage('prev');
-    } else if (e.key === 'ArrowRight') {
-      navigateImage('next');
+    } else if (e.key === "ArrowLeft") {
+      navigateImage("prev");
+    } else if (e.key === "ArrowRight") {
+      navigateImage("next");
     }
   };
 
@@ -119,7 +120,7 @@ const ImageGallery = ({ images }: ImageGalleryProps) => {
             onClick={() => openLightbox(images[3], 3)}
           />
           {images.length > 4 && (
-            <div 
+            <div
               className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-lg cursor-pointer hover:bg-opacity-60 transition-all"
               onClick={() => openLightbox(images[3], 3)}
             >
@@ -139,7 +140,7 @@ const ImageGallery = ({ images }: ImageGalleryProps) => {
 
       {/* Lightbox Modal */}
       {selectedImage && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50"
           onClick={closeLightbox}
           onKeyDown={handleKeyDown}
@@ -151,8 +152,18 @@ const ImageGallery = ({ images }: ImageGalleryProps) => {
               onClick={closeLightbox}
               className="absolute top-4 right-4 text-white hover:text-gray-300 z-10"
             >
-              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <svg
+                className="w-8 h-8"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
 
@@ -162,23 +173,43 @@ const ImageGallery = ({ images }: ImageGalleryProps) => {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    navigateImage('prev');
+                    navigateImage("prev");
                   }}
                   className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300 z-10"
                 >
-                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  <svg
+                    className="w-8 h-8"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 19l-7-7 7-7"
+                    />
                   </svg>
                 </button>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    navigateImage('next');
+                    navigateImage("next");
                   }}
                   className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300 z-10"
                 >
-                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  <svg
+                    className="w-8 h-8"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
                   </svg>
                 </button>
               </>

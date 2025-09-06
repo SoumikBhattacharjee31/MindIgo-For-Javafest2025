@@ -3,16 +3,14 @@ import React from "react";
 
 interface BackButtonProps {
   setCurPage: (curPage: string) => void;
-  sound:boolean;
+  sound: boolean;
 }
 
-const BackButton: React.FC<BackButtonProps> = ({ setCurPage, sound}) => {
+const BackButton: React.FC<BackButtonProps> = ({ setCurPage, sound }) => {
   const handleBack = () => {
     const audio = new Audio("/old-computer-click-152513.mp3");
-    if(sound)
-      audio.play();
+    if (sound) audio.play();
     setCurPage("menu");
-    
   };
 
   return (

@@ -1,14 +1,14 @@
-'use client';
-import React from 'react';
-import { useRouter } from 'next/navigation';
-import { removeCookie } from 'cookies-next';
+"use client";
+import React from "react";
+import { useRouter } from "next/navigation";
+import { removeCookie } from "cookies-next";
 
 const AdminNavbar = () => {
   const router = useRouter();
 
   const handleLogout = () => {
-    removeCookie('authToken');
-    router.push('/admin/login');
+    removeCookie("authToken");
+    router.push("/admin/login");
   };
 
   return (

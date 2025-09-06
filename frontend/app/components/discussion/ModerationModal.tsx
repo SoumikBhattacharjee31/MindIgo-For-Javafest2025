@@ -1,18 +1,24 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { ModerationRequest } from '../../api/discussionService';
+import { useState } from "react";
+import { ModerationRequest } from "../../api/discussionService";
 
 interface ModerationModalProps {
   isOpen: boolean;
   onClose: () => void;
-  type: 'post' | 'comment' | null;
+  type: "post" | "comment" | null;
   title: string;
   onSubmit: (data: ModerationRequest) => void;
 }
 
-const ModerationModal = ({ isOpen, onClose, type, title, onSubmit }: ModerationModalProps) => {
-  const [reason, setReason] = useState('');
+const ModerationModal = ({
+  isOpen,
+  onClose,
+  type,
+  title,
+  onSubmit,
+}: ModerationModalProps) => {
+  const [reason, setReason] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -23,17 +29,17 @@ const ModerationModal = ({ isOpen, onClose, type, title, onSubmit }: ModerationM
     }
 
     setIsSubmitting(true);
-    
+
     try {
       await onSubmit({ reason: reason.trim() });
-      setReason('');
+      setReason("");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleClose = () => {
-    setReason('');
+    setReason("");
     onClose();
   };
 
@@ -44,14 +50,24 @@ const ModerationModal = ({ isOpen, onClose, type, title, onSubmit }: ModerationM
       <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-900">
-            Moderate {type === 'post' ? 'Post' : 'Comment'}
+            Moderate {type === "post" ? "Post" : "Comment"}
           </h2>
           <button
             onClick={handleClose}
             className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -64,8 +80,16 @@ const ModerationModal = ({ isOpen, onClose, type, title, onSubmit }: ModerationM
             <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
               <div className="flex">
                 <div className="flex-shrink-0">
-                  <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  <svg
+                    className="h-5 w-5 text-yellow-400"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                 </div>
                 <div className="ml-3">
@@ -90,7 +114,9 @@ const ModerationModal = ({ isOpen, onClose, type, title, onSubmit }: ModerationM
               maxLength={500}
               required
             />
-            <p className="text-xs text-gray-500 mt-1">{reason.length}/500 characters</p>
+            <p className="text-xs text-gray-500 mt-1">
+              {reason.length}/500 characters
+            </p>
           </div>
 
           <div className="flex items-center justify-end space-x-3">
@@ -106,7 +132,7 @@ const ModerationModal = ({ isOpen, onClose, type, title, onSubmit }: ModerationM
               disabled={isSubmitting || !reason.trim()}
               className="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
             >
-              {isSubmitting ? 'Moderating...' : 'Moderate'}
+              {isSubmitting ? "Moderating..." : "Moderate"}
             </button>
           </div>
         </form>

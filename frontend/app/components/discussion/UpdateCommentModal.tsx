@@ -1,8 +1,12 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { toast } from 'react-toastify';
-import { discussionApi, CommentResponse, UpdateCommentRequest } from '../../api/discussionService';
+import { useState, useEffect } from "react";
+import { toast } from "react-toastify";
+import {
+  discussionApi,
+  CommentResponse,
+  UpdateCommentRequest,
+} from "../../api/discussionService";
 
 interface UpdateCommentModalProps {
   isOpen: boolean;
@@ -11,9 +15,14 @@ interface UpdateCommentModalProps {
   onCommentUpdated: (updatedComment: CommentResponse) => void;
 }
 
-const UpdateCommentModal = ({ isOpen, onClose, comment, onCommentUpdated }: UpdateCommentModalProps) => {
+const UpdateCommentModal = ({
+  isOpen,
+  onClose,
+  comment,
+  onCommentUpdated,
+}: UpdateCommentModalProps) => {
   const [formData, setFormData] = useState<UpdateCommentRequest>({
-    content: '',
+    content: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -27,9 +36,9 @@ const UpdateCommentModal = ({ isOpen, onClose, comment, onCommentUpdated }: Upda
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -37,7 +46,7 @@ const UpdateCommentModal = ({ isOpen, onClose, comment, onCommentUpdated }: Upda
     e.preventDefault();
 
     if (!formData.content.trim()) {
-      toast.error('Content is required');
+      toast.error("Content is required");
       return;
     }
 
@@ -52,8 +61,8 @@ const UpdateCommentModal = ({ isOpen, onClose, comment, onCommentUpdated }: Upda
         toast.error(response.data.message);
       }
     } catch (error) {
-      console.error('Error updating comment:', error);
-      toast.error('Failed to update comment');
+      console.error("Error updating comment:", error);
+      toast.error("Failed to update comment");
     } finally {
       setIsSubmitting(false);
     }
@@ -61,7 +70,7 @@ const UpdateCommentModal = ({ isOpen, onClose, comment, onCommentUpdated }: Upda
 
   const resetForm = () => {
     setFormData({
-      content: '',
+      content: "",
     });
   };
 
@@ -76,13 +85,25 @@ const UpdateCommentModal = ({ isOpen, onClose, comment, onCommentUpdated }: Upda
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">Update Comment</h2>
+          <h2 className="text-xl font-semibold text-gray-900">
+            Update Comment
+          </h2>
           <button
             onClick={handleClose}
             className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -103,7 +124,9 @@ const UpdateCommentModal = ({ isOpen, onClose, comment, onCommentUpdated }: Upda
               maxLength={5000}
               required
             />
-            <p className="text-xs text-gray-500 mt-1">{formData.content.length}/5000 characters</p>
+            <p className="text-xs text-gray-500 mt-1">
+              {formData.content.length}/5000 characters
+            </p>
           </div>
 
           {/* Actions */}
@@ -120,7 +143,7 @@ const UpdateCommentModal = ({ isOpen, onClose, comment, onCommentUpdated }: Upda
               disabled={isSubmitting}
               className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
             >
-              {isSubmitting ? 'Updating...' : 'Update Comment'}
+              {isSubmitting ? "Updating..." : "Update Comment"}
             </button>
           </div>
         </form>

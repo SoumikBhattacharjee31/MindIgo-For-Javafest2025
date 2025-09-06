@@ -1,8 +1,12 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { toast } from 'react-toastify';
-import { discussionApi, CommentResponse, CreateCommentRequest } from '../../api/discussionService';
+import { useState } from "react";
+import { toast } from "react-toastify";
+import {
+  discussionApi,
+  CommentResponse,
+  CreateCommentRequest,
+} from "../../api/discussionService";
 
 interface CommentFormProps {
   postId: number;
@@ -13,50 +17,50 @@ interface CommentFormProps {
   buttonText?: string;
 }
 
-const CommentForm = ({ 
-  postId, 
-  parentCommentId, 
-  onCommentCreated, 
+const CommentForm = ({
+  postId,
+  parentCommentId,
+  onCommentCreated,
   onCancel,
   placeholder = "Write your comment...",
-  buttonText = "Post Comment"
+  buttonText = "Post Comment",
 }: CommentFormProps) => {
-  const [content, setContent] = useState('');
+  const [content, setContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!content.trim()) {
-      toast.error('Comment content is required');
+      toast.error("Comment content is required");
       return;
     }
     if (content.length > 2000) {
-      toast.error('Comment is too long (max 2000 characters)');
+      toast.error("Comment is too long (max 2000 characters)");
       return;
     }
     try {
       setIsSubmitting(true);
       const commentData: CreateCommentRequest = {
         content: content.trim(),
-        parentCommentId
+        parentCommentId,
       };
       const response = await discussionApi.createComment(postId, commentData);
       if (response.data.success) {
         onCommentCreated(response.data.data);
-        setContent('');
+        setContent("");
       } else {
         toast.error(response.data.message);
       }
     } catch (error) {
-      console.error('Error creating comment:', error);
-      toast.error('Failed to post comment');
+      console.error("Error creating comment:", error);
+      toast.error("Failed to post comment");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleCancel = () => {
-    setContent('');
+    setContent("");
     onCancel?.();
   };
 
@@ -73,7 +77,9 @@ const CommentForm = ({
           disabled={isSubmitting}
         />
         <div className="flex justify-between items-center mt-1">
-          <p className="text-xs text-gray-500">{content.length}/2000 characters</p>
+          <p className="text-xs text-gray-500">
+            {content.length}/2000 characters
+          </p>
         </div>
       </div>
       <div className="flex items-center justify-end space-x-2">
@@ -92,7 +98,7 @@ const CommentForm = ({
           disabled={isSubmitting || !content.trim()}
           className="px-4 py-1.5 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
         >
-          {isSubmitting ? 'Posting...' : buttonText}
+          {isSubmitting ? "Posting..." : buttonText}
         </button>
       </div>
     </form>
