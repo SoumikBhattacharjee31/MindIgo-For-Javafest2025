@@ -6,15 +6,14 @@ interface GameProps {
   setCurPage: (curPage: string) => void;
   sound: boolean;
   arr: Array<Array<Array<number>>>;
-  setArr: (arr: Array<Array<Array<number>>>)=>void
+  setArr: (arr: Array<Array<Array<number>>>) => void;
 }
 
-const Game: React.FC<GameProps> = ({ setCurPage, sound, arr , setArr}) => {
-  
+const Game: React.FC<GameProps> = ({ setCurPage, sound, arr, setArr }) => {
   return (
     <div className="flex items-center justify-center">
-      <BackButton setCurPage={setCurPage} sound={sound}/>
-      <ButtonTable sound={sound} arr={arr} setArr={setArr}/>
+      <BackButton setCurPage={setCurPage} sound={sound} />
+      <ButtonTable sound={sound} arr={arr} setArr={setArr} />
     </div>
   );
 };

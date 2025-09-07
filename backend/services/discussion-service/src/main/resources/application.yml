@@ -1,0 +1,23 @@
+spring:
+  config:
+    import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888}
+  application:
+    name: discussion-service
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 50MB
+
+services:
+  file-server:
+    url=http://FILE-SERVER:
+
+logging:
+  level:
+    com:
+      mindigo:
+        discussion_service=INFO:
+    org:
+      hibernate:
+        SQL=DEBUG:
+

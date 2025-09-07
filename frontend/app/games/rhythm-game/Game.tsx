@@ -4,17 +4,17 @@ import { motion, AnimatePresence } from "framer-motion";
 import * as Phaser from "phaser";
 
 function parseOsuFile(content: string) {
-  const lines = content.split('\n');
+  const lines = content.split("\n");
   let inHitObjects = false;
   const hitObjects: { time: number; lane: number; type?: string }[] = [];
 
   for (const line of lines) {
-    if (line.trim() === '[HitObjects]') {
+    if (line.trim() === "[HitObjects]") {
       inHitObjects = true;
       continue;
     }
     if (inHitObjects && line.trim()) {
-      const parts = line.split(',');
+      const parts = line.split(",");
       if (parts.length >= 3) {
         const x = parseInt(parts[0], 10);
         const time = parseInt(parts[2], 10) / 1000;
@@ -27,10 +27,10 @@ function parseOsuFile(content: string) {
 }
 
 function useRhythmStats() {
-  const [stats, setStats] = useState({ 
-    score: 0, 
-    combo: 0, 
-    accuracy: 100, 
+  const [stats, setStats] = useState({
+    score: 0,
+    combo: 0,
+    accuracy: 100,
     judgement: "",
     maxCombo: 0,
     perfectHits: 0,
@@ -39,16 +39,17 @@ function useRhythmStats() {
     misses: 0,
     gameEnded: false,
     currentTime: 0,
-    totalTime: 0
+    totalTime: 0,
   });
-  
+
   useEffect(() => {
     const handler = (e: Event) => {
       const detail = (e as CustomEvent).detail;
       setStats((prev) => ({ ...prev, ...detail }));
     };
     window.addEventListener("rhythm:stats", handler as EventListener);
-    return () => window.removeEventListener("rhythm:stats", handler as EventListener);
+    return () =>
+      window.removeEventListener("rhythm:stats", handler as EventListener);
   }, []);
   return stats;
 }
@@ -59,10 +60,10 @@ function generateMockBeatmap(bpm: number, duration: number) {
   const map: { time: number; lane: number; type?: string }[] = [];
   let t = 3;
   const endTime = duration - 5;
-  
+
   while (t < endTime) {
     const pattern = Math.floor(t / (beat * 8)) % 8;
-    
+
     switch (pattern) {
       case 0:
         map.push({ time: t, lane: 0 });
@@ -105,7 +106,7 @@ function generateMockBeatmap(bpm: number, duration: number) {
     }
     t += beat * 4;
   }
-  
+
   return map;
 }
 
@@ -125,24 +126,27 @@ class EnhancedRhythmScene extends Phaser.Scene {
   paused = false;
   hitKeys = ["A", "S", "D", "F"];
   gameEnded = false;
-  
+
   score = 0;
   combo = 0;
   maxCombo = 0;
   hitCounts = { perfect: 0, great: 0, good: 0, miss: 0 };
-  
+
   laneGlows: Phaser.GameObjects.Image[] = [];
   backgroundElements: Phaser.GameObjects.GameObject[] = [];
   gameStarted = false;
 
   constructor() {
-    super('EnhancedRhythmScene');
+    super("EnhancedRhythmScene");
   }
 
   preload() {
     // Create simple colored rectangles as placeholder assets
-    this.load.image('note', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==');
-    
+    this.load.image(
+      "note",
+      "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+    );
+
     // Generate mock beatmap data
     this.beatmap = generateMockBeatmap(90, 120);
   }
@@ -150,7 +154,7 @@ class EnhancedRhythmScene extends Phaser.Scene {
   createTextures() {
     const noteSize = 32;
     const g = this.add.graphics();
-    
+
     // Regular note
     g.fillStyle(0x60a5fa, 0.8);
     g.fillCircle(noteSize, noteSize, noteSize);
@@ -177,7 +181,7 @@ class EnhancedRhythmScene extends Phaser.Scene {
   }
 
   create() {
-    this.cameras.main.setBackgroundColor('#f0f8ff');
+    this.cameras.main.setBackgroundColor("#f0f8ff");
     this.createTextures();
     this.addBackground();
     this.drawRunway();
@@ -192,19 +196,20 @@ class EnhancedRhythmScene extends Phaser.Scene {
 
   createMockAudio() {
     // Create a simple audio context for demo
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-    
+    const audioContext = new (window.AudioContext ||
+      (window as any).webkitAudioContext)();
+
     // Create a simple oscillator-based track
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
-    
+
     oscillator.connect(gainNode);
     gainNode.connect(audioContext.destination);
-    
+
     oscillator.frequency.setValueAtTime(220, audioContext.currentTime);
-    oscillator.type = 'sine';
+    oscillator.type = "sine";
     gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-    
+
     // Mock music object
     this.music = {
       isPlaying: false,
@@ -227,10 +232,10 @@ class EnhancedRhythmScene extends Phaser.Scene {
         this.gameStarted = false;
       },
       once: (event: string, callback: () => void) => {
-        if (event === 'complete') {
+        if (event === "complete") {
           setTimeout(callback, 120000); // 2 minutes
         }
-      }
+      },
     } as any;
   }
 
@@ -238,15 +243,15 @@ class EnhancedRhythmScene extends Phaser.Scene {
     const startTime = Date.now();
     const updateTimer = () => {
       if (!this.music.isPlaying) return;
-      
+
       const elapsed = (Date.now() - startTime) / 1000;
       this.music.seek = elapsed;
-      
+
       if (elapsed >= 120) {
         this.endGame();
         return;
       }
-      
+
       requestAnimationFrame(updateTimer);
     };
     updateTimer();
@@ -254,7 +259,7 @@ class EnhancedRhythmScene extends Phaser.Scene {
 
   addBackground() {
     const bg = this.add.rectangle(385, 360, 770, 720, 0xf0f8ff);
-    
+
     // Add floating particles
     for (let i = 0; i < 20; i++) {
       const particle = this.add.circle(
@@ -264,7 +269,7 @@ class EnhancedRhythmScene extends Phaser.Scene {
         0x93c5fd,
         Phaser.Math.FloatBetween(0.1, 0.3)
       );
-      
+
       this.tweens.add({
         targets: particle,
         y: particle.y - Phaser.Math.Between(50, 100),
@@ -272,25 +277,29 @@ class EnhancedRhythmScene extends Phaser.Scene {
         duration: Phaser.Math.Between(3000, 6000),
         repeat: -1,
         yoyo: true,
-        delay: Phaser.Math.Between(0, 2000)
+        delay: Phaser.Math.Between(0, 2000),
       });
     }
   }
 
   drawRunway() {
     const g = this.add.graphics();
-    
+
     for (let i = 0; i < 4; i++) {
       const top = this.topXs[i];
       const bot = this.bottomXs[i];
-      
+
       // Lane background
       g.fillStyle(0xe1f5fe, 0.3);
       const poly = new Phaser.Geom.Polygon([
-        top - 30, this.spawnY,
-        top + 30, this.spawnY,
-        bot + 50, this.hitLineY + 60,
-        bot - 50, this.hitLineY + 60,
+        top - 30,
+        this.spawnY,
+        top + 30,
+        this.spawnY,
+        bot + 50,
+        this.hitLineY + 60,
+        bot - 50,
+        this.hitLineY + 60,
       ]);
       g.fillPoints(poly.points, true);
 
@@ -321,14 +330,22 @@ class EnhancedRhythmScene extends Phaser.Scene {
 
     // Hit markers for each lane
     for (let i = 0; i < 4; i++) {
-      const marker = this.add.circle(this.bottomXs[i], this.hitLineY, 20, 0x93c5fd, 0.3);
+      const marker = this.add.circle(
+        this.bottomXs[i],
+        this.hitLineY,
+        20,
+        0x93c5fd,
+        0.3
+      );
       marker.setStrokeStyle(2, 0x60a5fa, 0.6);
-      
-      const keyLabel = this.add.text(this.bottomXs[i], this.hitLineY + 40, this.hitKeys[i], {
-        fontFamily: "Arial",
-        fontSize: "16px",
-        color: "#64748b"
-      }).setOrigin(0.5);
+
+      const keyLabel = this.add
+        .text(this.bottomXs[i], this.hitLineY + 40, this.hitKeys[i], {
+          fontFamily: "Arial",
+          fontSize: "16px",
+          color: "#64748b",
+        })
+        .setOrigin(0.5);
     }
   }
 
@@ -343,13 +360,21 @@ class EnhancedRhythmScene extends Phaser.Scene {
   }
 
   addInstructions() {
-    const instructions = this.add.text(385, 120, "♪ Calm Rhythm Demo ♪\nA S D F to play along\nP to pause • Click to start", {
-      fontFamily: "Arial",
-      fontSize: "18px",
-      color: "#64748b",
-      align: "center",
-    }).setOrigin(0.5).setAlpha(0.7);
-    
+    const instructions = this.add
+      .text(
+        385,
+        120,
+        "♪ Calm Rhythm Demo ♪\nA S D F to play along\nP to pause • Click to start",
+        {
+          fontFamily: "Arial",
+          fontSize: "18px",
+          color: "#64748b",
+          align: "center",
+        }
+      )
+      .setOrigin(0.5)
+      .setAlpha(0.7);
+
     this.tweens.add({
       targets: instructions,
       y: instructions.y + 5,
@@ -357,13 +382,13 @@ class EnhancedRhythmScene extends Phaser.Scene {
       duration: 2000,
       yoyo: true,
       repeat: -1,
-      ease: "sine.inOut"
+      ease: "sine.inOut",
     });
   }
 
   setupControls() {
     this.input.keyboard?.on("keydown-P", () => this.togglePause());
-    
+
     this.input.keyboard?.on("keydown", (ev: KeyboardEvent) => {
       if (this.gameEnded) return;
       const i = this.hitKeys.indexOf(ev.key.toUpperCase());
@@ -374,8 +399,8 @@ class EnhancedRhythmScene extends Phaser.Scene {
     });
 
     // Start game on click or key press
-    this.input.once('pointerdown', () => this.startGame());
-    this.input.keyboard?.once('keydown', () => this.startGame());
+    this.input.once("pointerdown", () => this.startGame());
+    this.input.keyboard?.once("keydown", () => this.startGame());
   }
 
   startGame() {
@@ -391,7 +416,7 @@ class EnhancedRhythmScene extends Phaser.Scene {
         targets: this.laneGlows[lane],
         alpha: 0.1,
         duration: 150,
-        ease: "power2.out"
+        ease: "power2.out",
       });
     }
   }
@@ -416,11 +441,18 @@ class EnhancedRhythmScene extends Phaser.Scene {
     // Update notes
     const toRemove: any[] = [];
     for (const note of this.notes) {
-      const t = Math.max(0, Math.min(1, (audioTime - note.spawnTime) / this.travelTime));
-      
+      const t = Math.max(
+        0,
+        Math.min(1, (audioTime - note.spawnTime) / this.travelTime)
+      );
+
       note.y = Phaser.Math.Linear(this.spawnY, this.hitLineY, t);
-      note.x = Phaser.Math.Linear(this.topXs[note.lane], this.bottomXs[note.lane], t);
-      
+      note.x = Phaser.Math.Linear(
+        this.topXs[note.lane],
+        this.bottomXs[note.lane],
+        t
+      );
+
       const scale = Phaser.Math.Linear(0.5, 1.2, t);
       note.setScale(scale);
 
@@ -430,7 +462,7 @@ class EnhancedRhythmScene extends Phaser.Scene {
         this.judgeHit("Miss", 0);
       }
     }
-    
+
     toRemove.forEach((n) => n.destroy());
     this.notes = this.notes.filter((n) => !toRemove.includes(n));
 
@@ -445,8 +477,8 @@ class EnhancedRhythmScene extends Phaser.Scene {
       detail: {
         currentTime,
         totalTime,
-        gameEnded: this.gameEnded
-      }
+        gameEnded: this.gameEnded,
+      },
     });
     window.dispatchEvent(ev);
   }
@@ -454,24 +486,28 @@ class EnhancedRhythmScene extends Phaser.Scene {
   spawnNote(hitTime: number, lane: number) {
     const spawnTime = hitTime - this.travelTime;
     const note = this.add.image(this.topXs[lane], this.spawnY, "enhancedNote");
-    
+
     Object.assign(note, { lane, hitTime, spawnTime, hit: false });
     this.notes.push(note);
   }
 
   convertToMissedNote(note: any) {
-    const missedNote = this.add.image(this.bottomXs[note.lane], this.hitLineY + 80, "missedNote");
+    const missedNote = this.add.image(
+      this.bottomXs[note.lane],
+      this.hitLineY + 80,
+      "missedNote"
+    );
     missedNote.setScale(0.6).setAlpha(0.5);
     this.missedNotes.push(missedNote);
   }
 
   onHitKey(lane: number) {
     if (!this.gameStarted || this.gameEnded) return;
-    
+
     const now = this.music.seek || 0;
     let best: any = null;
     let bestDt = 999;
-    
+
     for (const n of this.notes) {
       if (n.lane !== lane || n.hit) continue;
       const dt = Math.abs(n.hitTime - now);
@@ -480,13 +516,13 @@ class EnhancedRhythmScene extends Phaser.Scene {
         best = n;
       }
     }
-    
+
     if (!best) return;
 
     const windows = { perfect: 0.08, great: 0.15, good: 0.25 };
     let scoreAdd = 0;
     let label = "";
-    
+
     if (bestDt <= windows.perfect) {
       scoreAdd = 1000;
       label = "Perfect";
@@ -507,13 +543,13 @@ class EnhancedRhythmScene extends Phaser.Scene {
     if (label !== "Miss") {
       best.hit = true;
       this.hitEffect(best.x, this.hitLineY, label);
-      
+
       this.combo++;
       this.maxCombo = Math.max(this.maxCombo, this.combo);
-      
+
       const comboBonus = Math.floor(this.combo / 10) * 50;
       scoreAdd += comboBonus;
-      
+
       best.destroy();
       this.notes = this.notes.filter((n) => n !== best);
     } else {
@@ -526,17 +562,17 @@ class EnhancedRhythmScene extends Phaser.Scene {
 
   hitEffect(x: number, y: number, judgement: string) {
     this.particles.emitParticleAt(x, y, 8);
-    
+
     const ringColor = judgement === "Perfect" ? 0x10b981 : 0x60a5fa;
     const ring = this.add.circle(x, y, 25, ringColor, 0.5);
-    
+
     this.tweens.add({
       targets: ring,
       scale: { from: 0.5, to: 2 },
       alpha: 0,
       duration: 400,
       ease: "power2.out",
-      onComplete: () => ring.destroy()
+      onComplete: () => ring.destroy(),
     });
   }
 
@@ -545,16 +581,18 @@ class EnhancedRhythmScene extends Phaser.Scene {
 
     const colors = {
       Perfect: "#10b981",
-      Great: "#3b82f6", 
+      Great: "#3b82f6",
       Good: "#f59e0b",
-      Miss: "#ef4444"
+      Miss: "#ef4444",
     };
-    
-    const txt = this.add.text(385, this.hitLineY - 40, label, {
-      fontFamily: "Arial",
-      fontSize: "20px",
-      color: colors[label as keyof typeof colors],
-    }).setOrigin(0.5);
+
+    const txt = this.add
+      .text(385, this.hitLineY - 40, label, {
+        fontFamily: "Arial",
+        fontSize: "20px",
+        color: colors[label as keyof typeof colors],
+      })
+      .setOrigin(0.5);
 
     this.tweens.add({
       targets: txt,
@@ -563,14 +601,23 @@ class EnhancedRhythmScene extends Phaser.Scene {
       scale: { from: 1, to: 1.2 },
       duration: 600,
       ease: "power2.out",
-      onComplete: () => txt.destroy()
+      onComplete: () => txt.destroy(),
     });
   }
 
   updateStats() {
     const totalHits = Object.values(this.hitCounts).reduce((a, b) => a + b, 0);
-    const accuracy = totalHits > 0 ? Math.round(((this.hitCounts.perfect + this.hitCounts.great + this.hitCounts.good) / totalHits) * 100) : 100;
-    
+    const accuracy =
+      totalHits > 0
+        ? Math.round(
+            ((this.hitCounts.perfect +
+              this.hitCounts.great +
+              this.hitCounts.good) /
+              totalHits) *
+              100
+          )
+        : 100;
+
     const ev = new CustomEvent("rhythm:stats", {
       detail: {
         score: this.score,
@@ -581,8 +628,8 @@ class EnhancedRhythmScene extends Phaser.Scene {
         greatHits: this.hitCounts.great,
         goodHits: this.hitCounts.good,
         misses: this.hitCounts.miss,
-        gameEnded: this.gameEnded
-      }
+        gameEnded: this.gameEnded,
+      },
     });
     window.dispatchEvent(ev);
   }
@@ -590,7 +637,7 @@ class EnhancedRhythmScene extends Phaser.Scene {
   togglePause() {
     if (!this.gameStarted || this.gameEnded) return;
     this.paused = !this.paused;
-    
+
     if (this.paused) {
       this.music.pause();
       this.scene.pause();
@@ -604,7 +651,7 @@ class EnhancedRhythmScene extends Phaser.Scene {
     this.gameEnded = true;
     this.music.stop();
     this.updateStats();
-    
+
     const ev = new CustomEvent("rhythm:gameend", {
       detail: {
         finalScore: this.score,
@@ -613,8 +660,8 @@ class EnhancedRhythmScene extends Phaser.Scene {
         perfectHits: this.hitCounts.perfect,
         greatHits: this.hitCounts.great,
         goodHits: this.hitCounts.good,
-        misses: this.hitCounts.miss
-      }
+        misses: this.hitCounts.miss,
+      },
     });
     window.dispatchEvent(ev);
   }
@@ -622,7 +669,11 @@ class EnhancedRhythmScene extends Phaser.Scene {
   calculateAccuracy() {
     const total = Object.values(this.hitCounts).reduce((a, b) => a + b, 0);
     if (total === 0) return 100;
-    return Math.round(((this.hitCounts.perfect + this.hitCounts.great + this.hitCounts.good) / total) * 100);
+    return Math.round(
+      ((this.hitCounts.perfect + this.hitCounts.great + this.hitCounts.good) /
+        total) *
+        100
+    );
   }
 
   restartGame() {
@@ -633,13 +684,13 @@ class EnhancedRhythmScene extends Phaser.Scene {
     this.combo = 0;
     this.maxCombo = 0;
     this.hitCounts = { perfect: 0, great: 0, good: 0, miss: 0 };
-    
-    this.notes.forEach(note => note.destroy());
+
+    this.notes.forEach((note) => note.destroy());
     this.notes = [];
-    
-    this.missedNotes.forEach(note => note.destroy());
+
+    this.missedNotes.forEach((note) => note.destroy());
     this.missedNotes = [];
-    
+
     this.updateStats();
     this.createMockAudio();
   }
@@ -663,8 +714,8 @@ export default function FixedRhythmGame() {
       scene: [EnhancedRhythmScene],
       scale: {
         mode: Phaser.Scale.FIT,
-        autoCenter: Phaser.Scale.CENTER_BOTH
-      }
+        autoCenter: Phaser.Scale.CENTER_BOTH,
+      },
     };
 
     const game = new Phaser.Game(config);
@@ -678,9 +729,12 @@ export default function FixedRhythmGame() {
   }, []);
 
   const accuracy = useMemo(() => {
-    const total = stats.perfectHits + stats.greatHits + stats.goodHits + stats.misses;
+    const total =
+      stats.perfectHits + stats.greatHits + stats.goodHits + stats.misses;
     if (total === 0) return 100;
-    return Math.round(((stats.perfectHits + stats.greatHits + stats.goodHits) / total) * 100);
+    return Math.round(
+      ((stats.perfectHits + stats.greatHits + stats.goodHits) / total) * 100
+    );
   }, [stats]);
 
   const progress = useMemo(() => {
@@ -691,7 +745,7 @@ export default function FixedRhythmGame() {
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
   const getComboColor = (combo: number) => {
@@ -710,7 +764,9 @@ export default function FixedRhythmGame() {
 
   const handlePlayAgain = () => {
     if (gameInstance) {
-      const scene = gameInstance.scene.getScene('EnhancedRhythmScene') as EnhancedRhythmScene;
+      const scene = gameInstance.scene.getScene(
+        "EnhancedRhythmScene"
+      ) as EnhancedRhythmScene;
       if (scene) {
         scene.restartGame();
       }
@@ -728,25 +784,29 @@ export default function FixedRhythmGame() {
           Calm Rhythm
         </h1>
         <p className="text-center text-slate-600 mb-6">
-          A soothing rhythm game demo. Press <strong>A / S / D / F</strong> on the beat.
+          A soothing rhythm game demo. Press <strong>A / S / D / F</strong> on
+          the beat.
         </p>
       </div>
 
       <div className="relative w-full max-w-4xl mx-auto">
         {/* Game Canvas */}
-        <div ref={containerRef} className="w-full aspect-[770/720] rounded-3xl overflow-hidden shadow-2xl border-4 border-white/50" />
+        <div
+          ref={containerRef}
+          className="w-full aspect-[770/720] rounded-3xl overflow-hidden shadow-2xl border-4 border-white/50"
+        />
 
         {/* HUD Overlay */}
         <div className="pointer-events-none absolute inset-0 flex flex-col justify-between p-6">
           {/* Top Stats */}
           <div className="flex justify-between items-start">
-            <motion.div 
-              initial={{ x: -20, opacity: 0 }} 
+            <motion.div
+              initial={{ x: -20, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               className="bg-white/70 backdrop-blur-md px-4 py-3 rounded-2xl shadow-lg"
             >
               <div className="text-slate-600 text-sm font-medium">Score</div>
-              <motion.div 
+              <motion.div
                 key={stats.score}
                 initial={{ scale: 1.1 }}
                 animate={{ scale: 1 }}
@@ -757,13 +817,13 @@ export default function FixedRhythmGame() {
             </motion.div>
 
             <div className="flex gap-3">
-              <motion.div 
-                initial={{ y: -20, opacity: 0 }} 
+              <motion.div
+                initial={{ y: -20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 className="bg-white/70 backdrop-blur-md px-4 py-3 rounded-2xl shadow-lg"
               >
                 <div className="text-slate-600 text-sm font-medium">Combo</div>
-                <motion.div 
+                <motion.div
                   key={stats.combo}
                   initial={{ scale: stats.combo > 0 ? 1.2 : 1 }}
                   animate={{ scale: 1 }}
@@ -772,17 +832,23 @@ export default function FixedRhythmGame() {
                   {stats.combo}x
                 </motion.div>
                 {stats.maxCombo > 0 && (
-                  <div className="text-xs text-slate-500">Max: {stats.maxCombo}x</div>
+                  <div className="text-xs text-slate-500">
+                    Max: {stats.maxCombo}x
+                  </div>
                 )}
               </motion.div>
 
-              <motion.div 
-                initial={{ x: 20, opacity: 0 }} 
+              <motion.div
+                initial={{ x: 20, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
                 className="bg-white/70 backdrop-blur-md px-4 py-3 rounded-2xl shadow-lg"
               >
-                <div className="text-slate-600 text-sm font-medium">Accuracy</div>
-                <div className={`text-2xl font-bold ${getAccuracyColor(accuracy)}`}>
+                <div className="text-slate-600 text-sm font-medium">
+                  Accuracy
+                </div>
+                <div
+                  className={`text-2xl font-bold ${getAccuracyColor(accuracy)}`}
+                >
                   {accuracy}%
                 </div>
                 <div className="text-xs text-slate-500 grid grid-cols-2 gap-1 mt-1">
@@ -803,20 +869,25 @@ export default function FixedRhythmGame() {
                 initial={{ opacity: 0, scale: 0.8, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 1.2, y: -20 }}
-                transition={{ 
-                  type: "spring", 
-                  stiffness: 200, 
+                transition={{
+                  type: "spring",
+                  stiffness: 200,
                   damping: 20,
-                  duration: 0.6
+                  duration: 0.6,
                 }}
                 className="self-center mb-12"
               >
-                <div className={`px-6 py-3 rounded-3xl backdrop-blur-md shadow-xl border-2 ${
-                  stats.judgement === "Perfect" ? "bg-emerald-100/80 border-emerald-300/50 text-emerald-700" :
-                  stats.judgement === "Great" ? "bg-blue-100/80 border-blue-300/50 text-blue-700" :
-                  stats.judgement === "Good" ? "bg-amber-100/80 border-amber-300/50 text-amber-700" :
-                  "bg-red-100/80 border-red-300/50 text-red-700"
-                }`}>
+                <div
+                  className={`px-6 py-3 rounded-3xl backdrop-blur-md shadow-xl border-2 ${
+                    stats.judgement === "Perfect"
+                      ? "bg-emerald-100/80 border-emerald-300/50 text-emerald-700"
+                      : stats.judgement === "Great"
+                      ? "bg-blue-100/80 border-blue-300/50 text-blue-700"
+                      : stats.judgement === "Good"
+                      ? "bg-amber-100/80 border-amber-300/50 text-amber-700"
+                      : "bg-red-100/80 border-red-300/50 text-red-700"
+                  }`}
+                >
                   <div className="text-2xl font-bold text-center">
                     {stats.judgement}
                   </div>
@@ -847,28 +918,42 @@ export default function FixedRhythmGame() {
                 className="bg-white/90 backdrop-blur-md rounded-3xl p-8 shadow-2xl border border-white/50 max-w-md w-full mx-4"
               >
                 <div className="text-center">
-                  <h2 className="text-3xl font-bold text-slate-800 mb-2">Song Complete!</h2>
+                  <h2 className="text-3xl font-bold text-slate-800 mb-2">
+                    Song Complete!
+                  </h2>
                   <p className="text-slate-600 mb-6">Thanks for playing!</p>
-                  
+
                   <div className="grid grid-cols-2 gap-4 mb-6 text-center">
                     <div>
-                      <div className="text-2xl font-bold text-blue-600">{stats.score.toLocaleString()}</div>
+                      <div className="text-2xl font-bold text-blue-600">
+                        {stats.score.toLocaleString()}
+                      </div>
                       <div className="text-sm text-slate-600">Final Score</div>
                     </div>
                     <div>
-                      <div className={`text-2xl font-bold ${getAccuracyColor(accuracy)}`}>{accuracy}%</div>
+                      <div
+                        className={`text-2xl font-bold ${getAccuracyColor(
+                          accuracy
+                        )}`}
+                      >
+                        {accuracy}%
+                      </div>
                       <div className="text-sm text-slate-600">Accuracy</div>
                     </div>
                     <div>
-                      <div className="text-2xl font-bold text-purple-600">{stats.maxCombo}x</div>
+                      <div className="text-2xl font-bold text-purple-600">
+                        {stats.maxCombo}x
+                      </div>
                       <div className="text-sm text-slate-600">Max Combo</div>
                     </div>
                     <div>
-                      <div className="text-2xl font-bold text-emerald-600">{stats.perfectHits}</div>
+                      <div className="text-2xl font-bold text-emerald-600">
+                        {stats.perfectHits}
+                      </div>
                       <div className="text-sm text-slate-600">Perfect Hits</div>
                     </div>
                   </div>
-                  
+
                   <div className="flex gap-3">
                     <button
                       onClick={handlePlayAgain}
@@ -893,7 +978,9 @@ export default function FixedRhythmGame() {
         <div className="mt-4 bg-white/70 backdrop-blur-md rounded-2xl p-4 shadow-lg border border-white/50">
           <div className="flex justify-between items-center mb-2 text-sm text-slate-600">
             <span>Progress</span>
-            <span>{formatTime(stats.currentTime)} / {formatTime(stats.totalTime)}</span>
+            <span>
+              {formatTime(stats.currentTime)} / {formatTime(stats.totalTime)}
+            </span>
           </div>
           <div className="w-full bg-slate-200 rounded-full h-3 relative overflow-hidden">
             <motion.div
@@ -905,7 +992,7 @@ export default function FixedRhythmGame() {
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse" />
             </motion.div>
           </div>
-          
+
           {stats.misses > 0 && (
             <div className="mt-2 text-xs text-red-500 flex items-center gap-2">
               <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
@@ -915,28 +1002,39 @@ export default function FixedRhythmGame() {
         </div>
 
         {/* Performance Stats */}
-        {(stats.perfectHits + stats.greatHits + stats.goodHits + stats.misses) > 5 && (
+        {stats.perfectHits + stats.greatHits + stats.goodHits + stats.misses >
+          5 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="mt-4 bg-white/70 backdrop-blur-md rounded-2xl p-4 shadow-lg border border-white/50"
           >
-            <h3 className="text-lg font-semibold text-slate-700 mb-3">Performance</h3>
+            <h3 className="text-lg font-semibold text-slate-700 mb-3">
+              Performance
+            </h3>
             <div className="grid grid-cols-4 gap-3 text-center">
               <div>
-                <div className="text-xl font-bold text-emerald-600">{stats.perfectHits}</div>
+                <div className="text-xl font-bold text-emerald-600">
+                  {stats.perfectHits}
+                </div>
                 <div className="text-xs text-slate-600">Perfect</div>
               </div>
               <div>
-                <div className="text-xl font-bold text-blue-600">{stats.greatHits}</div>
+                <div className="text-xl font-bold text-blue-600">
+                  {stats.greatHits}
+                </div>
                 <div className="text-xs text-slate-600">Great</div>
               </div>
               <div>
-                <div className="text-xl font-bold text-amber-600">{stats.goodHits}</div>
+                <div className="text-xl font-bold text-amber-600">
+                  {stats.goodHits}
+                </div>
                 <div className="text-xs text-slate-600">Good</div>
               </div>
               <div>
-                <div className="text-xl font-bold text-red-600">{stats.misses}</div>
+                <div className="text-xl font-bold text-red-600">
+                  {stats.misses}
+                </div>
                 <div className="text-xs text-slate-600">Miss</div>
               </div>
             </div>
@@ -951,7 +1049,7 @@ export default function FixedRhythmGame() {
           >
             Back to Menu
           </button>
-          
+
           {stats.gameEnded && (
             <button
               onClick={handlePlayAgain}
@@ -976,8 +1074,12 @@ export default function FixedRhythmGame() {
                   transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
                   className="w-12 h-12 border-4 border-blue-200 border-t-blue-500 rounded-full mx-auto mb-4"
                 />
-                <div className="text-slate-600 font-medium">Loading Game...</div>
-                <div className="text-slate-500 text-sm mt-2">Initializing rhythm engine</div>
+                <div className="text-slate-600 font-medium">
+                  Loading Game...
+                </div>
+                <div className="text-slate-500 text-sm mt-2">
+                  Initializing rhythm engine
+                </div>
               </div>
             </motion.div>
           )}

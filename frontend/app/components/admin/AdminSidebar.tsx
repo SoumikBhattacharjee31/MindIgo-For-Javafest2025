@@ -1,15 +1,15 @@
-'use client';
-import React from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+"use client";
+import React from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 const AdminSidebar = () => {
   const path = usePathname();
 
   const menuItems = [
-    { name: 'Dashboard', href: '/admin/dashboard', icon: '📊' },
-    { name: 'Applications', href: '/admin/applications', icon: '📋' },
-    { name: 'Create Doctor', href: '/admin/create-doctor', icon: '➕' },
+    { name: "Dashboard", href: "/admin/dashboard", icon: "📊" },
+    { name: "Applications", href: "/admin/applications", icon: "📋" },
+    { name: "Create Doctor", href: "/admin/create-doctor", icon: "➕" },
   ];
 
   return (
@@ -21,7 +21,9 @@ const AdminSidebar = () => {
             key={item.href}
             href={item.href}
             className={`flex items-center px-6 py-3 text-gray-700 hover:bg-purple-100 transition ${
-              path === item.href ? 'bg-purple-200 border-r-4 border-purple-600' : ''
+              path === item.href
+                ? "bg-purple-200 border-r-4 border-purple-600"
+                : ""
             }`}
           >
             <span className="mr-3">{item.icon}</span>

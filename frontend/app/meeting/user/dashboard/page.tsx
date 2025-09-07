@@ -1,11 +1,11 @@
-"use client"
-import React, { useState, useEffect } from 'react';
-import UserMeetingRequest from '../../../components/UserMeetingRequest';
-import UserRequestsList from '../../../components/UserRequestsList';
-import { authApi } from '../../../api/authService';
+"use client";
+import React, { useState, useEffect } from "react";
+import UserMeetingRequest from "../../../components/UserMeetingRequest";
+import UserRequestsList from "../../../components/UserRequestsList";
+import { authApi } from "../../../api/authService";
 
 const UserMeetingDashboard = () => {
-  const [activeTab, setActiveTab] = useState('request');
+  const [activeTab, setActiveTab] = useState("request");
   const [counselors, setCounselors] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -19,12 +19,12 @@ const UserMeetingDashboard = () => {
       const response = await authApi.getCounselors();
       setCounselors(response.data.data || []);
     } catch (error) {
-      console.error('Error fetching counselors:', error);
+      console.error("Error fetching counselors:", error);
       // Use dummy data if API fails - replace this with proper error handling
       const dummyCounselors = [
-        { id: 31, username: 'Dr. Smith', email: 'dr.smith@example.com' },
-        { id: 32, username: 'Dr. Johnson', email: 'dr.johnson@example.com' },
-        { id: 33, username: 'Dr. Brown', email: 'dr.brown@example.com' },
+        { id: 31, username: "Dr. Smith", email: "dr.smith@example.com" },
+        { id: 32, username: "Dr. Johnson", email: "dr.johnson@example.com" },
+        { id: 33, username: "Dr. Brown", email: "dr.brown@example.com" },
       ];
       setCounselors(dummyCounselors);
     } finally {
@@ -49,25 +49,25 @@ const UserMeetingDashboard = () => {
         <h1 className="text-3xl font-bold text-gray-800 mb-8 text-center">
           Meeting Dashboard
         </h1>
-        
+
         <div className="flex justify-center mb-8">
           <div className="bg-white rounded-lg shadow-sm p-1">
             <button
-              onClick={() => setActiveTab('request')}
+              onClick={() => setActiveTab("request")}
               className={`px-6 py-2 rounded-md font-medium transition duration-200 ${
-                activeTab === 'request'
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-600 hover:text-gray-800'
+                activeTab === "request"
+                  ? "bg-blue-600 text-white"
+                  : "text-gray-600 hover:text-gray-800"
               }`}
             >
               Request Meeting
             </button>
             <button
-              onClick={() => setActiveTab('requests')}
+              onClick={() => setActiveTab("requests")}
               className={`px-6 py-2 rounded-md font-medium transition duration-200 ${
-                activeTab === 'requests'
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-600 hover:text-gray-800'
+                activeTab === "requests"
+                  ? "bg-blue-600 text-white"
+                  : "text-gray-600 hover:text-gray-800"
               }`}
             >
               My Requests
@@ -75,8 +75,10 @@ const UserMeetingDashboard = () => {
           </div>
         </div>
 
-        {activeTab === 'request' && <UserMeetingRequest counselors={counselors} />}
-        {activeTab === 'requests' && <UserRequestsList />}
+        {activeTab === "request" && (
+          <UserMeetingRequest counselors={counselors} />
+        )}
+        {activeTab === "requests" && <UserRequestsList />}
       </div>
     </div>
   );

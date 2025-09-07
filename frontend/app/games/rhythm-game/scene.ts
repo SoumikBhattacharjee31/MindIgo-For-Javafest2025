@@ -26,7 +26,7 @@ export default class RhythmScene extends Phaser.Scene {
         const x = 200 + lane * 100;
         const note = this.add.image(x, -50, "note").setScale(0.5);
         this.notes.push(note);
-      }
+      },
     });
 
     this.input.keyboard.on("keydown", (event: KeyboardEvent) => {
@@ -50,13 +50,13 @@ export default class RhythmScene extends Phaser.Scene {
   private checkHit(lane: number) {
     const x = 200 + lane * 100;
     const hitNote = this.notes.find(
-      n => Math.abs(n.x - x) < 10 && Math.abs(n.y - 550) < 40
+      (n) => Math.abs(n.x - x) < 10 && Math.abs(n.y - 550) < 40
     );
 
     if (hitNote) {
       this.add.circle(hitNote.x, 550, 20, 0x88ccff, 0.6).setAlpha(0.5);
       hitNote.destroy();
-      this.notes = this.notes.filter(n => n !== hitNote);
+      this.notes = this.notes.filter((n) => n !== hitNote);
     }
   }
 }

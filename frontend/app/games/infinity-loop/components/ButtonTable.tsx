@@ -1,13 +1,13 @@
 // components/CenteredTable.tsx
 
-import React, { useState} from "react";
+import React, { useState } from "react";
 import RotatingButton from "./RotatingButton";
 import Win from "./Win";
 
 interface ButtonTableProps {
   sound: boolean;
   arr: Array<Array<Array<number>>>;
-  setArr: (arr: Array<Array<Array<number>>>)=>void
+  setArr: (arr: Array<Array<Array<number>>>) => void;
 }
 
 const ButtonTable: React.FC<ButtonTableProps> = ({ sound, arr, setArr }) => {

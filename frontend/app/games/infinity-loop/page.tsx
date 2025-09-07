@@ -10,17 +10,25 @@ import MusicButton from "./components/MusicButton";
 const Home = () => {
   const [sound, setSound] = useState(true);
   const [curPage, setCurPage] = useState("menu");
-  const [arr, setArr] = useState<number[][][]|any>([]);
+  const [arr, setArr] = useState<number[][][] | any>([]);
 
   const getCurrentPage = () => {
-    
     switch (curPage) {
       case "menu":
-        return <MainMenu setCurPage={setCurPage} sound={sound} setArr={setArr}/>;
+        return (
+          <MainMenu setCurPage={setCurPage} sound={sound} setArr={setArr} />
+        );
       case "game":
-        return <Game setCurPage={setCurPage}  sound={sound} arr={arr} setArr={setArr}/>;
+        return (
+          <Game
+            setCurPage={setCurPage}
+            sound={sound}
+            arr={arr}
+            setArr={setArr}
+          />
+        );
       case "help":
-        return <Help setCurPage={setCurPage}  sound={sound}/>;
+        return <Help setCurPage={setCurPage} sound={sound} />;
       default:
         return <></>;
     }
@@ -29,7 +37,7 @@ const Home = () => {
     <div className="flex items-center justify-center min-h-screen">
       <BackgroundVideo />
       <div className="z-10">
-        <MusicButton isPlaying={sound} setIsPlaying={setSound}/>
+        <MusicButton isPlaying={sound} setIsPlaying={setSound} />
         {getCurrentPage()}
       </div>
     </div>
