@@ -11,11 +11,12 @@ class Settings(BaseSettings):
     SERVER_PORT: int = 8000
     CONFIG_SERVER_URL: str="http://localhost:8888"
     APP_NAME: str="genai-service"
-    EUREKA_SERVER_URL: str="http://localhost:8761/eureka/"
+    EUREKA_SERVER_URL: str="http://localhost:8761/eureka"
     EUREKA_HOSTNAME: str ="localhost"
     EUREKA_SERVER_PORT: int = 8761
     CONTAINER_MODE: bool = os.getenv("CONTAINER_MODE", "false").lower() == "true"
     LANGSMITH_API_KEY: str
+    health_check_interval: int = 30  # seconds
 
 def load_remote_config_with_requests():
     return Settings(
@@ -24,10 +25,11 @@ def load_remote_config_with_requests():
         SERVER_PORT=int(os.getenv("SERVER_PORT", 8000)),
         CONFIG_SERVER_URL=os.getenv("CONFIG_SERVER_URL", "http://localhost:8888"),
         APP_NAME=os.getenv("APP_NAME", "genai-service"),
-        EUREKA_SERVER_URL=os.getenv("EUREKA_SERVER_URL", "http://localhost:8761/eureka/"),
+        EUREKA_SERVER_URL=os.getenv("EUREKA_SERVER_URL", "http://localhost:8761/eureka"),
         EUREKA_HOSTNAME=os.getenv("EUREKA_HOSTNAME", "localhost"),
         EUREKA_SERVER_PORT=int(os.getenv("EUREKA_SERVER_PORT", 8761)),
         LANGSMITH_API_KEY=os.getenv("LANGSMITH_API_KEY",""),
+        health_check_interval=int(os.getenv("HEALTH_CHECK_INTERVAL", 30))
     )
 
 settings = load_remote_config_with_requests()

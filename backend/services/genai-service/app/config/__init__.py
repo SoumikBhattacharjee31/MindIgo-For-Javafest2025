@@ -1,4 +1,4 @@
 from .settings import settings
-from .eureka_client import init_eureka
+from .eureka_client import eureka_client
 
-__all__ = ["settings", "init_eureka"]
+__all__ = ["settings", "eureka_client"]
