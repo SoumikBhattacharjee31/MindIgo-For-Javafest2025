@@ -10,28 +10,36 @@ import asyncio
 from app.model import get_chat_model
 from app.tools import get_mood_history, get_recommended_doctors, get_recommended_songs
 
-
 class MoodAnalysis(BaseModel):
     mood: Literal["amazing", "happy", "neutral", "sad", "terrible", "angry", "anxious", "excited", "relaxed", "motivated"]
     date: str
     reason: str
     description: Optional[str] = None
+    severity: Literal["low", "moderate", "high", "critical"] = "low"
 
 class Recommendation(BaseModel):
-    type: Literal["song", "doctor", "activity"] = "activity"
+    type: Literal["song", "doctor", "activity", "emergency_contact"]
     title: str
     reason: str
-    urgency: Literal["low", "medium", "high"] = "low"
+    urgency: Literal["low", "medium", "high", "immediate"] = "low"
+
+class SafetyAlert(BaseModel):
+    level: Literal["none", "concern", "warning", "crisis"]
+    triggers: List[str] = []
+    immediate_action_required: bool = False
+    emergency_message: Optional[str] = None
 
 class Response(BaseModel):
     message: str
     mood: Optional[MoodAnalysis] = None
     recommendations: List[Recommendation] = []
     escalate: bool = False
+    safety_alert: SafetyAlert = SafetyAlert(level="none")
     
 class State(MessagesState):
     user_id: int
     user_name: str
+    safety_score: int = 0  # Track concerning patterns
     
 class GeminiChatService:
     def __init__(self, **kwargs):
@@ -39,17 +47,141 @@ class GeminiChatService:
         self.tools = [get_recommended_doctors, get_mood_history, get_recommended_songs]
         self.model_with_tools = self.chat_model.bind_tools(self.tools)
         self.structured_model = self.chat_model.with_structured_output(Response)
-        self.system_message = kwargs.get("system_message", 
-                                         "You are a helpful mental health assistant.")
+        
+        self.crisis_keywords = {
+            'suicide': ['suicide', 'kill myself', 'end my life', 'want to die', 'better off dead', 'not worth living'],
+            'self_harm': ['cut myself', 'hurt myself', 'self harm', 'pain helps', 'deserve pain'],
+            'violence': ['hurt others', 'kill them', 'make them pay', 'they deserve to die'],
+            'severe_crisis': ['ending it all', 'final solution', 'goodbye forever', 'last time', 'cant go on']
+        }
+        
+        self.system_message = self._create_comprehensive_system_message()
         self.app = self._build_graph()
+        
+    def _create_comprehensive_system_message(self) -> str:
+        return """You are MindfulAI, a professional mental health companion designed to provide empathetic, evidence-based emotional support. Your primary mission is to help users navigate their mental health journey safely and effectively.
+
+## CORE PRINCIPLES:
+1. **Safety First**: Always prioritize user safety. Detect and respond appropriately to crisis situations.
+2. **Empathetic Listening**: Provide non-judgmental, compassionate support.
+3. **Professional Boundaries**: You are a supportive companion, not a replacement for professional therapy.
+4. **Evidence-Based**: Ground recommendations in established mental health practices.
+5. **Cultural Sensitivity**: Respect diverse backgrounds and experiences.
+
+## CRISIS DETECTION & RESPONSE:
+**IMMEDIATE ESCALATION REQUIRED for:**
+- Suicidal ideation, plans, or intent
+- Self-harm behaviors or urges
+- Threats of violence toward others
+- Severe psychotic episodes or complete detachment from reality
+- Substance abuse emergencies
+
+**RESPONSE PROTOCOL for Crisis:**
+1. Express immediate concern and validation
+2. Encourage contacting emergency services (988, 911, local crisis lines)
+3. Recommend immediate professional help
+4. Set escalate=true and safety_alert.immediate_action_required=true
+5. Provide crisis resources and emergency contacts
+
+## ASSESSMENT FRAMEWORK:
+**Mood Severity Levels:**
+- **Low**: Temporary sadness, mild stress, everyday challenges
+- **Moderate**: Persistent low mood, anxiety affecting daily life, relationship issues
+- **High**: Significant depression/anxiety, sleep/appetite changes, social withdrawal
+- **Critical**: Severe symptoms, crisis indicators, immediate intervention needed
+
+**Urgency Classifications:**
+- **Low**: General wellness, preventive care
+- **Medium**: Developing concerns, should seek support soon
+- **High**: Significant distress, professional help recommended within days
+- **Immediate**: Crisis situation, emergency intervention required
+
+## THERAPEUTIC APPROACH:
+1. **Active Listening**: Reflect feelings, validate experiences
+2. **Cognitive Reframing**: Gently challenge negative thought patterns
+3. **Behavioral Activation**: Suggest small, achievable activities
+4. **Mindfulness Integration**: Incorporate grounding techniques
+5. **Strengths-Based**: Highlight user's resilience and capabilities
+
+## TOOL USAGE GUIDELINES:
+- **get_mood_history**: Use to identify patterns, triggers, or concerning trends
+- **get_recommended_songs**: Suggest music for mood regulation (uplifting, calming, motivational)
+- **get_recommended_doctors**: Essential for moderate-to-severe cases or when professional help is needed
+
+## COMMUNICATION STYLE:
+- Use the user's name naturally, not excessively
+- Match their emotional tone while remaining professional
+- Ask open-ended questions to encourage expression
+- Provide specific, actionable suggestions
+- Avoid clinical jargon; use accessible language
+
+## SAFETY BOUNDARIES:
+**DO NOT:**
+- Diagnose mental health conditions
+- Prescribe medications or specific medical treatments
+- Provide crisis counseling for active emergencies
+- Make promises about outcomes
+- Share personal information about other users
+
+**ALWAYS:**
+- Document concerning patterns in safety_alert
+- Recommend professional help for persistent issues
+- Provide crisis resources when appropriate
+- Maintain confidentiality and respect privacy
+
+## RESPONSE STRUCTURE:
+Your responses should be warm, personalized, and action-oriented. Include:
+1. Emotional validation and empathy
+2. Specific observations about their situation
+3. Gentle guidance or reframing when appropriate
+4. Concrete next steps or recommendations
+5. Hope and encouragement for their journey
+
+Remember: You are a bridge to professional care, not a replacement. Your role is to provide immediate support, detect concerning patterns, and guide users toward appropriate resources when needed."""
+
+    def _detect_crisis_indicators(self, message: str, state: State) -> SafetyAlert:
+        """Detect potential crisis situations in user messages"""
+        message_lower = message.lower()
+        triggers = []
+        crisis_level = "none"
+        immediate_action = False
+        emergency_msg = None
+        
+        # Check for crisis keywords
+        for category, keywords in self.crisis_keywords.items():
+            for keyword in keywords:
+                if keyword in message_lower:
+                    triggers.append(f"{category}: {keyword}")
+                    
+        # Determine crisis level based on triggers
+        if any('suicide' in t or 'severe_crisis' in t for t in triggers):
+            crisis_level = "crisis"
+            immediate_action = True
+            emergency_msg = "CRISIS DETECTED: User may be expressing suicidal thoughts. Immediate professional intervention recommended."
+            
+        elif any('self_harm' in t or 'violence' in t for t in triggers):
+            crisis_level = "warning"
+            immediate_action = True
+            emergency_msg = "WARNING: User may be expressing self-harm or violence. Professional help strongly recommended."
+            
+        elif len(triggers) > 0:
+            crisis_level = "concern"
+            
+        # Check for mood pattern deterioration
+        if hasattr(state, 'safety_score'):
+            if state.safety_score >= 3:
+                crisis_level = "warning" if crisis_level == "none" else crisis_level
+                
+        return SafetyAlert(
+            level=crisis_level,
+            triggers=triggers,
+            immediate_action_required=immediate_action,
+            emergency_message=emergency_msg
+        )
         
     def _prep(self, state: State):
         if len(state['messages']) == 1:
-            sys_msg = SystemMessage(content=f"""You're an empathetic mental health companion to support {state['user_name']}. 
-            Address the user by their name where it feels natural. Use tools for data (mood history, songs, doctors). 
-            While recommending, use song's title, doctor's name and reason why you are recommending it.
-            Generate all creative content yourself (stories, insights).
-            Be like a caring friend who analyzes patterns and gives personal support in a creative, supportive manner without directly dumping data.""")
+            sys_msg = SystemMessage(content=self.system_message)
             return {"messages": [sys_msg] + state['messages']}
         return state
     
@@ -59,46 +191,98 @@ class GeminiChatService:
     
     def _route(self, state: State):
         last_msg = state["messages"][-1]
-        return "tools" if hasattr(last_msg, 'tool_calls') and last_msg.tool_calls else "respond"
+        return "tools" if hasattr(last_msg, 'tool_calls') and last_msg.tool_calls else "safety_check"
+    
+    def _safety_check(self, state: State):
+        """New safety check node before responding"""
+        user_message = state["messages"][-2].content if len(state["messages"]) >= 2 else ""
+        safety_alert = self._detect_crisis_indicators(user_message, state)
+        
+        state["safety_alert"] = safety_alert
+        
+        if safety_alert.level in ["concern", "warning"]:
+            state["safety_score"] = state.get("safety_score", 0) + 1
+        elif safety_alert.level == "crisis":
+            state["safety_score"] = 5  # Maximum concern level
+            
+        return {"messages": state["messages"], "safety_score": state["safety_score"]}
     
     def _respond(self, state: State):
-        context = "\n".join([f"{type(m).__name__}: {m.content}" for m in state["messages"][-3:]])
+        context = "\n".join([f"{type(m).__name__}: {m.content}" for m in state["messages"][-5:]])
         current_date = datetime.now().strftime("%Y-%m-%d")
-    
+        safety_alert = state.get("safety_alert", SafetyAlert(level="none"))
+        
+        # Enhanced prompt with safety considerations
         prompt = f"""User name: {state['user_name']}
         Current date: {current_date}
-    
-        Generate a caring, supportive response in a creative manner. Address the user by name naturally. 
-        Weave in suggestions subtly like a friend would, without listing data directly. 
-        Use stories, analogies, or gentle encouragement.
-    
-        Output strictly in this exact JSON structure:
+        Safety Alert Level: {safety_alert.level}
+        Safety Triggers: {safety_alert.triggers}
+        User Safety Score: {state.get('safety_score', 0)}/5
+
+        CRISIS RESPONSE GUIDELINES:
+        - If safety_alert.level is "crisis": Provide immediate crisis support, emergency contacts, and set escalate=true
+        - If safety_alert.level is "warning": Express serious concern, strongly recommend professional help
+        - If safety_alert.level is "concern": Gently suggest professional support while providing emotional support
+        
+        Generate a caring, professional mental health response. Address safety concerns appropriately while maintaining empathy and hope.
+
+        For crisis situations, include:
+        - Crisis hotline numbers (988 Suicide & Crisis Lifeline)
+        - Emergency services (911)
+        - Local crisis resources
+        
+        Output in this JSON structure:
         {{
-            "message": "...",
-            "mood": {{"mood": "...", "date": "{current_date}", "reason": "...", "description": "..."}},
-            "recommendations": [{{"type": "...", "title": "...", "reason": "...", "urgency": "..."}}],
-            "escalate": false
+            "message": "Your empathetic response here...",
+            "mood": {{
+                "mood": "...",
+                "date": "{current_date}",
+                "reason": "...",
+                "description": "...",
+                "severity": "low|moderate|high|critical"
+            }},
+            "recommendations": [
+                {{
+                    "type": "doctor|song|activity|emergency_contact",
+                    "title": "...",
+                    "reason": "...",
+                    "urgency": "low|medium|high|immediate"
+                }}
+            ],
+            "escalate": {str(safety_alert.immediate_action_required).lower()},
+            "safety_alert": {{
+                "level": "{safety_alert.level}",
+                "triggers": {safety_alert.triggers},
+                "immediate_action_required": {str(safety_alert.immediate_action_required).lower()},
+                "emergency_message": "{safety_alert.emergency_message or ''}"
+            }}
         }}
-    
-        Only output valid JSON. Base on: {context}
+
+        Context: {context}
         """
-    
+
         try:
             output: Response = self.structured_model.invoke(prompt)
+            
+            # Override safety alert with our detection
+            output.safety_alert = safety_alert
+            output.escalate = safety_alert.immediate_action_required
+            
             final_msg = AIMessage(
                 content=output.message,
                 additional_kwargs={"structured": output.dict()}
             )
             return {"messages": state["messages"] + [final_msg]}
+            
         except Exception as e:
             print(f"Error in response generation: {e}")
-            # Fallback response with proper structure
+            # Safe fallback for any situation
             fallback_response = Response(
-                message=f"Hey {state['user_name']}, I'm here to support you. Let's talk more.",
-                mood=None,
-                recommendations=[],
-                escalate=False
+                message=f"Hi {state['user_name']}, I'm here to listen and support you. How are you feeling right now?",
+                safety_alert=safety_alert,
+                escalate=safety_alert.immediate_action_required
             )
+            
             final_msg = AIMessage(
                 content=fallback_response.message,
                 additional_kwargs={"structured": fallback_response.dict()}
@@ -110,13 +294,15 @@ class GeminiChatService:
         
         workflow.add_node("prep", self._prep)
         workflow.add_node("chat", self._chat)
+        workflow.add_node("safety_check", self._safety_check)
         workflow.add_node("respond", self._respond)
         workflow.add_node("tools", ToolNode(self.tools))
         
         workflow.add_edge(START, "prep")
         workflow.add_edge("prep", "chat")
-        workflow.add_conditional_edges("chat", self._route, {"tools": "tools", "respond": "respond"})
-        workflow.add_edge("tools", "respond")
+        workflow.add_conditional_edges("chat", self._route, {"tools": "tools", "safety_check": "safety_check"})
+        workflow.add_edge("tools", "safety_check")
+        workflow.add_edge("safety_check", "respond")
         workflow.add_edge("respond", END)
         
         return workflow.compile(checkpointer=MemorySaver())
@@ -125,13 +311,14 @@ class GeminiChatService:
              thread_id: str, 
              user_id: int, 
              user_name: str) -> Dict[str, Any]:
-        """Main interface - shows complete state flow"""
+        """Main interface with enhanced safety features"""
         config = {"configurable": {"thread_id": thread_id}}
         
         initial_state = {
             "messages": [HumanMessage(content=message)], 
             "user_id": user_id,
-            "user_name": user_name
+            "user_name": user_name,
+            "safety_score": 0
         }
         
         final_state = self.app.invoke(initial_state, config)
@@ -140,42 +327,68 @@ class GeminiChatService:
         last_message = final_state["messages"][-1]
         structured_data = last_message.additional_kwargs.get("structured", {})
         
+        # Log safety concerns for monitoring
+        safety_alert = structured_data.get("safety_alert", {})
+        if safety_alert.get("level") in ["warning", "crisis"]:
+            print(f" SAFETY ALERT for user {user_id}: {safety_alert}")
+            # Here you could integrate with logging system, notifications, etc.
+        
         return {
             "message": last_message.content,
             "mood": structured_data.get("mood"),
             "recommendations": structured_data.get("recommendations", []),
-            "escalate": structured_data.get("escalate", False)
+            "escalate": structured_data.get("escalate", False),
+            "safety_alert": safety_alert
         }
 
     async def chat_stream(self, message: str, 
                           thread_id: str, 
                           user_id: int, 
                           user_name: str):
-        """
-        Streaming chat response. Yields tokens incrementally.
-        """
+        """Streaming with safety checks"""
+        # First, quickly check for crisis indicators
+        safety_alert = self._detect_crisis_indicators(message, State())
+        
+        if safety_alert.immediate_action_required:
+            # For crisis situations, don't stream - provide immediate full response
+            crisis_response = f"""I'm very concerned about you, {user_name}. Your safety is my top priority right now.
+
+Please reach out for immediate help:
+• Call 988 (Suicide & Crisis Lifeline) - available 24/7
+• Text "HELLO" to 741741 (Crisis Text Line)
+• Call 911 if you're in immediate danger
+• Go to your nearest emergency room
+
+You don't have to face this alone. There are people who want to help you through this difficult time."""
+            
+            for char in crisis_response:
+                yield char
+                await asyncio.sleep(0.02)
+            return
+        
+        # For non-crisis situations, proceed with normal streaming
         config = {"configurable": {"thread_id": thread_id}}
         initial_state = {
             "messages": [HumanMessage(content=message)],
             "user_id": user_id,
-            "user_name": user_name
+            "user_name": user_name,
+            "safety_score": 0
         }
 
         try:
-            # For streaming, we'll process the full response first, then yield it
-            # This is because LangGraph's streaming might not work as expected for structured output
             final_state = self.app.invoke(initial_state, config)
             last_message = final_state["messages"][-1]
             
             if isinstance(last_message, AIMessage) and last_message.content:
-                # Yield the message content character by character for streaming effect
                 for char in last_message.content:
                     yield char
-                    await asyncio.sleep(0.01)  # Small delay for streaming effect
+                    await asyncio.sleep(0.01)
             
         except Exception as e:
             print(f"Error in streaming: {e}")
-            fallback_msg = f"Hey {user_name}, I'm here to support you. Let's talk more."
+            fallback_msg = f"Hi {user_name}, I'm here to support you. Let's talk about how you're feeling."
             for char in fallback_msg:
                 yield char
                 await asyncio.sleep(0.01)
+
+

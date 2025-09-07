@@ -1,4 +1,3 @@
-import py_eureka_client.eureka_client as eureka_client
 import os
 from app.config.settings import settings
 from .settings import Settings
@@ -6,28 +5,27 @@ import asyncio
 from typing import Optional
 import socket
 import httpx
-import logging
+from app.config.logger_config import get_logger
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
-async def init_eureka():
-    eureka_server = settings.EUREKA_SERVER_URL
-    app_name = settings.APP_NAME
-    instance_port = settings.SERVER_PORT
-    instance_host = settings.EUREKA_HOSTNAME
-    instance_id = f"{app_name}:{os.urandom(4).hex()}"
-    health_check_url = f"http://{instance_host}:{instance_port}/health"  # For Eureka to monitor health
+# async def init_eureka():
+#     eureka_server = settings.EUREKA_SERVER_URL
+#     app_name = settings.APP_NAME
+#     instance_port = settings.SERVER_PORT
+#     instance_host = settings.EUREKA_HOSTNAME
+#     instance_id = f"{app_name}:{os.urandom(4).hex()}"
+#     health_check_url = f"http://{instance_host}:{instance_port}/health"  # For Eureka to monitor health
 
 
-    await eureka_client.init_async(
-        eureka_server=eureka_server,
-        app_name=app_name,
-        instance_port=instance_port,
-        instance_host=instance_host,
-        instance_id=instance_id,
-        health_check_url=health_check_url
-    )
+#     await eureka_client.init_async(
+#         eureka_server=eureka_server,
+#         app_name=app_name,
+#         instance_port=instance_port,
+#         instance_host=instance_host,
+#         instance_id=instance_id,
+#         health_check_url=health_check_url
+#     )
     
 class EurekaClient:
     def __init__(self, settings: Settings):
@@ -36,6 +34,7 @@ class EurekaClient:
         self.app_url = f"http://{self._get_local_ip()}:{settings.SERVER_PORT}"
         self.eureka_url = settings.EUREKA_SERVER_URL
         self.heartbeat_task: Optional[asyncio.Task] = None
+        logger.info(f"Eureka Client initialized with Instance ID: {self.instance_id} and App URL: {self.app_url}")
         
     def _get_local_ip(self) -> str:
         """Get the local IP address"""
@@ -44,7 +43,10 @@ class EurekaClient:
             with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
                 s.connect(("8.8.8.8", 80))
                 return s.getsockname()[0]
-        except Exception:
+        except Exception as e:
+            template = "An exception of type {0} occurred. Arguments:\n{1!r}"
+            message = template.format(type(e).__name__, e.args)
+            logger.error(f"Could not determine local IP address: {message}")
             return "localhost"
     
     def _get_registration_data(self) -> dict:
@@ -100,7 +102,9 @@ class EurekaClient:
                 return False
                 
         except Exception as e:
-            logger.error(f"Error registering with Eureka: {e}")
+            template = "An exception of type {0} occurred. Arguments:\n{1!r}"
+            message = template.format(type(e).__name__, e.args)
+            logger.error(f"Error registering with Eureka: {message}")
             return False
     
     async def deregister(self) -> bool:
@@ -119,7 +123,9 @@ class EurekaClient:
                 return False
                 
         except Exception as e:
-            logger.error(f"Error deregistering from Eureka: {e}")
+            template = "An exception of type {0} occurred. Arguments:\n{1!r}"
+            message = template.format(type(e).__name__, e.args)
+            logger.error(f"Error deregistering from Eureka: {message}")
             return False
     
     async def send_heartbeat(self) -> bool:
@@ -138,7 +144,9 @@ class EurekaClient:
                 return False
                 
         except Exception as e:
-            logger.error(f"Error sending heartbeat: {e}")
+            template = "An exception of type {0} occurred. Arguments:\n{1!r}"
+            message = template.format(type(e).__name__, e.args)
+            logger.error(f"Error sending heartbeat: {message}")
             return False
     
     async def start_heartbeat(self):

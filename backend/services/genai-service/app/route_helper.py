@@ -1,6 +1,10 @@
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse 
 from app.routes import *
+from app.config import get_logger
+
+logger = get_logger(__name__)
+
 
 def include_routers(app: FastAPI):
     BASE_API_PATH = "/api/v1/genai"

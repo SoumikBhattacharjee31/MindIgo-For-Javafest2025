@@ -71,20 +71,28 @@
 # print(get_song(mood_category="calming"))
 # print(get_doctor())
 
-from uuid import uuid4
+# from uuid import uuid4
 
-thread_id = str(uuid4())
-print(thread_id)
+# thread_id = str(uuid4())
+# print(thread_id)
 
 from app.service import GeminiChatService
 gemini = GeminiChatService()
 app = gemini.app
-# print(gemini.chat("Feeling Anxious", thread_id=thread_id, user_id=1, user_name="Somik"))
+# # print(gemini.chat("Feeling Anxious", thread_id=thread_id, user_id=1, user_name="Somik"))
 from langchain_core.runnables.graph import MermaidDrawMethod
 from IPython.display import display, HTML, Image
 
 png_bytes = app.get_graph().draw_mermaid_png(draw_method=MermaidDrawMethod.API)
 
-# Save to a file
+# # Save to a file
 with open("graph.png", "wb") as f:
     f.write(png_bytes)
+
+# from pymongo import MongoClient
+
+# client = MongoClient("mongodb://mindigo:1234@localhost:27017/")
+
+# db = client["mindigo_checkpoints"]
+# db.create_collection("test_collection")
+# print("Connected to MongoDB!")

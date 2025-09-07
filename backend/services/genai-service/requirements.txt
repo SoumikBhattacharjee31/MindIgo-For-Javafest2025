@@ -11,3 +11,6 @@ langsmith
 langchain[google-genai]
 uuid
 IPython
+langgraph-checkpoint-mongodb
+pymongo
+langgraph-store-mongodb

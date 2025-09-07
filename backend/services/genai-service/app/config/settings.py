@@ -2,7 +2,9 @@
 import os
 from pydantic_settings import BaseSettings
 from dotenv import load_dotenv
+from app.config.logger_config import get_logger
 
+logger = get_logger(__name__)
 load_dotenv()
 
 class Settings(BaseSettings):
@@ -19,6 +21,7 @@ class Settings(BaseSettings):
     health_check_interval: int = 30  # seconds
 
 def load_remote_config_with_requests():
+    logger.info("Loading remote configuration...")
     return Settings(
         OPENAI_API_KEY=os.getenv("OPENAI_API_KEY", ""),
         GEMINI_API_KEY=os.getenv("GEMINI_API_KEY", ""),
