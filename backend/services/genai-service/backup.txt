@@ -1,0 +1,181 @@
+from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
+from langgraph.checkpoint.memory import MemorySaver
+from langgraph.graph import START, END, MessagesState, StateGraph
+from langgraph.prebuilt import ToolNode
+from typing import Literal, List, Optional, Dict, Any
+from pydantic import BaseModel
+from datetime import datetime
+import asyncio
+
+from app.model import get_chat_model
+from app.tools import get_mood_history, get_recommended_doctors, get_recommended_songs
+
+
+class MoodAnalysis(BaseModel):
+    mood: Literal["amazing", "happy", "neutral", "sad", "terrible", "angry", "anxious", "excited", "relaxed", "motivated"]
+    date: str
+    reason: str
+    description: Optional[str] = None
+
+class Recommendation(BaseModel):
+    type: Literal["song", "doctor", "activity"] = "activity"
+    title: str
+    reason: str
+    urgency: Literal["low", "medium", "high"] = "low"
+
+class Response(BaseModel):
+    message: str
+    mood: Optional[MoodAnalysis] = None
+    recommendations: List[Recommendation] = []
+    escalate: bool = False
+    
+class State(MessagesState):
+    user_id: int
+    user_name: str
+    
+class GeminiChatService:
+    def __init__(self, **kwargs):
+        self.chat_model = get_chat_model("gemini", **kwargs)
+        self.tools = [get_recommended_doctors, get_mood_history, get_recommended_songs]
+        self.model_with_tools = self.chat_model.bind_tools(self.tools)
+        self.structured_model = self.chat_model.with_structured_output(Response)
+        self.system_message = kwargs.get("system_message", 
+                                         "You are a helpful mental health assistant.")
+        self.app = self._build_graph()
+        
+    def _prep(self, state: State):
+        if len(state['messages']) == 1:
+            sys_msg = SystemMessage(content=f"""You're an empathetic mental health companion to support {state['user_name']}. 
+            Address the user by their name where it feels natural. Use tools for data (mood history, songs, doctors). 
+            While recommending, use song's title, doctor's name and reason why you are recommending it.
+            Generate all creative content yourself (stories, insights).
+            Be like a caring friend who analyzes patterns and gives personal support in a creative, supportive manner without directly dumping data.""")
+            return {"messages": [sys_msg] + state['messages']}
+        return state
+    
+    def _chat(self, state: State):
+        response = self.model_with_tools.invoke(state["messages"])
+        return {"messages": state["messages"] + [response]}
+    
+    def _route(self, state: State):
+        last_msg = state["messages"][-1]
+        return "tools" if hasattr(last_msg, 'tool_calls') and last_msg.tool_calls else "respond"
+    
+    def _respond(self, state: State):
+        context = "\n".join([f"{type(m).__name__}: {m.content}" for m in state["messages"][-3:]])
+        current_date = datetime.now().strftime("%Y-%m-%d")
+    
+        prompt = f"""User name: {state['user_name']}
+        Current date: {current_date}
+    
+        Generate a caring, supportive response in a creative manner. Address the user by name naturally. 
+        Weave in suggestions subtly like a friend would, without listing data directly. 
+        Use stories, analogies, or gentle encouragement.
+    
+        Output strictly in this exact JSON structure:
+        {{
+            "message": "...",
+            "mood": {{"mood": "...", "date": "{current_date}", "reason": "...", "description": "..."}},
+            "recommendations": [{{"type": "...", "title": "...", "reason": "...", "urgency": "..."}}],
+            "escalate": false
+        }}
+    
+        Only output valid JSON. Base on: {context}
+        """
+    
+        try:
+            output: Response = self.structured_model.invoke(prompt)
+            final_msg = AIMessage(
+                content=output.message,
+                additional_kwargs={"structured": output.dict()}
+            )
+            return {"messages": state["messages"] + [final_msg]}
+        except Exception as e:
+            print(f"Error in response generation: {e}")
+            # Fallback response with proper structure
+            fallback_response = Response(
+                message=f"Hey {state['user_name']}, I'm here to support you. Let's talk more.",
+                mood=None,
+                recommendations=[],
+                escalate=False
+            )
+            final_msg = AIMessage(
+                content=fallback_response.message,
+                additional_kwargs={"structured": fallback_response.dict()}
+            )
+            return {"messages": state["messages"] + [final_msg]}
+    
+    def _build_graph(self):
+        workflow = StateGraph(state_schema=State)
+        
+        workflow.add_node("prep", self._prep)
+        workflow.add_node("chat", self._chat)
+        workflow.add_node("respond", self._respond)
+        workflow.add_node("tools", ToolNode(self.tools))
+        
+        workflow.add_edge(START, "prep")
+        workflow.add_edge("prep", "chat")
+        workflow.add_conditional_edges("chat", self._route, {"tools": "tools", "respond": "respond"})
+        workflow.add_edge("tools", "respond")
+        workflow.add_edge("respond", END)
+        
+        return workflow.compile(checkpointer=MemorySaver())
+
+    def chat(self, message: str, 
+             thread_id: str, 
+             user_id: int, 
+             user_name: str) -> Dict[str, Any]:
+        """Main interface - shows complete state flow"""
+        config = {"configurable": {"thread_id": thread_id}}
+        
+        initial_state = {
+            "messages": [HumanMessage(content=message)], 
+            "user_id": user_id,
+            "user_name": user_name
+        }
+        
+        final_state = self.app.invoke(initial_state, config)
+        
+        # Extract structured data from the last message
+        last_message = final_state["messages"][-1]
+        structured_data = last_message.additional_kwargs.get("structured", {})
+        
+        return {
+            "message": last_message.content,
+            "mood": structured_data.get("mood"),
+            "recommendations": structured_data.get("recommendations", []),
+            "escalate": structured_data.get("escalate", False)
+        }
+
+    async def chat_stream(self, message: str, 
+                          thread_id: str, 
+                          user_id: int, 
+                          user_name: str):
+        """
+        Streaming chat response. Yields tokens incrementally.
+        """
+        config = {"configurable": {"thread_id": thread_id}}
+        initial_state = {
+            "messages": [HumanMessage(content=message)],
+            "user_id": user_id,
+            "user_name": user_name
+        }
+
+        try:
+            # For streaming, we'll process the full response first, then yield it
+            # This is because LangGraph's streaming might not work as expected for structured output
+            final_state = self.app.invoke(initial_state, config)
+            last_message = final_state["messages"][-1]
+            
+            if isinstance(last_message, AIMessage) and last_message.content:
+                # Yield the message content character by character for streaming effect
+                for char in last_message.content:
+                    yield char
+                    await asyncio.sleep(0.01)  # Small delay for streaming effect
+            
+        except Exception as e:
+            print(f"Error in streaming: {e}")
+            fallback_msg = f"Hey {user_name}, I'm here to support you. Let's talk more."
+            for char in fallback_msg:
+                yield char
+                await asyncio.sleep(0.01)

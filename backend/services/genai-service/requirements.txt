@@ -1,0 +1,13 @@
+google-genai
+dotenv
+fastapi
+uvicorn
+spring-config-client
+pydantic-settings
+py_eureka_client
+langchain-google-genai
+langgraph
+langsmith
+langchain[google-genai]
+uuid
+IPython
