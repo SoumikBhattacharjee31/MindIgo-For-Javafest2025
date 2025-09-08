@@ -80,14 +80,21 @@ from app.service import GeminiChatService
 gemini = GeminiChatService()
 app = gemini.app
 # # print(gemini.chat("Feeling Anxious", thread_id=thread_id, user_id=1, user_name="Somik"))
-from langchain_core.runnables.graph import MermaidDrawMethod
-from IPython.display import display, HTML, Image
+# from langchain_core.runnables.graph import MermaidDrawMethod
 
-png_bytes = app.get_graph().draw_mermaid_png(draw_method=MermaidDrawMethod.API)
+# png_bytes = app.get_graph().draw_mermaid_png(draw_method=MermaidDrawMethod.API)
 
+# with open("graph.png", "wb") as f:
+#     f.write(png_bytes)
+
+session_id = gemini.provide_session_to_user(1,"Somik")
+
+print(gemini.chat("Hi",user_id=1,session_id=session_id,user_name="Somik"))
+
+print(gemini.chat("I don't wanna die",user_id=1,session_id=session_id,user_name="Somik"))
+
+print(gemini.chat("I want to hurt myself",user_id=1,session_id=session_id,user_name="Somik"))
 # # Save to a file
-with open("graph.png", "wb") as f:
-    f.write(png_bytes)
 
 # from pymongo import MongoClient
 

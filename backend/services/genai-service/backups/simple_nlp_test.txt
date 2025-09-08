@@ -1,0 +1,66 @@
+
+"""
+Simple test script for Mental Health NLP Pipeline
+"""
+
+def test_nlp_pipeline():
+    """Test the NLP pipeline"""
+    try:
+        from nlp_pipeline import MentalHealthNLPPipeline
+        
+        # Initialize pipeline
+        print("Initializing NLP Pipeline...")
+        pipeline = MentalHealthNLPPipeline()
+        print("✅ Pipeline initialized successfully!")
+        
+        # Test cases
+        test_cases = [
+            "Hi there!",
+            "I want to hurt myself",
+            "What's the weather like?",
+            "I need help with my mood",
+            "I'm feeling really depressed and hopeless",
+            "Hey what's up!!!",
+            "Can you help me find a therapist?",
+            "How do I code in Python?",
+        ]
+        
+        print("\n" + "="*80)
+        print("TESTING NLP PIPELINE")
+        print("="*80)
+        
+        for i, text in enumerate(test_cases, 1):
+            print(f"\n--- Test {i} ---")
+            print(f"Input: '{text}'")
+            
+            # Analyze with NLP pipeline
+            result = pipeline.analyze(text)
+            routing = pipeline.get_routing_decision(result)
+            
+            print(f"Primary Intent: {result.primary_intent.value}")
+            print(f"Confidence: {result.confidence:.2f}")
+            print(f"Crisis Level: {result.crisis_level.value}")
+            print(f"Recommended Model: {result.recommended_model}")
+            print(f"Requires Immediate Attention: {result.requires_immediate_attention}")
+            
+            if result.crisis_indicators:
+                print(f"Crisis Indicators: {result.crisis_indicators}")
+            
+            print(f"Routing Decision: {routing['reasoning']}")
+            
+            # Show if spaCy can handle it alone
+            if routing['use_spacy_only']:
+                print("✅ Can be handled by spaCy alone")
+            elif routing['use_gemini_light']:
+                print("🔄 Needs Gemini Light model")
+            else:
+                print("🔄 Needs Gemini Full model")
+        
+    except ImportError as e:
+        print(f"❌ Import error: {e}")
+        print("Make sure nlp_pipeline.py is in the same directory")
+    except Exception as e:
+        print(f"❌ Error: {e}")
+
+if __name__ == "__main__":
+    test_nlp_pipeline()

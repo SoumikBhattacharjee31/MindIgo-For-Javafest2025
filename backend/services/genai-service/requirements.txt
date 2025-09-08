@@ -14,3 +14,8 @@ IPython
 langgraph-checkpoint-mongodb
 pymongo
 langgraph-store-mongodb
+pip 
+setuptools 
+wheel
+spacy
+python -m spacy download en_core_web_sm

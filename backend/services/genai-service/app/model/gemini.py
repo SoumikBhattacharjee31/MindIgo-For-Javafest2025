@@ -21,6 +21,6 @@ def get_gemini_chat_model(
         model=model_name,
         temperature=temperature,
         max_retries=max_retries,
-        model_provider="google_genai"
+        model_provider="google_genai",
     )
     

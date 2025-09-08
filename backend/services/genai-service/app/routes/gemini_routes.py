@@ -1,9 +1,7 @@
-# Enhanced router.py with safety logging
 from fastapi import APIRouter, Header, BackgroundTasks
 from fastapi.responses import StreamingResponse
 from app.dto import APIResponseClass, ChatRequest, ChatResponse
 from app.service import GeminiChatService 
-from app.util import SessionManager
 from typing import Annotated
 
 from app.config import get_logger

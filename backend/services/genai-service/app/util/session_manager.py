@@ -8,8 +8,8 @@ class SessionManager:
     
     def __init__(self, mongo_client: MongoClient):
         self.client = mongo_client
-        self.db = self.client.mindigo_sessions
-        self.sessions = self.db.sessions
+        self.db = self.client.mindigo_sessions # Database for sessions
+        self.sessions = self.db.sessions # Collection for session documents
         
     def create_session(self, user_id: int, user_name: str, session_data: Dict = None) -> str:
         """Create a new session"""

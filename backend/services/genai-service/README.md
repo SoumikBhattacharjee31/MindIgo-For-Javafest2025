@@ -28,6 +28,8 @@ source .venv/bin/activate  # On Linux/Mac
 ### 3. Install Dependencies
 ```sh
 pip install -r requirements.txt
+python -m spacy download en_core_web_lg
+
 ```
 
 ### 4. Configure Environment Variables

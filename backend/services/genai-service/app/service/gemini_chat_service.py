@@ -5,25 +5,21 @@ from langgraph.prebuilt import ToolNode
 from typing import List, Optional, Dict, Any
 import asyncio
 import re
+import json
 from pymongo import MongoClient
+from datetime import datetime
 
 from app.config import get_logger
-from app.util import SessionManager
 from app.model import get_chat_model
 from app.tools import get_mood_history, get_recommended_doctors, get_recommended_songs
+from app.db import get_database
 from .helper import *
 
 logger = get_logger(__name__)
 
 class GeminiChatService:
     def __init__(self, mongo_uri: str = "mongodb://mindigo:1234@localhost:27017/", **kwargs):
-        """
-        Initialize the GeminiChatService with configurable components.
-        
-        Args:
-            mongo_uri: MongoDB connection URI
-            **kwargs: Additional keyword arguments for model initialization
-        """
+        """Simplified, efficient chat service with four-tier model architecture."""
         try:
             # MongoDB setup
             self.mongo_client = MongoClient(mongo_uri)
@@ -31,423 +27,481 @@ class GeminiChatService:
                 client=self.mongo_client,
                 db_name="mindigo_checkpoints"
             )
-            self.session_manager = SessionManager(self.mongo_client)
             
-            # Configurable models - can be overridden via subclassing or init params
-            self.models = self._get_models(**kwargs)
+            # Database for message storage and session management
+            self.db = get_database(mongo_uri)
             
-            # Task classifier model
-            self.task_classifier = get_chat_model("gemini", model_name="gemini-1.5-flash", **kwargs)
+            # Four-tier model architecture for cost/performance optimization
+            self.models = {
+                "lite": get_chat_model("gemini", model_name="gemini-2.0-flash-lite", **kwargs),      # Quick analysis
+                "flash_lite": get_chat_model("gemini", model_name="gemini-2.5-flash-lite", **kwargs), # Simple responses
+                "flash": get_chat_model("gemini", model_name="gemini-2.5-flash", **kwargs),           # Standard processing
+                "pro": get_chat_model("gemini", model_name="gemini-2.5-pro", **kwargs)                # Complex/crisis cases
+            }
             
-            # Configurable tools
-            self.tools = self._get_tools()
+            # Extensible tool registry
+            self.tool_registry = {
+                "core_tools": [get_recommended_doctors, get_mood_history, get_recommended_songs],
+                "wellness_tools": [],  # Can add: breathing exercises, meditation guides, etc.
+                "user_tools": [],      # Can add: user preferences, history, goals, etc.
+                "crisis_tools": []     # Can add: emergency contacts, crisis resources, etc.
+            }
             
-            # Configurable crisis keywords - can be extended or modified
-            self.crisis_keywords = self._get_crisis_keywords()
+            # Crisis detection patterns
+            self.crisis_patterns = [
+                'kill myself', 'end my life', 'suicide', 'want to die', 'better off dead',
+                'hurt myself', 'self harm', 'cut myself', 'overdose', 'ending it all'
+            ]
             
-            # System message - fetched from external helper
             self.system_message = get_system_message()
+            self.app = self._build_efficient_graph()
             
-            # Build the graph
-            self.app = self._build_graph()
-            
-            logger.info("GeminiChatService initialized successfully")
+            logger.info("GeminiChatService initialized with efficient architecture")
         except Exception as e:
             logger.error(f"Initialization error: {str(e)}")
             raise
 
-    def _get_models(self, **kwargs) -> Dict[str, Any]:
-        """Get configurable models. Can be overridden for customization."""
-        return {
-            "simple": get_chat_model("gemini", model_name="gemini-1.5-flash", **kwargs),
-            "moderate": get_chat_model("gemini", model_name="gemini-2.0-flash", **kwargs), 
-            "complex": get_chat_model("gemini", model_name="gemini-2.5-flash", **kwargs)
+    def _get_all_tools(self) -> List:
+        """Get all tools from registry."""
+        all_tools = []
+        for tool_group in self.tool_registry.values():
+            all_tools.extend(tool_group)
+        return all_tools
+
+    def preprocess_text(self, text: str) -> str:
+        """Fast text preprocessing."""
+        if not text:
+            return ""
+        
+        # Basic cleanup
+        text = re.sub(r'\s+', ' ', text.strip())
+        text = re.sub(r'[!]{3,}', '!!', text)
+        text = re.sub(r'[?]{3,}', '??', text)
+        text = re.sub(r'[.]{4,}', '...', text)
+        
+        # Common chat abbreviations
+        fixes = {
+            r'\bu\b': 'you', r'\bur\b': 'your', r'\br\b': 'are',
+            r'\bidk\b': "I don't know", r'\bomg\b': 'oh my god'
         }
+        
+        for pattern, replacement in fixes.items():
+            text = re.sub(pattern, replacement, text, flags=re.IGNORECASE)
+        
+        return text
 
-    def _get_tools(self) -> List:
-        """Get configurable tools. Can be overridden to add/remove tools."""
-        return [get_recommended_doctors, get_mood_history, get_recommended_songs]
+    def quick_crisis_check(self, text: str) -> bool:
+        """Fast crisis detection."""
+        text_lower = text.lower()
+        return any(pattern in text_lower for pattern in self.crisis_patterns)
 
-    def _get_crisis_keywords(self) -> Dict[str, List[str]]:
-        """Get configurable crisis keywords. Can be overridden for customization."""
-        return {
-            'suicide': ['suicide', 'kill myself', 'end my life', 'want to die', 'better off dead', 'not worth living'],
-            'self_harm': ['cut myself', 'hurt myself', 'self harm', 'pain helps', 'deserve pain'],
-            'violence': ['hurt others', 'kill them', 'make them pay', 'they deserve to die'],
-            'severe_crisis': ['ending it all', 'final solution', 'goodbye forever', 'last time', 'cant go on']
-        }
-
-    def _classify_task_complexity(self, message: str, state: State) -> TaskComplexity:
-        """Classify the complexity of the incoming message."""
-        try:
-            # Simple patterns that can be handled quickly
-            simple_patterns = [
-                r'\b(hi|hello|hey|good\s+morning|good\s+evening)\b',
-                r'\bhow\s+are\s+you\b',
-                r'\bthank\s+you\b',
-                r'\bthanks\b',
-                r'\bgoodbye|bye\b',
-                r'\bokay|ok\b'
-            ]
-            
-            # Crisis patterns require immediate complex processing
-            crisis_patterns = [re.escape(kw) for keywords in self.crisis_keywords.values() for kw in keywords]
-            
-            message_lower = message.lower()
-            
-            # Check for crisis - always complex
-            if any(re.search(pattern, message_lower) for pattern in crisis_patterns):
-                logger.info("Crisis indicators detected in task classification")
-                return TaskComplexity(
-                    level="complex",
-                    reasoning="Crisis indicators detected - requires full safety assessment",
-                    use_tools=True,
-                    requires_history=True
-                )
-            
-            # Check for simple greetings/acknowledgments
-            if any(re.search(pattern, message_lower) for pattern in simple_patterns) and len(message.split()) <= 5:
-                return TaskComplexity(
-                    level="simple",
-                    reasoning="Simple greeting or acknowledgment",
-                    use_tools=False,
-                    requires_history=False
-                )
-            
-            # Check for tool-requiring keywords
-            tool_keywords = [
-                'doctor', 'therapist', 'professional help', 'music', 'songs', 'history', 'mood history', 'recommend'
-            ]
-            
-            if any(keyword in message_lower for keyword in tool_keywords):
-                return TaskComplexity(
-                    level="complex",
-                    reasoning="Request requires tool usage for recommendations",
-                    use_tools=True,
-                    requires_history=True
-                )
-            
-            # Check message length and emotional complexity
-            word_count = len(message.split())
-            emotional_keywords = [
-                'depressed', 'anxious', 'worried', 'scared', 'angry', 'frustrated', 'hopeless',
-                'overwhelmed', 'stressed', 'panic', 'fear', 'sad', 'lonely', 'confused'
-            ]
-            
-            has_emotional_content = any(keyword in message_lower for keyword in emotional_keywords)
-            
-            if word_count > 50 or has_emotional_content:
-                return TaskComplexity(
-                    level="moderate",
-                    reasoning="Moderate emotional content or length requires careful processing",
-                    use_tools=False,
-                    requires_history=True
-                )
-            
-            return TaskComplexity(
-                level="simple",
-                reasoning="Short message with no complex indicators",
-                use_tools=False,
-                requires_history=False
-            )
-        except Exception as e:
-            logger.error(f"Error in task classification: {str(e)}")
-            # Fallback to moderate
-            return TaskComplexity(
-                level="moderate",
-                reasoning="Fallback due to classification error",
-                use_tools=False,
-                requires_history=True
-            )
-
-    def _detect_crisis_indicators(self, message: str, state: State) -> SafetyAlert:
-        """Detect potential crisis situations in user messages."""
-        try:
-            message_lower = message.lower()
-            triggers = []
-            crisis_level = "none"
-            immediate_action = False
-            emergency_msg = None
-            
-            # Check for crisis keywords
-            for category, keywords in self.crisis_keywords.items():
-                for keyword in keywords:
-                    if keyword in message_lower:
-                        triggers.append(f"{category}: {keyword}")
-                        
-            # Determine crisis level based on triggers
-            if any('suicide' in t or 'severe_crisis' in t for t in triggers):
-                crisis_level = "crisis"
-                immediate_action = True
-                emergency_msg = "CRISIS DETECTED: User may be expressing suicidal thoughts. Immediate professional intervention recommended."
-                
-            elif any('self_harm' in t or 'violence' in t for t in triggers):
-                crisis_level = "warning"
-                immediate_action = True
-                emergency_msg = "WARNING: User may be expressing self-harm or violence. Professional help strongly recommended."
-                
-            elif len(triggers) > 0:
-                crisis_level = "concern"
-                
-            # Check for mood pattern deterioration
-            if hasattr(state, 'safety_score') and state.safety_score >= 3:
-                crisis_level = "warning" if crisis_level == "none" else crisis_level
-                    
-            logger.info(f"Crisis detection: level={crisis_level}, triggers={triggers}")
-            return SafetyAlert(
-                level=crisis_level,
-                triggers=triggers,
-                immediate_action_required=immediate_action,
-                emergency_message=emergency_msg
-            )
-        except Exception as e:
-            logger.error(f"Error in crisis detection: {str(e)}")
-            return SafetyAlert(level="none", triggers=[], immediate_action_required=False)
-
-    def _prep(self, state: State):
-        """Prepare the conversation with system message and task classification."""
+    def _preprocess(self, state: State):
+        """Preprocessing: clean text, crisis check, add system message."""
         try:
             user_message = state['messages'][-1].content if state['messages'] else ""
             
-            # Classify task complexity
-            complexity = self._classify_task_complexity(user_message, state)
-            state["task_complexity"] = complexity
+            # Clean the text
+            cleaned_text = self.preprocess_text(user_message)
+            state['messages'][-1] = HumanMessage(content=cleaned_text)
             
+            # Quick crisis detection
+            has_crisis = self.quick_crisis_check(cleaned_text)
+            
+            # Add system message for new conversations
             if len(state['messages']) == 1:
                 sys_msg = SystemMessage(content=self.system_message)
-                return {"messages": [sys_msg] + state['messages'], "task_complexity": complexity}
-            return {"task_complexity": complexity}
+                return {
+                    "messages": [sys_msg] + state['messages'],
+                    "has_crisis": has_crisis,
+                    "processed_text": cleaned_text
+                }
+            
+            return {
+                "has_crisis": has_crisis,
+                "processed_text": cleaned_text
+            }
         except Exception as e:
-            logger.error(f"Error in prep node: {str(e)}")
+            logger.error(f"Preprocessing error: {str(e)}")
             return state
 
-    def _route_by_complexity(self, state: State):
-        """Route based on task complexity."""
+    def _quick_analysis(self, state: State):
+        """Use lite model for fast initial analysis."""
         try:
-            complexity = state.get("task_complexity")
-            if not complexity:
-                logger.warning("No task complexity found, defaulting to moderate_chat")
-                return "moderate_chat"
-                
-            if complexity.level == "simple":
-                return "simple_chat"
-            elif complexity.use_tools:
-                return "complex_chat"
+            # Use fastest model for analysis
+            model = self.models["lite"]
+            text = state.get('processed_text', '')
+            
+            prompt = f"""
+            Analyze this message and respond in JSON format:
+            
+            Message: "{text}"
+            
+            {{
+                "intent": "greeting|crisis|question|support|off_topic",
+                "complexity": "simple|moderate|complex", 
+                "needs_tools": "yes|no",
+                "direct_answer": "yes|no",
+                "sentiment": "positive|neutral|negative",
+                "confidence": 0.8
+            }}
+            """
+            
+            response = model.invoke([HumanMessage(content=prompt)])
+            analysis = self._parse_json_response(response.content)
+            
+            return {"analysis": analysis}
+            
+        except Exception as e:
+            logger.error(f"Quick analysis error: {str(e)}")
+            return {
+                "analysis": {
+                    "intent": "support",
+                    "complexity": "moderate",
+                    "needs_tools": "no", 
+                    "direct_answer": "no",
+                    "sentiment": "neutral",
+                    "confidence": 0.5
+                }
+            }
+
+    def _parse_json_response(self, response: str) -> Dict:
+        """Extract JSON from model response."""
+        try:
+            # Find JSON in response
+            start = response.find('{')
+            end = response.rfind('}') + 1
+            if start != -1 and end != 0:
+                json_str = response[start:end]
+                return json.loads(json_str)
+        except:
+            pass
+        
+        # Fallback
+        return {
+            "intent": "support",
+            "complexity": "moderate",
+            "needs_tools": "no",
+            "direct_answer": "no", 
+            "sentiment": "neutral",
+            "confidence": 0.5
+        }
+
+    def _route_by_analysis(self, state: State):
+        """Smart routing based on analysis."""
+        try:
+            has_crisis = state.get("has_crisis", False)
+            analysis = state.get("analysis", {})
+            
+            # Crisis always gets priority
+            if has_crisis or analysis.get("intent") == "crisis":
+                return "crisis_handler"
+            
+            # Direct answers for simple cases
+            if (analysis.get("direct_answer") == "yes" and 
+                analysis.get("confidence", 0) >= 0.8 and
+                analysis.get("needs_tools") == "no"):
+                return "direct_response"
+            
+            # Tool-enhanced responses
+            if analysis.get("needs_tools") == "yes":
+                return "tool_response"
+            
+            # Complex cases need pro model
+            if analysis.get("complexity") == "complex" or analysis.get("confidence", 0) < 0.7:
+                return "complex_response"
+            
+            # Standard processing
+            return "standard_response"
+            
+        except Exception as e:
+            logger.error(f"Routing error: {str(e)}")
+            return "standard_response"
+
+    def _direct_response(self, state: State):
+        """Handle simple cases with flash-lite model."""
+        try:
+            model = self.models["flash_lite"]
+            analysis = state.get("analysis", {})
+            text = state.get("processed_text", "")
+            
+            if analysis.get("intent") == "greeting":
+                prompt = f"Provide a brief, warm mental health support greeting for: {text}"
+            elif analysis.get("intent") == "off_topic":
+                prompt = f"Politely redirect to mental health support: {text}"
             else:
-                return "moderate_chat"
-        except Exception as e:
-            logger.error(f"Error in routing by complexity: {str(e)}")
-            return "moderate_chat"
-
-    def _simple_chat(self, state: State):
-        """Handle simple messages with lightweight processing."""
-        try:
-            model = self.models["simple"]
+                prompt = f"Provide brief supportive response: {text}"
             
-            # For simple responses, use minimal context
-            recent_messages = state["messages"][-3:] if len(state["messages"]) > 3 else state["messages"]
-            response = model.invoke(recent_messages)
-            
+            response = model.invoke([HumanMessage(content=prompt)])
             return {"messages": state["messages"] + [response]}
+            
         except Exception as e:
-            logger.error(f"Error in simple_chat: {str(e)}")
+            logger.error(f"Direct response error: {str(e)}")
             return state
 
-    def _moderate_chat(self, state: State):
-        """Handle moderate complexity messages."""
+    def _standard_response(self, state: State):
+        """Standard processing with flash model."""
         try:
-            model = self.models["moderate"]
+            model = self.models["flash"]
             response = model.invoke(state["messages"])
             return {"messages": state["messages"] + [response]}
         except Exception as e:
-            logger.error(f"Error in moderate_chat: {str(e)}")
+            logger.error(f"Standard response error: {str(e)}")
             return state
 
-    def _complex_chat(self, state: State):
-        """Handle complex messages that may need tools."""
+    def _tool_response(self, state: State):
+        """Tool-enhanced response with flash model."""
         try:
-            model = self.models["complex"]
-            model_with_tools = model.bind_tools(self.tools)
+            model = self.models["flash"]
+            tools = self._get_all_tools()
+            model_with_tools = model.bind_tools(tools)  # Using bind_tools for better control
+            
             response = model_with_tools.invoke(state["messages"])
             return {"messages": state["messages"] + [response]}
         except Exception as e:
-            logger.error(f"Error in complex_chat: {str(e)}")
+            logger.error(f"Tool response error: {str(e)}")
             return state
 
-    def _route_after_chat(self, state: State):
-        """Route after initial chat response."""
+    def _complex_response(self, state: State):
+        """Complex processing with pro model and tools."""
+        try:
+            model = self.models["pro"]
+            tools = self._get_all_tools()
+            model_with_tools = model.bind_tools(tools)
+            
+            response = model_with_tools.invoke(state["messages"])
+            return {"messages": state["messages"] + [response]}
+        except Exception as e:
+            logger.error(f"Complex response error: {str(e)}")
+            return state
+
+    def _crisis_handler(self, state: State):
+        """Crisis handling with pro model."""
+        try:
+            model = self.models["pro"]
+            user_name = state.get('user_name', 'there')
+            text = state.get('processed_text', '')
+            
+            prompt = f"""
+            CRISIS SITUATION - IMMEDIATE RESPONSE NEEDED
+            
+            User: {user_name}
+            Message: {text}
+            
+            Provide immediate crisis support:
+            1. Express concern and validation
+            2. Crisis resources (988, 911, text 741741)
+            3. Encourage professional help
+            4. Supportive but directive tone
+            """
+            
+            response = model.invoke([HumanMessage(content=prompt)])
+            return {"messages": state["messages"] + [response]}
+            
+        except Exception as e:
+            logger.error(f"Crisis handler error: {str(e)}")
+            fallback = get_crisis_response(state.get('user_name', 'there'))
+            return {"messages": state["messages"] + [AIMessage(content=fallback)]}
+
+    def _check_for_tools(self, state: State):
+        """Check if tools were called."""
         try:
             last_msg = state["messages"][-1]
-            
-            # Check if tools were called
             if hasattr(last_msg, 'tool_calls') and last_msg.tool_calls:
                 return "tools"
-            
-            # Always do safety check
-            return "safety_check"
+            return "safety_and_format"
         except Exception as e:
-            logger.error(f"Error in route_after_chat: {str(e)}")
-            return "safety_check"
+            logger.error(f"Tool check error: {str(e)}")
+            return "safety_and_format"
 
-    def _safety_check(self, state: State):
-        """Enhanced safety check with session tracking."""
+    def _safety_and_format(self, state: State):
+        """Final safety check and response formatting."""
         try:
-            user_message = ""
-            for msg in reversed(state["messages"]):
-                if isinstance(msg, HumanMessage):
-                    user_message = msg.content
-                    break
-                    
-            safety_alert = self._detect_crisis_indicators(user_message, state)
+            has_crisis = state.get("has_crisis", False)
+            analysis = state.get("analysis", {})
+            
+            # Safety assessment
+            safety_level = "crisis" if has_crisis else "none"
+            if analysis.get("sentiment") == "negative":
+                safety_level = "concern"
+            
+            safety_alert = SafetyAlert(
+                level=safety_level,
+                triggers=["crisis_pattern"] if has_crisis else [],
+                immediate_action_required=has_crisis
+            )
             
             # Update safety score
-            new_safety_score = state.get("safety_score", 0)
-            if safety_alert.level in ["concern", "warning"]:
-                new_safety_score += 1
-            elif safety_alert.level == "crisis":
-                new_safety_score = 5  # Maximum concern level
+            current_score = state.get("safety_score", 0)
+            new_score = min(current_score + (2 if has_crisis else 0), 5)
             
-            # Update session with safety information
-            if hasattr(state, 'session_id') and state.get('session_id'):
-                self.session_manager.update_session(
-                    state['session_id'],
-                    {
-                        'safety_score': new_safety_score,
-                        'last_safety_alert': safety_alert.dict()
-                    }
-                )
-                
-            return {
-                "messages": state["messages"], 
-                "safety_score": new_safety_score,
-                "safety_alert": safety_alert
-            }
-        except Exception as e:
-            logger.error(f"Error in safety_check: {str(e)}")
-            return state
-
-    def _respond(self, state: State):
-        """Generate final structured response."""
-        try:
-            complexity = state.get("task_complexity", TaskComplexity(level="moderate", reasoning="default"))
-            model = self.models[complexity.level]
+            # Format response using appropriate model
+            model_choice = "pro" if has_crisis else "flash"
+            model = self.models[model_choice]
             structured_model = model.with_structured_output(Response)
-            safety_alert = state.get("safety_alert", SafetyAlert(level="none"))
-
-            logger.info(f"User Name: {state['user_name']}")
-            logger.info(f"Generating response with complexity {complexity.level} - {complexity.reasoning}")
-            logger.info(f"safety alert {safety_alert.level} and Safety triggers: {safety_alert.triggers} and Safety score: {state.get('safety_score', 0)}")
+            
+            complexity = TaskComplexity(
+                level=analysis.get("complexity", "moderate"),
+                reasoning=f"Analysis-based: {analysis.get('intent', 'support')}",
+                use_tools=analysis.get("needs_tools") == "yes",
+                requires_history=False
+            )
             
             prompt = get_final_prompt(state, complexity, safety_alert)
-
             output: Response = structured_model.invoke(prompt)
+            
             output.safety_alert = safety_alert
-            output.escalate = safety_alert.immediate_action_required
+            output.escalate = has_crisis
             
             final_msg = AIMessage(
                 content=output.message,
                 additional_kwargs={"structured": output.dict()}
             )
-            return {"messages": state["messages"] + [final_msg]}
+            
+            return {
+                "messages": state["messages"] + [final_msg],
+                "safety_score": new_score,
+                "safety_alert": safety_alert
+            }
             
         except Exception as e:
-            logger.error(f"Error in respond node: {str(e)}")
-            fallback_response = Response(
-                message=f"Hi {state['user_name']}, I'm here to listen and support you. How are you feeling right now?",
-                safety_alert=safety_alert,
-                escalate=safety_alert.immediate_action_required
+            logger.error(f"Safety and format error: {str(e)}")
+            fallback = Response(
+                message=f"Hi {state.get('user_name', 'there')}, I'm here to support you.",
+                escalate=has_crisis
             )
             
             final_msg = AIMessage(
-                content=fallback_response.message,
-                additional_kwargs={"structured": fallback_response.dict()}
+                content=fallback.message,
+                additional_kwargs={"structured": fallback.dict()}
             )
+            
             return {"messages": state["messages"] + [final_msg]}
 
-    def _build_graph(self):
-        """Build the enhanced workflow graph with task routing."""
+    def _build_efficient_graph(self):
+        """Build streamlined workflow graph."""
         try:
             workflow = StateGraph(state_schema=State)
             
-            # Add all nodes
-            workflow.add_node("prep", self._prep)
-            workflow.add_node("simple_chat", self._simple_chat)
-            workflow.add_node("moderate_chat", self._moderate_chat)  
-            workflow.add_node("complex_chat", self._complex_chat)
-            workflow.add_node("tools", ToolNode(self.tools))
-            workflow.add_node("safety_check", self._safety_check)
-            workflow.add_node("respond", self._respond)
+            # Add nodes
+            workflow.add_node("preprocess", self._preprocess)
+            workflow.add_node("quick_analysis", self._quick_analysis)
+            workflow.add_node("direct_response", self._direct_response)
+            workflow.add_node("standard_response", self._standard_response)
+            workflow.add_node("tool_response", self._tool_response)
+            workflow.add_node("complex_response", self._complex_response)
+            workflow.add_node("crisis_handler", self._crisis_handler)
+            workflow.add_node("tools", ToolNode(self._get_all_tools()))
+            workflow.add_node("safety_and_format", self._safety_and_format)
             
-            # Build the workflow
-            workflow.add_edge(START, "prep")
+            # Build workflow
+            workflow.add_edge(START, "preprocess")
+            workflow.add_edge("preprocess", "quick_analysis")
+            
+            # Route based on analysis
             workflow.add_conditional_edges(
-                "prep", 
-                self._route_by_complexity,
+                "quick_analysis",
+                self._route_by_analysis,
                 {
-                    "simple_chat": "simple_chat",
-                    "moderate_chat": "moderate_chat", 
-                    "complex_chat": "complex_chat"
+                    "direct_response": "direct_response",
+                    "standard_response": "standard_response",
+                    "tool_response": "tool_response", 
+                    "complex_response": "complex_response",
+                    "crisis_handler": "crisis_handler"
                 }
             )
             
-            # All chat nodes route through the same conditional logic
-            workflow.add_conditional_edges(
-                "simple_chat",
-                self._route_after_chat,
-                {"tools": "tools", "safety_check": "safety_check"}
-            )
-            workflow.add_conditional_edges(
-                "moderate_chat", 
-                self._route_after_chat,
-                {"tools": "tools", "safety_check": "safety_check"}
-            )
-            workflow.add_conditional_edges(
-                "complex_chat",
-                self._route_after_chat, 
-                {"tools": "tools", "safety_check": "safety_check"}
-            )
+            # All response nodes check for tools
+            for node in ["direct_response", "standard_response", "tool_response", 
+                        "complex_response", "crisis_handler"]:
+                workflow.add_conditional_edges(
+                    node,
+                    self._check_for_tools,
+                    {"tools": "tools", "safety_and_format": "safety_and_format"}
+                )
             
-            workflow.add_edge("tools", "safety_check")
-            workflow.add_edge("safety_check", "respond")
-            workflow.add_edge("respond", END)
+            workflow.add_edge("tools", "safety_and_format")
+            workflow.add_edge("safety_and_format", END)
             
             return workflow.compile(checkpointer=self.checkpointer)
+            
         except Exception as e:
-            logger.error(f"Error building graph: {str(e)}")
+            logger.error(f"Graph building error: {str(e)}")
             raise
 
+    def _generate_session_id(self, user_id: int) -> str:
+        """Generate simple session ID."""
+        import hashlib
+        from datetime import datetime
+        timestamp = datetime.now().isoformat()
+        raw_id = f"{user_id}_{timestamp}"
+        return hashlib.md5(raw_id.encode()).hexdigest()
+
+    def _get_or_create_session(self, user_id: int, user_name: str, session_id: str = None) -> str:
+        """Get existing session or create new one using database."""
+        if session_id:
+            # Check if session exists in database
+            session_info = self.db.get_session_info(session_id)
+            if session_info:
+                return session_id
+        
+        # Create new session ID
+        new_session_id = self._generate_session_id(user_id)
+        
+        # Initialize session in database by updating metadata
+        self.db.update_session_metadata(new_session_id, {
+            "user_id": user_id,
+            "user_name": user_name,
+            "created_at": datetime.utcnow().isoformat()
+        })
+        
+        return new_session_id
+
     def get_session(self, session_id: str) -> Optional[Dict]:
-        """Retrieve session information."""
+        """Retrieve session information directly from database."""
         try:
-            return self.session_manager.get_session(session_id)
+            return self.db.get_session_info(session_id)
         except Exception as e:
             logger.error(f"Error getting session {session_id}: {str(e)}")
             return None
 
     def get_user_sessions(self, user_id: int) -> List[Dict]:
-        """Get all sessions for a user."""
+        """Get all sessions for a user directly from database."""
         try:
-            return self.session_manager.get_user_sessions(user_id)
+            return self.db.get_user_sessions(user_id)
         except Exception as e:
             logger.error(f"Error getting user sessions for {user_id}: {str(e)}")
+            return []
+
+    def get_message_history(self, session_id: str, limit: int = 50) -> List[Dict]:
+        """Get complete message history for a session."""
+        try:
+            return self.db.get_message_history(session_id, limit)
+        except Exception as e:
+            logger.error(f"Error getting message history for {session_id}: {str(e)}")
+            return []
+
+    def get_recent_messages(self, session_id: str, count: int = 10) -> List[Dict]:
+        """Get recent messages for context."""
+        try:
+            return self.db.get_recent_messages(session_id, count)
+        except Exception as e:
+            logger.error(f"Error getting recent messages for {session_id}: {str(e)}")
             return []
 
     def chat(self, message: str, 
              user_id: int, 
              user_name: str,
              session_id: str = None) -> Dict[str, Any]:
-        """Enhanced chat interface with session management."""
+        """Enhanced chat interface with simplified session and message storage."""
         try:
-            # Get or create session
-            final_session_id = self.session_manager.get_or_create_session(
-                user_id, user_name, session_id
-            )
+            # Get or create session using database only
+            final_session_id = self._get_or_create_session(user_id, user_name, session_id)
             
             config = {"configurable": {"thread_id": final_session_id}}
             
-            # Get session data for safety score
-            session_data = self.session_manager.get_session(final_session_id)
-            initial_safety_score = session_data.get('safety_score', 0) if session_data else 0
+            # Get session data for safety score from database
+            session_data = self.db.get_session_info(final_session_id)
+            initial_safety_score = session_data.get('metadata', {}).get('safety_score', 0) if session_data else 0
             
             initial_state = {
                 "messages": [HumanMessage(content=message)], 
@@ -463,17 +517,38 @@ class GeminiChatService:
             last_message = final_state["messages"][-1]
             structured_data = last_message.additional_kwargs.get("structured", {})
             
+            # Store message in database
+            try:
+                metadata = {
+                    "safety_score": final_state.get('safety_score', initial_safety_score),
+                    "safety_alert": structured_data.get("safety_alert", {}),
+                    "escalate": structured_data.get("escalate", False),
+                    "mood": structured_data.get("mood"),
+                    "recommendations": structured_data.get("recommendations", []),
+                    "task_complexity": final_state.get("task_complexity", {}).dict() if final_state.get("task_complexity") else None
+                }
+                
+                self.db.store_message(
+                    session_id=final_session_id,
+                    user_id=user_id,
+                    user_name=user_name,
+                    user_message=message,
+                    ai_response=last_message.content,
+                    metadata=metadata
+                )
+                
+                # Update session metadata with latest safety score
+                self.db.update_session_metadata(final_session_id, {
+                    "safety_score": final_state.get('safety_score', initial_safety_score)
+                })
+                
+            except Exception as e:
+                logger.error(f"Failed to store message in database: {str(e)}")
+            
             # Log safety concerns for monitoring
             safety_alert = structured_data.get("safety_alert", {})
             if safety_alert.get("level") in ["warning", "crisis"]:
                 logger.warning(f"🚨 SAFETY ALERT for user {user_id}: {safety_alert}")
-            
-            # Update session with the conversation
-            self.session_manager.update_session(final_session_id, {
-                'safety_score': final_state.get('safety_score', initial_safety_score),
-                'last_message': message,
-                'last_response': last_message.content
-            })
             
             return {
                 "message": last_message.content,
@@ -500,19 +575,15 @@ class GeminiChatService:
                           user_id: int, 
                           user_name: str,
                           session_id: str = None):
-        """Enhanced streaming with session management and task routing."""
+        """Enhanced streaming with simplified session management."""
         try:
-            # Get or create session
-            final_session_id = self.session_manager.get_or_create_session(
-                user_id, user_name, session_id
-            )
+            # Get or create session using database only
+            final_session_id = self._get_or_create_session(user_id, user_name, session_id)
             
-            # Quick complexity assessment for streaming strategy
-            dummy_state = State(user_id=user_id, user_name=user_name, session_id=final_session_id)
-            complexity = self._classify_task_complexity(message, dummy_state)
-            safety_alert = self._detect_crisis_indicators(message, dummy_state)
+            # Quick crisis check for immediate response
+            has_crisis = self.quick_crisis_check(message)
             
-            if safety_alert.immediate_action_required:
+            if has_crisis:
                 # Crisis - provide immediate response
                 crisis_response = get_crisis_response(user_name)
                 
@@ -521,11 +592,11 @@ class GeminiChatService:
                     await asyncio.sleep(0.02)
                 return
             
-            # For non-crisis situations, process normally but with optimized delay based on complexity
+            # For non-crisis situations, process normally
             config = {"configurable": {"thread_id": final_session_id}}
             
-            session_data = self.session_manager.get_session(final_session_id)
-            initial_safety_score = session_data.get('safety_score', 0) if session_data else 0
+            session_data = self.db.get_session_info(final_session_id)
+            initial_safety_score = session_data.get('metadata', {}).get('safety_score', 0) if session_data else 0
             
             initial_state = {
                 "messages": [HumanMessage(content=message)],
@@ -539,23 +610,37 @@ class GeminiChatService:
             last_message = final_state["messages"][-1]
             
             if isinstance(last_message, AIMessage) and last_message.content:
-                # Adjust streaming speed based on complexity
-                delay = {
-                    "simple": 0.005,    # Very fast for simple responses
-                    "moderate": 0.01,   # Normal speed  
-                    "complex": 0.015    # Slightly slower for complex responses
-                }.get(complexity.level, 0.01)
-                
+                # Standard streaming speed
                 for char in last_message.content:
                     yield char
-                    await asyncio.sleep(delay)
+                    await asyncio.sleep(0.01)
             
-            # Update session
-            self.session_manager.update_session(final_session_id, {
-                'safety_score': final_state.get('safety_score', initial_safety_score),
-                'last_message': message,
-                'last_response': last_message.content
-            })
+            # Store message in database
+            try:
+                structured_data = last_message.additional_kwargs.get("structured", {})
+                metadata = {
+                    "safety_score": final_state.get('safety_score', initial_safety_score),
+                    "safety_alert": structured_data.get("safety_alert", {}),
+                    "escalate": structured_data.get("escalate", False),
+                    "streaming": True
+                }
+                
+                self.db.store_message(
+                    session_id=final_session_id,
+                    user_id=user_id,
+                    user_name=user_name,
+                    user_message=message,
+                    ai_response=last_message.content,
+                    metadata=metadata
+                )
+                
+                # Update session metadata
+                self.db.update_session_metadata(final_session_id, {
+                    "safety_score": final_state.get('safety_score', initial_safety_score)
+                })
+                
+            except Exception as e:
+                logger.error(f"Failed to store streamed message: {str(e)}")
             
         except Exception as e:
             logger.error(f"Error in chat_stream: {str(e)}")
@@ -564,10 +649,10 @@ class GeminiChatService:
                 yield char
                 await asyncio.sleep(0.01)
     
-    def provide_session_to_user(self,user_id: int, user_name: str) -> str:
+    def provide_session_to_user(self, user_id: int, user_name: str) -> str:
         """Create and return a new session ID for the user."""
         try:
-            return self.session_manager.create_session(user_id, user_name)
+            return self._get_or_create_session(user_id, user_name)
         except Exception as e:
             logger.error(f"Error creating session for user {user_id}: {str(e)}")
             return ""
@@ -578,5 +663,8 @@ class GeminiChatService:
             if hasattr(self, 'mongo_client'):
                 self.mongo_client.close()
                 logger.info("MongoDB connection closed")
+            if hasattr(self, 'db'):
+                self.db.close()
+                logger.info("Database connection closed")
         except Exception as e:
             logger.error(f"Error closing connections: {str(e)}")
