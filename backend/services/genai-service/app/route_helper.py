@@ -9,7 +9,7 @@ logger = get_logger(__name__)
 def include_routers(app: FastAPI):
     BASE_API_PATH = "/api/v1/genai"
     app.include_router(test_router, 
-                       prefix=f"{BASE_API_PATH}/test", 
+                       prefix=f"{BASE_API_PATH}", 
                        tags=["Test Endpoints"],
                        default_response_class=JSONResponse)
     

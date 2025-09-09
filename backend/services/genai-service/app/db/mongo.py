@@ -75,13 +75,13 @@ class MindIgoDatabase:
             logger.error(f"Failed to store message: {str(e)}")
             return ""
     
-    def get_message_history(self, session_id: str, limit: int = 50) -> List[Dict]:
-        """Get message history for a session."""
+    def get_message_history(self, session_id: str, limit: int = 50, offset: int = 0) -> List[Dict]:
+        """Get message history for a session with pagination."""
         try:
             messages = list(
                 self.messages.find(
                     {"session_id": session_id}
-                ).sort("timestamp", 1).limit(limit)
+                ).sort("timestamp", 1).skip(offset).limit(limit)
             )
             
             # Convert ObjectId to string for JSON serialization
@@ -93,6 +93,36 @@ class MindIgoDatabase:
         except Exception as e:
             logger.error(f"Failed to get message history: {str(e)}")
             return []
+
+    def get_recent_messages(self, session_id: str, count: int = 5) -> List[Dict]:
+        """Get recent messages for context in streaming."""
+        try:
+            messages = list(
+                self.messages.find(
+                    {"session_id": session_id}
+                ).sort("timestamp", -1).limit(count)
+            )
+            
+            # Reverse to get chronological order
+            messages.reverse()
+            
+            # Convert ObjectId to string for JSON serialization
+            for msg in messages:
+                msg["_id"] = str(msg["_id"])
+            
+            return messages
+            
+        except Exception as e:
+            logger.error(f"Failed to get recent messages: {str(e)}")
+            return []
+
+    def get_message_count(self, session_id: str) -> int:
+        """Get total message count for a session."""
+        try:
+            return self.messages.count_documents({"session_id": session_id})
+        except Exception as e:
+            logger.error(f"Failed to get message count: {str(e)}")
+            return 0
     
     def get_recent_messages(self, session_id: str, count: int = 10) -> List[Dict]:
         """Get recent messages for context."""

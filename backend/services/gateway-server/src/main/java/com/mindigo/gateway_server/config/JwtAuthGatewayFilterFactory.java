@@ -94,6 +94,7 @@ public class JwtAuthGatewayFilterFactory extends AbstractGatewayFilterFactory<Jw
                                 .header("X-User-Id", String.valueOf(validateResponse.getUserId()))
                                 .header("X-User-Email", validateResponse.getEmail())
                                 .header("X-User-Role", validateResponse.getRole())
+                                .header("X-User-Name", validateResponse.getUserName())
                                 .header("X-Authenticated", "true")
                                 .build();
 
@@ -158,6 +159,7 @@ public class JwtAuthGatewayFilterFactory extends AbstractGatewayFilterFactory<Jw
         private String email;
         private String role;
         private boolean valid;
+        private String userName;
 
         public Long getUserId() {
             return userId;
@@ -179,6 +181,8 @@ public class JwtAuthGatewayFilterFactory extends AbstractGatewayFilterFactory<Jw
             return role;
         }
 
+        public String getUserName() { return  userName;}
+
         public void setRole(String role) {
             this.role = role;
         }
@@ -190,5 +194,6 @@ public class JwtAuthGatewayFilterFactory extends AbstractGatewayFilterFactory<Jw
         public void setValid(boolean valid) {
             this.valid = valid;
         }
+
     }
 }

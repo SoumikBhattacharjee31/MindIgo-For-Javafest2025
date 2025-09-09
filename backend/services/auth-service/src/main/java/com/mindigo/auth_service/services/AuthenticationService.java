@@ -523,12 +523,14 @@ public class AuthenticationService {
                 throw new InvalidTokenException("User not found");
             }
             String role = String.valueOf(user.get().getRole());
+            String name = user.get().getName();
 
             return ValidateResponse.builder()
                     .userId(Long.parseLong(userId))
                     .email(userEmail)
                     .valid(true)
                     .role(role)
+                    .userName(name)
                     .build();
 
         } catch (Exception e) {

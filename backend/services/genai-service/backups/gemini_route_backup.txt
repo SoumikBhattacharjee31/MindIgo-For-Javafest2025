@@ -216,7 +216,6 @@ async def chat_stream_endpoint(
             try:
                 # Store message data for metadata
                 message_data = {}
-                full_response = ""
                 
                 # First, stream the text response
                 async for chunk in chat_service.chat_stream(
@@ -225,15 +224,10 @@ async def chat_stream_endpoint(
                     user_name=validated_user_name,
                     session_id=request.session_id
                 ):
-                    full_response += chunk
-                    # Send each character immediately and flush
-                    chunk_data = f"data: {json.dumps({'type': 'text', 'content': chunk})}\n\n"
-                    yield chunk_data
-                    # Force flush by yielding empty string
-                    yield ""
+                    yield f"data: {json.dumps({'type': 'text', 'content': chunk})}\n\n"
                 
                 # Wait a moment for processing to complete
-                await asyncio.sleep(0.2)
+                await asyncio.sleep(0.1)
                 
                 # Get the latest message metadata from the database
                 try:
@@ -285,9 +279,7 @@ async def chat_stream_endpoint(
             headers={
                 "Cache-Control": "no-cache",
                 "Connection": "keep-alive",
-                "Content-Type": "text/plain; charset=utf-8",
-                "X-Accel-Buffering": "no",  # Disable nginx buffering
-                "Transfer-Encoding": "chunked"  # Force chunked encoding
+                "Content-Type": "text/plain; charset=utf-8"
             }
         )
         

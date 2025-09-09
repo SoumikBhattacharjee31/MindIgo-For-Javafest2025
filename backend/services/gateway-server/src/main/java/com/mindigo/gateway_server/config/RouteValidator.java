@@ -18,7 +18,8 @@ public class RouteValidator {
             "/api/v1/auth/test",
             "/api/v1/assessment/test",
             "/api/v1/content/test",
-            "/api/v1/ai/test"
+            "/api/v1/ai/test",
+            "/api/v1/genai/test"
     );
 
     // The predicate returns 'true' if the request path does NOT start with any of the public prefixes.
