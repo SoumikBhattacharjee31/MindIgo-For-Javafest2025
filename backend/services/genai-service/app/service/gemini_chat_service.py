@@ -34,10 +34,10 @@ class GeminiChatService:
             
             # Four-tier model architecture for cost/performance optimization
             self.models = {
-                "lite": get_chat_model("gemini", model_name="gemini-2.0-flash-lite", **kwargs),      # Quick analysis
-                "flash_lite": get_chat_model("gemini", model_name="gemini-2.5-flash-lite", **kwargs), # Simple responses
-                "flash": get_chat_model("gemini", model_name="gemini-2.5-flash", **kwargs),           # Standard processing
-                "pro": get_chat_model("gemini", model_name="gemini-2.5-pro", **kwargs)                # Complex/crisis cases
+                "lite": get_chat_model("gemini", model_name="gemini-1.5-flash-lite", **kwargs),      # Quick analysis
+                "flash_lite": get_chat_model("gemini", model_name="gemini-2.0-flash-lite", **kwargs), # Simple responses
+                "flash": get_chat_model("gemini", model_name="gemini-2.0-flash", **kwargs),           # Standard processing
+                "pro": get_chat_model("gemini", model_name="gemini-2.5-flash", **kwargs)                # Complex/crisis cases
             }
             
             # Extensible tool registry

@@ -67,7 +67,7 @@
 
 # from app.util import get_mood, get_song, get_doctor
 
-# print(get_mood())
+# print(get_mood(user_id=1, days=7))
 # print(get_song(mood_category="calming"))
 # print(get_doctor())
 
@@ -76,16 +76,16 @@
 # thread_id = str(uuid4())
 # print(thread_id)
 
-from app.service import GeminiChatService
-gemini = GeminiChatService()
-app = gemini.app
-# # print(gemini.chat("Feeling Anxious", thread_id=thread_id, user_id=1, user_name="Somik"))
-from langchain_core.runnables.graph import MermaidDrawMethod
+# from app.service import GeminiChatService
+# gemini = GeminiChatService()
+# app = gemini.app
+# # # print(gemini.chat("Feeling Anxious", thread_id=thread_id, user_id=1, user_name="Somik"))
+# from langchain_core.runnables.graph import MermaidDrawMethod
 
-png_bytes = app.get_graph().draw_mermaid_png(draw_method=MermaidDrawMethod.API)
+# png_bytes = app.get_graph().draw_mermaid_png(draw_method=MermaidDrawMethod.API)
 
-with open("graph.png", "wb") as f:
-    f.write(png_bytes)
+# with open("graph.png", "wb") as f:
+#     f.write(png_bytes)
 
 # session_id = gemini.provide_session_to_user(1,"Somik")
 
@@ -103,3 +103,6 @@ with open("graph.png", "wb") as f:
 # db = client["mindigo_checkpoints"]
 # db.create_collection("test_collection")
 # print("Connected to MongoDB!")
+
+from datetime import datetime
+print(datetime.now().date().isoformat())

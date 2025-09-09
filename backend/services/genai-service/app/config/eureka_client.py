@@ -168,5 +168,32 @@ class EurekaClient:
             except asyncio.CancelledError:
                 pass
             logger.info("Stopped heartbeat task")
+        
+    async def get_service_instance(self, service_name: str) -> Optional[str]:
+        """Fetch a service instance URL from Eureka"""
+        try:
+            url = f"{self.eureka_url}/apps/{service_name.upper()}"
+            
+            async with httpx.AsyncClient() as client:
+                response = await client.get(url, headers={'Accept':'application/json'}, timeout=10.0)
+
+            logger.info(f"Service discovery response for {service_name}: {response.status_code}")
+            if response.status_code == 200:
+                data = response.json()
+                # logger.info(f"Eureka response data: {data}")
+                instances = data["application"]["instance"]
+                instance = instances[0]  # TODO: improve load-balancing
+                ip = instance["ipAddr"]
+                port = instance["port"]["$"]
+
+                logger.info(f"Discovered service instance: {service_name} at {ip}:{port}")
+                return f"http://{ip}:{port}"
+            else:
+                logger.error(f"Failed to fetch service from Eureka: {service_name}, status={response.status_code}")
+                return None
+
+        except Exception as e:
+            logger.error(f"Error discovering service {service_name}: {e}")
+            return None
             
 eureka_client = EurekaClient(settings)
