@@ -1,0 +1,14 @@
+[
+    {
+        "name": "Dr. Sarah Johnson",
+        "specialty": "Clinical Psychology",
+        "rating": 4.8,
+        "accepts_insurance": true
+    },
+    {
+        "name": "Dr. Michael Chen",
+        "specialty": "Psychiatry",
+        "rating": 4.9,
+        "accepts_insurance": true
+    }
+]

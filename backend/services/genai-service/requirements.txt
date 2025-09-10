@@ -1,0 +1,21 @@
+google-genai
+dotenv
+fastapi
+uvicorn
+spring-config-client
+pydantic-settings
+py_eureka_client
+langchain-google-genai
+langgraph
+langsmith
+langchain[google-genai]
+uuid
+IPython
+langgraph-checkpoint-mongodb
+pymongo
+langgraph-store-mongodb
+pip 
+setuptools 
+wheel
+spacy
+python -m spacy download en_core_web_sm
