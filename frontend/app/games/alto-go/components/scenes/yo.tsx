@@ -148,12 +148,12 @@ export class TestScene extends Scene {
     this.player.body.setAllowGravity(false);
     this.player.body.setImmovable(true); // Keep this for correct collisions
 
-    // --- Make the player hitbox larger than the sprite ---
-    const hitboxWidth = this.player.displayWidth * 6.2; // Increase hitbox width
-    const hitboxHeight = this.player.displayHeight * 6.2; // Increase hitbox height
+    // --- Fix 2: Correct the hitbox size to be smaller than the sprite ---
+    const hitboxWidth = this.player.displayWidth * 6.6;
+    const hitboxHeight = this.player.displayHeight * 6.8;
     this.player.body.setSize(hitboxWidth, hitboxHeight);
 
-    // Re-center the larger hitbox on the player sprite
+    // Re-center the smaller hitbox on the player sprite
     const offsetX = (this.player.width - hitboxWidth) / 2;
     const offsetY = (this.player.height - hitboxHeight) / 2;
     this.player.body.setOffset(offsetX, offsetY);
@@ -377,17 +377,12 @@ export class TestScene extends Scene {
     obstacle.setOrigin(0.5, 0.5);
     obstacle.body.setAllowGravity(false);
     
-    // --- Make the obstacle hitbox larger than the sprite ---
-    const hitboxMultiplier = 6.2; // A uniform, larger multiplier
-    const hitboxWidth = obstacle.displayWidth * hitboxMultiplier;
-    const hitboxHeight = obstacle.displayHeight * hitboxMultiplier;
-    obstacle.body.setSize(hitboxWidth, hitboxHeight);
-
-    // Re-center the larger hitbox
-    const offsetX = (obstacle.width - hitboxWidth) / 2;
-    const offsetY = (obstacle.height - hitboxHeight) / 2;
-    obstacle.body.setOffset(offsetX, offsetY);
-
+    // Enhanced hitbox
+    const hitboxMultiplier = obstacleType === "bird" ? 6.6 : 6.8;
+    obstacle.body.setSize(
+      obstacle.displayWidth * hitboxMultiplier,
+      obstacle.displayHeight * hitboxMultiplier
+    );
 
     obstacle.setVelocityX(-this.velocity);
 
@@ -407,7 +402,7 @@ export class TestScene extends Scene {
     
     // Use a 'coin' sprite for the collectible
     const collectible = this.collectibles.create(x, y, "coin") as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
-    collectible.setScale(1.0); // Make the coin visible
+    collectible.setScale(1.0); // Make the coin 10x bigger
     collectible.body.setAllowGravity(false);
     collectible.setVelocityX(-this.velocity);
 
@@ -456,7 +451,7 @@ export class TestScene extends Scene {
     }
 
     const powerUp = this.powerUps.create(x, y, powerUpSpriteKey) as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
-    powerUp.setScale(1.0); // Increase the size of the power-up icons
+    powerUp.setScale(2.0); // Make the power-up icons 10x bigger
     powerUp.setData("type", powerUpType);
     powerUp.body.setAllowGravity(false);
     powerUp.setVelocityX(-this.velocity);
@@ -464,8 +459,8 @@ export class TestScene extends Scene {
     // Add pulsing effect, adjusting the scale for the new sprites
     this.tweens.add({
       targets: powerUp,
-      scaleX: 1.2, // Adjust pulsing scale
-      scaleY: 1.2, // Adjust pulsing scale
+      scaleX: 2.2, // Adjust pulsing scale
+      scaleY: 2.2, // Adjust pulsing scale
       duration: 800,
       yoyo: true,
       repeat: -1
@@ -489,26 +484,10 @@ export class TestScene extends Scene {
   }
 
   private handleCollectibleCollection(player: any, collectible: any) {
-    const collectibleX = collectible.x;
-    const collectibleY = collectible.y;
-
     collectible.destroy();
     this.addScore(100);
     this.addCombo();
-
-    // Create a floating coin icon instead of text
-    const floatingCoin = this.add.image(collectibleX, collectibleY, 'coin')
-        .setScale(1.0)
-        .setOrigin(0.5);
-
-    this.tweens.add({
-        targets: floatingCoin,
-        y: collectibleY - 50,
-        alpha: 0,
-        duration: 1000,
-        ease: 'Power2',
-        onComplete: () => floatingCoin.destroy()
-    });
+    this.showFloatingText(collectible.x, collectible.y, "+100!", 0xffff00);
     
     // Speed boost from collectibles
     this.velocity = Math.min(this.velocity + 2, this.maxVelocity);

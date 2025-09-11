@@ -30,6 +30,7 @@ const Dashboard: React.FC = () => {
     setIsLoading(true);
     try {
       let data: RoutineResponse[];
+      console.log(userRole);
       if (userRole === 'doctor') {
         data = await routineService.getRoutinesByDoctor(currentDoctorId);
       } else {

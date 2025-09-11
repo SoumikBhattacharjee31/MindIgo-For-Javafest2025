@@ -1,32 +1,39 @@
 "use client";
-import Head from "next/head";
 import { Inter } from "next/font/google";
 import styles from "./Home.module.css";
 import dynamic from "next/dynamic";
-import { useState } from "react";
 
 const inter = Inter({ subsets: ["latin"] });
 
-const AppWithoutSSR = dynamic(() => import("./components/App"), { ssr: false });
+// Dynamically import the App component to avoid SSR issues
+const AppWithoutSSR = dynamic(() => import("./components/App"), { 
+  ssr: false,
+  loading: () => (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      height: '100vh',
+      background: 'linear-gradient(135deg, #001122, #003366)',
+      color: 'white',
+      fontSize: '24px',
+      fontFamily: 'Arial, sans-serif'
+    }}>
+      🏂 Loading Snowboarder Game...
+    </div>
+  )
+});
 
 export default function Home() {
-  // const [clicked, setClicked] = useState(false);
-  // if (!clicked)
-  //   return <button onClick={() => setClicked(true)}>Hello</button>;
   return (
-    <>
-      <Head>
-        <title>Phaser Nextjs Template</title>
-        <meta
-          name="description"
-          content="A Phaser 3 Next.js project template that demonstrates Next.js with React communication and uses Vite for bundling."
-        />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" href="/favicon.png" />
-      </Head>
-      <main className={`${styles.main} ${inter.className}`}>
-        <AppWithoutSSR />
-      </main>
-    </>
+    <main className={`${styles.main} ${inter.className}`} style={{ 
+      margin: 0, 
+      padding: 0, 
+      width: '100vw', 
+      height: '100vh',
+      overflow: 'hidden'
+    }}>
+      <AppWithoutSSR />
+    </main>
   );
 }

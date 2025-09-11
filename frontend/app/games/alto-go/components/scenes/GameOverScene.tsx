@@ -3,51 +3,340 @@ import { EventBus } from "../EventBus";
 
 export class GameOverScene extends Scene {
   private score!: number;
+  private maxCombo!: number;
+  private highScore!: number;
+  private isNewRecord: boolean = false;
+  private particles!: Phaser.GameObjects.Particles.ParticleEmitter;
 
   constructor() {
     super("GameOverScene");
   }
 
-  init(data: { score: number }) {
-    this.score = data.score;
+  init(data: { score: number; maxCombo?: number }) {
+    this.score = data.score || 0;
+    this.maxCombo = data.maxCombo || 0;
+    this.loadHighScore();
   }
 
   create() {
     const { width, height } = this.scale;
 
-    this.add
-      .text(width / 2, height / 2 - 100, "Game Over", {
-        fontSize: "64px",
-        color: "#fff",
-      })
-      .setOrigin(0.5);
-    this.add
-      .text(width / 2, height / 2, `Score: ${Math.floor(this.score)}`, {
-        fontSize: "32px",
-        color: "#fff",
-      })
-      .setOrigin(0.5);
+    // Add background gradient
+    this.createBackground();
 
-    const restartButton = this.add
-      .text(width / 2, height / 2 + 100, "Restart", {
-        fontSize: "32px",
-        color: "#fff",
-      })
-      .setOrigin(0.5)
-      .setInteractive();
+    // Add particle effects for celebration if new record
+    if (this.isNewRecord) {
+      this.createCelebrationParticles();
+    }
+
+    // Create animated title
+    this.createGameOverTitle();
+
+    // Create stats display
+    this.createStatsDisplay();
+
+    // Create buttons with hover effects
+    this.createButtons();
+
+    // Add entrance animations
+    this.animateEntrance();
+
+    EventBus.emit("current-scene-ready", this);
+  }
+
+  private loadHighScore() {
+    // In a real game, you'd load from localStorage or a server
+    // Since we can't use localStorage in artifacts, we'll simulate it
+    this.highScore = 5000; // Simulated high score
+    
+    if (this.score > this.highScore) {
+      this.highScore = this.score;
+      this.isNewRecord = true;
+    }
+  }
+
+  private createBackground() {
+    const { width, height } = this.scale;
+    
+    // Create gradient background
+    const graphics = this.add.graphics();
+    graphics.fillGradientStyle(0x001122, 0x001122, 0x004455, 0x004455);
+    graphics.fillRect(0, 0, width, height);
+
+    // Add animated snow particles with error handling
+    try {
+      const snowParticles = this.add.particles(0, 0, 'snowboarder', {
+        x: { min: 0, max: width },
+        y: -50,
+        scale: { min: 0.005, max: 0.02 },
+        alpha: { min: 0.3, max: 0.8 },
+        lifespan: 8000,
+        speedY: { min: 30, max: 80 },
+        speedX: { min: -20, max: 20 },
+        tint: 0xffffff,
+        quantity: 2,
+        frequency: 200
+      });
+    } catch (error) {
+      console.warn('Could not create background snow particles:', error);
+      // Continue without snow particles
+    }
+  }
+
+  private createCelebrationParticles() {
+    const { width, height } = this.scale;
+    
+    // Golden confetti for new record
+    this.particles = this.add.particles(width / 2, height / 2, 'snowboarder', {
+      scale: { min: 0.01, max: 0.03 },
+      speed: { min: 100, max: 200 },
+      alpha: { start: 1, end: 0 },
+      lifespan: 2000,
+      tint: [0xffd700, 0xffff00, 0xff8c00, 0xff1493],
+      quantity: 5,
+      frequency: 100,
+      emitZone: { type: 'edge', source: new Phaser.Geom.Circle(0, 0, 50), quantity: 20 }
+    });
+
+    // Stop particles after celebration
+    this.time.delayedCall(3000, () => {
+      this.particles.stop();
+    });
+  }
+
+  private createGameOverTitle() {
+    const { width, height } = this.scale;
+    
+    const titleText = this.isNewRecord ? "NEW RECORD!" : "Game Over";
+    const titleColor = this.isNewRecord ? "#ffd700" : "#ffffff";
+    
+    const title = this.add.text(width / 2, height / 2 - 180, titleText, {
+      fontSize: "72px",
+      color: titleColor,
+      fontStyle: "bold",
+      stroke: "#000000",
+      strokeThickness: 4
+    }).setOrigin(0.5).setAlpha(0);
+
+    // Pulsing effect for new record
+    if (this.isNewRecord) {
+      this.tweens.add({
+        targets: title,
+        scaleX: 1.1,
+        scaleY: 1.1,
+        duration: 800,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut'
+      });
+    }
+
+    return title;
+  }
+
+  private createStatsDisplay() {
+    const { width, height } = this.scale;
+    
+    // Score display
+    const scoreLabel = this.add.text(width / 2, height / 2 - 80, "Final Score", {
+      fontSize: "32px",
+      color: "#cccccc",
+      fontStyle: "bold"
+    }).setOrigin(0.5).setAlpha(0);
+
+    const scoreValue = this.add.text(width / 2, height / 2 - 40, `${Math.floor(this.score)}`, {
+      fontSize: "48px",
+      color: "#ffffff",
+      fontStyle: "bold",
+      stroke: "#000000",
+      strokeThickness: 3
+    }).setOrigin(0.5).setAlpha(0);
+
+    // Max combo display
+    const comboLabel = this.add.text(width / 2 - 150, height / 2 + 20, "Max Combo", {
+      fontSize: "24px",
+      color: "#cccccc"
+    }).setOrigin(0.5).setAlpha(0);
+
+    const comboValue = this.add.text(width / 2 - 150, height / 2 + 50, `x${this.maxCombo}`, {
+      fontSize: "32px",
+      color: "#ffff00",
+      fontStyle: "bold",
+      stroke: "#000000",
+      strokeThickness: 2
+    }).setOrigin(0.5).setAlpha(0);
+
+    // High score display
+    const highScoreLabel = this.add.text(width / 2 + 150, height / 2 + 20, "High Score", {
+      fontSize: "24px",
+      color: "#cccccc"
+    }).setOrigin(0.5).setAlpha(0);
+
+    const highScoreValue = this.add.text(width / 2 + 150, height / 2 + 50, `${Math.floor(this.highScore)}`, {
+      fontSize: "32px",
+      color: "#ffd700",
+      fontStyle: "bold",
+      stroke: "#000000",
+      strokeThickness: 2
+    }).setOrigin(0.5).setAlpha(0);
+
+    return [scoreLabel, scoreValue, comboLabel, comboValue, highScoreLabel, highScoreValue];
+  }
+
+  private createButtons() {
+    const { width, height } = this.scale;
+    
+    // Restart button
+    const restartButton = this.add.text(width / 2, height / 2 + 120, "🔄 Play Again", {
+      fontSize: "36px",
+      color: "#ffffff",
+      backgroundColor: "#4CAF50",
+      padding: { x: 20, y: 10 },
+      fontStyle: "bold"
+    }).setOrigin(0.5).setAlpha(0).setInteractive();
+
+    this.setupButtonHover(restartButton, "#45a049");
     restartButton.on("pointerdown", () => {
-      this.scene.start("TestScene");
+      this.cameras.main.fadeOut(300);
+      this.cameras.main.once('camerafadeoutcomplete', () => {
+        this.scene.start("TestScene");
+      });
     });
 
-    const backButton = this.add
-      .text(width / 2, height / 2 + 150, "Back To Menu", {
-        fontSize: "32px",
-        color: "#fff",
-      })
-      .setOrigin(0.5)
-      .setInteractive();
-    backButton.on("pointerdown", () => {
-      this.scene.start("MainMenuScene");
+    // Menu button
+    const menuButton = this.add.text(width / 2, height / 2 + 180, "🏠 Main Menu", {
+      fontSize: "36px",
+      color: "#ffffff",
+      backgroundColor: "#2196F3",
+      padding: { x: 20, y: 10 },
+      fontStyle: "bold"
+    }).setOrigin(0.5).setAlpha(0).setInteractive();
+
+    this.setupButtonHover(menuButton, "#1976D2");
+    menuButton.on("pointerdown", () => {
+      this.cameras.main.fadeOut(300);
+      this.cameras.main.once('camerafadeoutcomplete', () => {
+        this.scene.start("MainMenuScene");
+      });
     });
+
+    // High Scores button
+    const highScoresButton = this.add.text(width / 2, height / 2 + 240, "🏆 High Scores", {
+      fontSize: "32px",
+      color: "#ffffff",
+      backgroundColor: "#FF9800",
+      padding: { x: 15, y: 8 },
+      fontStyle: "bold"
+    }).setOrigin(0.5).setAlpha(0).setInteractive();
+
+    this.setupButtonHover(highScoresButton, "#F57C00");
+    highScoresButton.on("pointerdown", () => {
+      this.cameras.main.fadeOut(300);
+      this.cameras.main.once('camerafadeoutcomplete', () => {
+        this.scene.start("HighScoresScene");
+      });
+    });
+
+    return [restartButton, menuButton, highScoresButton];
+  }
+
+  private setupButtonHover(button: Phaser.GameObjects.Text, hoverColor: string) {
+    const originalColor = button.style.backgroundColor;
+    
+    button.on('pointerover', () => {
+      button.setStyle({ backgroundColor: hoverColor });
+      this.tweens.add({
+        targets: button,
+        scaleX: 1.05,
+        scaleY: 1.05,
+        duration: 100,
+        ease: 'Power2'
+      });
+    });
+
+    button.on('pointerout', () => {
+      button.setStyle({ backgroundColor: originalColor });
+      this.tweens.add({
+        targets: button,
+        scaleX: 1,
+        scaleY: 1,
+        duration: 100,
+        ease: 'Power2'
+      });
+    });
+
+    button.on('pointerdown', () => {
+      this.tweens.add({
+        targets: button,
+        scaleX: 0.95,
+        scaleY: 0.95,
+        duration: 50,
+        yoyo: true,
+        ease: 'Power2'
+      });
+    });
+  }
+
+  private animateEntrance() {
+    const { width, height } = this.scale;
+    
+    // Get all UI elements
+    const title = this.children.getByName('title') || this.children.list.find(child => 
+      child instanceof Phaser.GameObjects.Text && (child.text === "Game Over" || child.text === "NEW RECORD!")
+    );
+    
+    const allElements = this.children.list.filter(child => 
+      child instanceof Phaser.GameObjects.Text && child.alpha === 0
+    );
+
+    // Animate title first
+    this.tweens.add({
+      targets: title,
+      alpha: 1,
+      y: title ? (title as Phaser.GameObjects.Text).y : height / 2 - 180,
+      duration: 600,
+      ease: 'Back.easeOut'
+    });
+
+    // Animate other elements with stagger
+    allElements.forEach((element, index) => {
+      if (element !== title) {
+        this.tweens.add({
+          targets: element,
+          alpha: 1,
+          y: (element as Phaser.GameObjects.Text).y,
+          duration: 400,
+          delay: 200 + index * 100,
+          ease: 'Power2.easeOut'
+        });
+      }
+    });
+
+    // Screen flash for new record
+    if (this.isNewRecord) {
+      const flash = this.add.rectangle(width / 2, height / 2, width, height, 0xffd700, 0.3);
+      this.tweens.add({
+        targets: flash,
+        alpha: 0,
+        duration: 800,
+        ease: 'Power2.easeOut',
+        onComplete: () => flash.destroy()
+      });
+    }
+
+    // Camera fade in
+    this.cameras.main.fadeIn(500);
+  }
+
+  private calculateGrade(): string {
+    if (this.score >= 10000) return "S+";
+    if (this.score >= 8000) return "S";
+    if (this.score >= 6000) return "A+";
+    if (this.score >= 4000) return "A";
+    if (this.score >= 3000) return "B+";
+    if (this.score >= 2000) return "B";
+    if (this.score >= 1000) return "C+";
+    if (this.score >= 500) return "C";
+    return "D";
   }
 }

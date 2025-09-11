@@ -11,6 +11,10 @@ export class Boot extends Scene {
 
     // this.load.image('background', 'assets/bg.png');
     this.load.image("snowybg", "/snowybg.png");
+    this.load.image("speedIcon", "/speed.png");
+    this.load.image("invulnerabilityIcon", "/star.png");
+    this.load.image("magnetIcon", "/magnet.png");
+    this.load.image("coin", "/coin.png");
   }
 
   create() {
