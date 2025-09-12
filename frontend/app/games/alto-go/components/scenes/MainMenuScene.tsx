@@ -2,6 +2,7 @@ import { Scene } from "phaser";
 import { EventBus } from "../EventBus";
 import { userService, User } from "../../services/userService";
 import { apiService } from "../../services/apiService";
+import { musicService } from "../../services/musicService";
 
 export class MainMenuScene extends Scene {
   private titleText!: Phaser.GameObjects.Text;
@@ -354,13 +355,21 @@ export class MainMenuScene extends Scene {
   }
 
   private setupBackgroundMusic() {
-    if (!this.sound.get("backgroundMusic")) {
-      this.backgroundMusic = this.sound.add("backgroundMusic", {
-        loop: true,
-        volume: 0.2
-      });
+    musicService.setScene(this);
+    
+    // Start background music if enabled
+    if (musicService.getMusicEnabled()) {
+      musicService.playBackgroundMusic('backgroundMusic');
     }
   }
+
+  private toggleMusic() {
+    const isEnabled = musicService.getMusicEnabled();
+    musicService.setMusicEnabled(!isEnabled);
+    
+    // Update button texture
+    // this.musicButton.setTexture(isEnabled ? "musicOffButton" : "musicOnButton");
+  };
 
   private async loadUserStats() {
     try {

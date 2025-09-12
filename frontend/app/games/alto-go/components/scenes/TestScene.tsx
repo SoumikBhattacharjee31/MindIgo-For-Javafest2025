@@ -1,5 +1,6 @@
 import { EventBus } from "../EventBus";
 import { Scene } from "phaser";
+import { musicService } from "../../services/musicService";
 
 export class TestScene extends Scene {
   private snowybg!: Phaser.GameObjects.TileSprite;
@@ -27,8 +28,9 @@ export class TestScene extends Scene {
   private groundTime: number = 0;
   private isGrounded: boolean = true;
   private cameraTween!: Phaser.Tweens.Tween;
-  private backgroundMusic!: Phaser.Sound.BaseSound;
-  private isMusicPlaying: boolean = false;
+  // --- REMOVED: Local music state. The service will handle this now. ---
+  // private backgroundMusic!: Phaser.Sound.BaseSound;
+  // private isMusicPlaying: boolean = false;
   private musicButton!: Phaser.GameObjects.Image;
   private powerUps!: Phaser.Physics.Arcade.Group;
   private invulnerable: boolean = false;
@@ -46,6 +48,13 @@ export class TestScene extends Scene {
 
   create() {
     // --- Fix 1: Set the camera size ---
+    musicService.setScene(this);
+  
+    // Continue background music from menu (it should already be playing)
+    if (musicService.getMusicEnabled() && !musicService.isMusicPlaying()) {
+      musicService.playBackgroundMusic('backgroundMusic');
+    }
+
     this.cameras.main.setSize(this.scale.width, this.scale.height);
 
     this.resetGameState();
@@ -93,8 +102,8 @@ export class TestScene extends Scene {
     // Create enhanced UI
     this.createUI();
 
-    // Setup background music
-    this.setupAudio();
+    // --- REMOVED: Redundant setup. The service handles music creation. ---
+    // this.setupAudio();
 
     // Add camera effects
     this.setupCamera();
@@ -335,20 +344,17 @@ export class TestScene extends Scene {
       strokeThickness: 2
     }).setScrollFactor(0); // Pin UI to screen
 
-    // Music toggle button
-    this.musicButton = this.add.image(width - 50, 50, "musicOnButton")
+    // --- FIXED: Set initial button texture from the music service ---
+    const initialTexture = musicService.getMusicEnabled() ? "musicOnButton" : "musicOffButton";
+    this.musicButton = this.add.image(width - 50, 50, initialTexture)
       .setScale(0.1)
       .setInteractive()
       .on('pointerdown', this.toggleMusic, this)
       .setScrollFactor(0); // Pin UI to screen
   }
 
-  private setupAudio() {
-    this.backgroundMusic = this.sound.add("backgroundMusic", {
-      loop: true,
-      volume: 0.3
-    });
-  }
+  // --- REMOVED: Redundant method. The service handles this. ---
+  // private setupAudio() { ... }
 
   private setupCamera() {
     // Smooth camera following
@@ -480,6 +486,8 @@ export class TestScene extends Scene {
       return;
     }
 
+    musicService.playSFX('crashSound', { volume: 0.8 });
+
     this.shakeCamera();
     this.resetCombo();
     this.scene.start("GameOverScene", { 
@@ -489,6 +497,9 @@ export class TestScene extends Scene {
   }
 
   private handleCollectibleCollection(player: any, collectible: any) {
+
+    musicService.playSFX('coinSound', { volume: 0.6 });
+
     const collectibleX = collectible.x;
     const collectibleY = collectible.y;
 
@@ -515,6 +526,7 @@ export class TestScene extends Scene {
   }
 
   private handlePowerUpCollection(player: any, powerUp: any) {
+    musicService.playSFX('powerupSound', { volume: 0.7 });
     const type = powerUp.getData("type");
     powerUp.destroy();
     
@@ -558,6 +570,7 @@ export class TestScene extends Scene {
 
   private jump() {
     if (!this.isJumping && this.isGrounded) {
+      musicService.playSFX('jumpSound', { volume: 0.4 });
       this.player.body.setAllowGravity(true);
       this.isJumping = true;
       this.isGrounded = false;
@@ -573,6 +586,7 @@ export class TestScene extends Scene {
   private performTrick(direction: string) {
     if (!this.isJumping || this.isPerformingTrick) return;
 
+    musicService.playSFX('trickSound', { volume: 0.5 });
     this.isPerformingTrick = true;
     let trickScore = 0;
     let trickName = "";
@@ -676,15 +690,25 @@ export class TestScene extends Scene {
   }
 
   private toggleMusic() {
-    if (this.isMusicPlaying) {
-      this.backgroundMusic.pause();
-      this.musicButton.setTexture("musicOffButton");
-      this.isMusicPlaying = false;
-    } else {
-      this.backgroundMusic.resume();
-      this.musicButton.setTexture("musicOnButton");
-      this.isMusicPlaying = true;
+    // 1. Get the current enabled state from the service.
+    const isCurrentlyEnabled = musicService.getMusicEnabled();
+
+    // 2. Set the new, opposite state for both music and SFX.
+    const newEnabledState = !isCurrentlyEnabled;
+    musicService.setMusicEnabled(newEnabledState);
+    musicService.setSFXEnabled(newEnabledState); // Mute SFX as well
+
+    // --- ADDED FIX ---
+    // Manually restart the BGM when toggling sound back on.
+    // This is because the service's setMusicEnabled(false) destroys the music instance,
+    // and its setMusicEnabled(true) logic doesn't re-create it.
+    if (newEnabledState) {
+        musicService.playBackgroundMusic('backgroundMusic');
     }
+
+    // 3. Update the button's texture to reflect the new state.
+    const newTexture = newEnabledState ? "musicOnButton" : "musicOffButton";
+    this.musicButton.setTexture(newTexture);
   }
 
   update(time: number, delta: number): void {
