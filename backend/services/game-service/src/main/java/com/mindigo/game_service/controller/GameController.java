@@ -1,13 +1,11 @@
-package com.mindigo.game_service.controllers;
+package com.mindigo.game_service.controller;
 
-import com.mindigo.game_service.dto.GridResponse;
-import com.mindigo.game_service.dto.TestResponse;
+import com.mindigo.game_service.dto.response.GridResponse;
+import com.mindigo.game_service.dto.response.TestResponse;
 import com.mindigo.game_service.exceptions.InvalidParameterException;
-import com.mindigo.game_service.services.InfinityLoopService;
-import jakarta.servlet.http.HttpServletRequest;
+import com.mindigo.game_service.service.InfinityLoopService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

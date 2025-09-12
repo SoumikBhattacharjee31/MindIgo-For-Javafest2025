@@ -1,5 +1,7 @@
 import { Scene } from "phaser";
 import { EventBus } from "../EventBus";
+import { apiService } from "../../services/apiService";
+import { userService } from "../../services/userService";
 
 export class GameOverScene extends Scene {
   private score!: number;
@@ -7,6 +9,8 @@ export class GameOverScene extends Scene {
   private highScore!: number;
   private isNewRecord: boolean = false;
   private particles!: Phaser.GameObjects.Particles.ParticleEmitter;
+  private isSavingScore: boolean = false;
+  private scoreSaved: boolean = false;
 
   constructor() {
     super("GameOverScene");
@@ -15,11 +19,16 @@ export class GameOverScene extends Scene {
   init(data: { score: number; maxCombo?: number }) {
     this.score = data.score || 0;
     this.maxCombo = data.maxCombo || 0;
+    this.isSavingScore = false;
+    this.scoreSaved = false;
     this.loadHighScore();
   }
 
   create() {
     const { width, height } = this.scale;
+
+    // Initialize user if not already done
+    userService.initializeUser();
 
     // Add background gradient
     this.createBackground();
@@ -41,17 +50,71 @@ export class GameOverScene extends Scene {
     // Add entrance animations
     this.animateEntrance();
 
+    // Save score to backend
+    this.saveScoreToBackend();
+
     EventBus.emit("current-scene-ready", this);
   }
 
-  private loadHighScore() {
-    // In a real game, you'd load from localStorage or a server
-    // Since we can't use localStorage in artifacts, we'll simulate it
-    this.highScore = 5000; // Simulated high score
+  private async loadHighScore() {
+    try {
+      // Try to get personal best from backend
+      const response = await apiService.getPersonalBest();
+      if (response.success && response.data) {
+        this.highScore = response.data.score;
+      } else {
+        // Fallback to local storage or default
+        this.highScore = parseInt(localStorage.getItem('snowboarder_highscore') || '0');
+      }
+    } catch (error) {
+      console.error('Failed to load high score from backend:', error);
+      // Fallback to local storage
+      this.highScore = parseInt(localStorage.getItem('snowboarder_highscore') || '0');
+    }
     
     if (this.score > this.highScore) {
       this.highScore = this.score;
       this.isNewRecord = true;
+      // Save to localStorage as backup
+      localStorage.setItem('snowboarder_highscore', this.highScore.toString());
+    }
+  }
+
+  private async saveScoreToBackend() {
+    if (this.isSavingScore || this.scoreSaved) return;
+
+    this.isSavingScore = true;
+
+    try {
+      const response = await apiService.saveScore({ score: Math.floor(this.score) });
+      
+      if (response.success) {
+        this.scoreSaved = true;
+        console.log('Score saved successfully:', response.data);
+        
+        // Show success message
+        this.showFloatingText(this.scale.width / 2, this.scale.height - 100, 
+          'Score Saved!', 0x00ff00, 1000);
+      } else {
+        throw new Error(response.message || 'Failed to save score');
+      }
+    } catch (error) {
+      console.error('Failed to save score to backend:', error);
+      
+      // Show error message but continue with game
+      this.showFloatingText(this.scale.width / 2, this.scale.height - 100, 
+        'Score save failed - playing offline', 0xff4444, 2000);
+      
+      // Save locally as backup
+      const localScores = JSON.parse(localStorage.getItem('snowboarder_offline_scores') || '[]');
+      localScores.push({
+        score: Math.floor(this.score),
+        timestamp: new Date().toISOString(),
+        uploaded: false
+      });
+      localStorage.setItem('snowboarder_offline_scores', JSON.stringify(localScores));
+    } finally {
+      this.isSavingScore = false;
     }
   }
 
@@ -79,7 +142,6 @@ export class GameOverScene extends Scene {
       });
     } catch (error) {
       console.warn('Could not create background snow particles:', error);
-      // Continue without snow particles
     }
   }
 
@@ -274,6 +336,34 @@ export class GameOverScene extends Scene {
         yoyo: true,
         ease: 'Power2'
       });
+    });
+  }
+
+  private showFloatingText(x: number, y: number, text: string, color: number, duration: number = 1000) {
+    const floatingText = this.add.text(x, y, text, {
+      fontSize: "16px",
+      color: Phaser.Display.Color.IntegerToColor(color).rgba,
+      fontStyle: "bold",
+      stroke: "#000000",
+      strokeThickness: 2
+    }).setOrigin(0.5).setAlpha(0);
+
+    this.tweens.add({
+      targets: floatingText,
+      alpha: 1,
+      y: y - 30,
+      duration: 300,
+      ease: 'Power2'
+    });
+
+    this.tweens.add({
+      targets: floatingText,
+      alpha: 0,
+      y: y - 60,
+      duration: 300,
+      delay: duration - 300,
+      ease: 'Power2',
+      onComplete: () => floatingText.destroy()
     });
   }
 

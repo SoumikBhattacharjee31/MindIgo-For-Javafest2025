@@ -1,11 +1,17 @@
 import { Scene } from "phaser";
 import { EventBus } from "../EventBus";
+import { userService, User } from "../../services/userService";
+import { apiService } from "../../services/apiService";
 
 export class MainMenuScene extends Scene {
   private titleText!: Phaser.GameObjects.Text;
   private snowParticles!: Phaser.GameObjects.Particles.ParticleEmitter;
   private backgroundMusic!: Phaser.Sound.BaseSound;
   private buttons: Phaser.GameObjects.Text[] = [];
+  private userInfoText!: Phaser.GameObjects.Text;
+  private currentUser: User | null = null;
+  private personalBestText!: Phaser.GameObjects.Text;
+  private connectionStatusText!: Phaser.GameObjects.Text;
 
   constructor() {
     super("MainMenuScene");
@@ -13,6 +19,9 @@ export class MainMenuScene extends Scene {
 
   create() {
     const { width, height } = this.scale;
+
+    // Initialize user
+    this.initializeUser();
 
     // Create dynamic background
     this.createBackground();
@@ -22,6 +31,9 @@ export class MainMenuScene extends Scene {
 
     // Add subtitle
     this.createSubtitle();
+
+    // Create user info display
+    this.createUserInfo();
 
     // Create menu buttons with modern styling
     this.createMenuButtons();
@@ -35,7 +47,17 @@ export class MainMenuScene extends Scene {
     // Add entrance animations
     this.animateEntrance();
 
+    // Check connection and load user stats
+    this.loadUserStats();
+
     EventBus.emit("current-scene-ready", this);
+  }
+
+  private initializeUser() {
+    this.currentUser = userService.getCurrentUser();
+    if (!this.currentUser) {
+      this.currentUser = userService.initializeUser();
+    }
   }
 
   private createBackground() {
@@ -65,7 +87,6 @@ export class MainMenuScene extends Scene {
       });
     } catch (error) {
       console.warn('Could not create background particles:', error);
-      // Continue without background particles
     }
 
     // Add twinkling stars
@@ -118,7 +139,6 @@ export class MainMenuScene extends Scene {
         0.8
       );
 
-      // Twinkling animation
       this.tweens.add({
         targets: star,
         alpha: 0.2,
@@ -141,14 +161,12 @@ export class MainMenuScene extends Scene {
       strokeThickness: 6
     }).setOrigin(0.5).setAlpha(0);
 
-    // Add glow effect
     const glowTitle = this.add.text(width / 2, height / 2 - 120, "SNOWBOARDER", {
       fontSize: "64px",
       color: "#00ccff",
       fontStyle: "bold"
     }).setOrigin(0.5).setAlpha(0.3).setBlendMode(Phaser.BlendModes.ADD);
 
-    // Pulsing glow animation
     this.tweens.add({
       targets: glowTitle,
       alpha: 0.1,
@@ -158,7 +176,6 @@ export class MainMenuScene extends Scene {
       ease: 'Sine.easeInOut'
     });
 
-    // Floating animation
     this.tweens.add({
       targets: [this.titleText, glowTitle],
       y: height / 2 - 130,
@@ -179,6 +196,48 @@ export class MainMenuScene extends Scene {
     }).setOrigin(0.5).setAlpha(0);
 
     this.buttons.push(subtitle);
+  }
+
+  private createUserInfo() {
+    const { width } = this.scale;
+    
+    // User name and info
+    const userName = this.currentUser?.name || 'Guest Player';
+    this.userInfoText = this.add.text(20, 20, `Welcome, ${userName}!`, {
+      fontSize: "18px",
+      color: "#ffffff",
+      backgroundColor: "#004466",
+      padding: { x: 10, y: 5 },
+      fontStyle: "bold"
+    }).setAlpha(0);
+
+    // Personal best display (will be updated when loaded)
+    this.personalBestText = this.add.text(20, 50, "Personal Best: Loading...", {
+      fontSize: "14px",
+      color: "#cccccc",
+      backgroundColor: "#003344",
+      padding: { x: 8, y: 4 }
+    }).setAlpha(0);
+
+    // Connection status
+    this.connectionStatusText = this.add.text(width - 20, 20, "Offline", {
+      fontSize: "14px",
+      color: "#ff4444",
+      backgroundColor: "#440000",
+      padding: { x: 8, y: 4 }
+    }).setOrigin(1, 0).setAlpha(0);
+
+    // Account management button
+    const accountButton = this.add.text(width - 20, 50, "Account", {
+      fontSize: "16px",
+      color: "#ffffff",
+      backgroundColor: "#2196F3",
+      padding: { x: 10, y: 5 }
+    }).setOrigin(1, 0).setAlpha(0).setInteractive();
+
+    this.setupButtonEffects(accountButton, "#2196F3", "#1976D2", () => this.showAccountMenu());
+
+    this.buttons.push(this.userInfoText, this.personalBestText, this.connectionStatusText, accountButton);
   }
 
   private createMenuButtons() {
@@ -207,11 +266,11 @@ export class MainMenuScene extends Scene {
         action: () => this.showSettings()
       },
       {
-        text: "❌ EXIT",
+        text: "🚪 EXIT",
         y: height / 2 + 230,
         color: "#F44336",
         hoverColor: "#D32F2F",
-        action: () => this.exitGame()
+        action: () => { window.location.href = '/games'; }
       }
     ];
 
@@ -235,7 +294,6 @@ export class MainMenuScene extends Scene {
     hoverColor: string, 
     action: () => void
   ) {
-    // Hover effects
     button.on('pointerover', () => {
       button.setStyle({ backgroundColor: hoverColor });
       this.tweens.add({
@@ -258,7 +316,6 @@ export class MainMenuScene extends Scene {
       });
     });
 
-    // Click effects
     button.on('pointerdown', () => {
       this.tweens.add({
         targets: button,
@@ -284,7 +341,6 @@ export class MainMenuScene extends Scene {
       }
     ).setOrigin(0.5).setAlpha(0);
 
-    // Fade in and out animation
     this.tweens.add({
       targets: instructions,
       alpha: 0.4,
@@ -306,8 +362,188 @@ export class MainMenuScene extends Scene {
     }
   }
 
+  private async loadUserStats() {
+    try {
+      // Check connection by trying to load personal best
+      const response = await apiService.getPersonalBest();
+      
+      if (response.success) {
+        this.connectionStatusText.setText("Online");
+        this.connectionStatusText.setStyle({ color: "#00ff00", backgroundColor: "#004400" });
+        
+        if (response.data && response.data.score) {
+          this.personalBestText.setText(`Personal Best: ${response.data.score.toLocaleString()}`);
+        } else {
+          this.personalBestText.setText("Personal Best: No scores yet");
+        }
+      } else {
+        throw new Error('Backend not available');
+      }
+    } catch (error) {
+      console.warn('Backend connection failed:', error);
+      this.connectionStatusText.setText("Offline");
+      this.connectionStatusText.setStyle({ color: "#ff4444", backgroundColor: "#440000" });
+      
+      // Load offline high score
+      const offlineHighScore = localStorage.getItem('snowboarder_highscore');
+      if (offlineHighScore && parseInt(offlineHighScore) > 0) {
+        this.personalBestText.setText(`Personal Best: ${parseInt(offlineHighScore).toLocaleString()} (Offline)`);
+      } else {
+        this.personalBestText.setText("Personal Best: No scores yet");
+      }
+    }
+  }
+
+  private showAccountMenu() {
+    const { width, height } = this.scale;
+    
+    const modalBg = this.add.rectangle(width / 2, height / 2, 350, 250, 0x000000, 0.8);
+    const modalFrame = this.add.rectangle(width / 2, height / 2, 340, 240, 0x333333);
+    modalFrame.setStrokeStyle(3, 0x00ccff);
+
+    const modalTitle = this.add.text(width / 2, height / 2 - 80, "Account", {
+      fontSize: "28px",
+      color: "#ffffff",
+      fontStyle: "bold"
+    }).setOrigin(0.5);
+
+    const userEmail = this.currentUser?.email || 'guest@snowboarder.game';
+    const userInfo = this.add.text(width / 2, height / 2 - 40, `Logged in as:\n${userEmail}`, {
+      fontSize: "16px",
+      color: "#cccccc",
+      align: "center"
+    }).setOrigin(0.5);
+
+    const changeNameButton = this.add.text(width / 2, height / 2 + 10, "Change Name", {
+      fontSize: "18px",
+      color: "#ffffff",
+      backgroundColor: "#4CAF50",
+      padding: { x: 15, y: 8 }
+    }).setOrigin(0.5).setInteractive();
+
+    const logoutButton = this.add.text(width / 2, height / 2 + 50, "Logout", {
+      fontSize: "18px",
+      color: "#ffffff",
+      backgroundColor: "#F44336",
+      padding: { x: 15, y: 8 }
+    }).setOrigin(0.5).setInteractive();
+
+    const closeButton = this.add.text(width / 2, height / 2 + 90, "Close", {
+      fontSize: "16px",
+      color: "#ffffff",
+      backgroundColor: "#607D8B",
+      padding: { x: 15, y: 8 }
+    }).setOrigin(0.5).setInteractive();
+
+    const closeModal = () => {
+      modalBg.destroy();
+      modalFrame.destroy();
+      modalTitle.destroy();
+      userInfo.destroy();
+      changeNameButton.destroy();
+      logoutButton.destroy();
+      closeButton.destroy();
+    };
+
+    changeNameButton.on('pointerdown', () => {
+      closeModal();
+      this.showChangeNameDialog();
+    });
+
+    logoutButton.on('pointerdown', () => {
+      userService.logout();
+      closeModal();
+      this.scene.restart();
+    });
+
+    closeButton.on('pointerdown', closeModal);
+  }
+
+  private showChangeNameDialog() {
+    const { width, height } = this.scale;
+    
+    const modalBg = this.add.rectangle(width / 2, height / 2, 400, 200, 0x000000, 0.8);
+    const modalFrame = this.add.rectangle(width / 2, height / 2, 390, 190, 0x333333);
+    modalFrame.setStrokeStyle(2, 0x00ccff);
+
+    const modalTitle = this.add.text(width / 2, height / 2 - 60, "Change Name", {
+      fontSize: "24px",
+      color: "#ffffff",
+      fontStyle: "bold"
+    }).setOrigin(0.5);
+
+    // Create a simple input simulation (since Phaser doesn't have native inputs)
+    const inputBg = this.add.rectangle(width / 2, height / 2 - 20, 300, 40, 0x444444);
+    inputBg.setStrokeStyle(2, 0x666666);
+
+    const inputText = this.add.text(width / 2, height / 2 - 20, this.currentUser?.name || '', {
+      fontSize: "18px",
+      color: "#ffffff"
+    }).setOrigin(0.5);
+
+    const saveButton = this.add.text(width / 2 - 50, height / 2 + 40, "Save", {
+      fontSize: "18px",
+      color: "#ffffff",
+      backgroundColor: "#4CAF50",
+      padding: { x: 15, y: 8 }
+    }).setOrigin(0.5).setInteractive();
+
+    const cancelButton = this.add.text(width / 2 + 50, height / 2 + 40, "Cancel", {
+      fontSize: "18px",
+      color: "#ffffff",
+      backgroundColor: "#666666",
+      padding: { x: 15, y: 8 }
+    }).setOrigin(0.5).setInteractive();
+
+    const closeModal = () => {
+      modalBg.destroy();
+      modalFrame.destroy();
+      modalTitle.destroy();
+      inputBg.destroy();
+      inputText.destroy();
+      saveButton.destroy();
+      cancelButton.destroy();
+    };
+
+    saveButton.on('pointerdown', () => {
+      // In a real implementation, you'd handle actual input
+      // For demo purposes, we'll just show a success message
+      closeModal();
+      this.showNotification("Name change feature coming soon!");
+    });
+
+    cancelButton.on('pointerdown', closeModal);
+  }
+
+  private showNotification(message: string) {
+    const { width } = this.scale;
+    
+    const notification = this.add.text(width / 2, 150, message, {
+      fontSize: "16px",
+      color: "#ffffff",
+      backgroundColor: "#4CAF50",
+      padding: { x: 15, y: 8 }
+    }).setOrigin(0.5).setAlpha(0);
+
+    this.tweens.add({
+      targets: notification,
+      alpha: 1,
+      duration: 300,
+      ease: 'Power2'
+    });
+
+    this.time.delayedCall(2000, () => {
+      this.tweens.add({
+        targets: notification,
+        alpha: 0,
+        duration: 300,
+        ease: 'Power2',
+        onComplete: () => notification.destroy()
+      });
+    });
+  }
+
   private animateEntrance() {
-    // Title entrance
     this.tweens.add({
       targets: this.titleText,
       alpha: 1,
@@ -316,11 +552,10 @@ export class MainMenuScene extends Scene {
       ease: 'Back.easeOut'
     });
 
-    // Buttons entrance with stagger
     this.buttons.forEach((button, index) => {
       this.tweens.add({
         targets: button,
-        alpha: index === 0 ? 0.7 : 1, // Subtitle is more subtle
+        alpha: index === 0 ? 0.7 : 1,
         x: button.x,
         duration: 600,
         delay: 200 + index * 150,
@@ -328,12 +563,10 @@ export class MainMenuScene extends Scene {
       });
     });
 
-    // Screen fade in
     this.cameras.main.fadeIn(800);
   }
 
   private startGame() {
-    // Play transition sound effect (if available)
     this.cameras.main.fadeOut(500);
     this.cameras.main.once('camerafadeoutcomplete', () => {
       this.scene.start("TestScene");
@@ -348,26 +581,22 @@ export class MainMenuScene extends Scene {
   }
 
   private showSettings() {
-    // For now, just show a simple settings panel
     this.showSettingsModal();
   }
 
   private showSettingsModal() {
     const { width, height } = this.scale;
     
-    // Create modal background
     const modalBg = this.add.rectangle(width / 2, height / 2, 400, 300, 0x000000, 0.8);
     const modalFrame = this.add.rectangle(width / 2, height / 2, 390, 290, 0x333333);
     modalFrame.setStrokeStyle(3, 0x00ccff);
 
-    // Modal title
     const modalTitle = this.add.text(width / 2, height / 2 - 100, "Settings", {
       fontSize: "32px",
       color: "#ffffff",
       fontStyle: "bold"
     }).setOrigin(0.5);
 
-    // Music toggle (simulated)
     const musicToggle = this.add.text(width / 2, height / 2 - 30, "🔊 Music: ON", {
       fontSize: "24px",
       color: "#ffffff",
@@ -382,7 +611,6 @@ export class MainMenuScene extends Scene {
       musicToggle.setStyle({ backgroundColor: musicOn ? "#4CAF50" : "#F44336" });
     });
 
-    // Close button
     const closeButton = this.add.text(width / 2, height / 2 + 60, "Close", {
       fontSize: "24px",
       color: "#ffffff",
@@ -399,48 +627,7 @@ export class MainMenuScene extends Scene {
     });
   }
 
-  private exitGame() {
-    // Create confirmation dialog
-    const { width, height } = this.scale;
-    
-    const confirmBg = this.add.rectangle(width / 2, height / 2, 350, 200, 0x000000, 0.9);
-    const confirmFrame = this.add.rectangle(width / 2, height / 2, 340, 190, 0x444444);
-    confirmFrame.setStrokeStyle(2, 0xff4444);
-
-    const confirmText = this.add.text(width / 2, height / 2 - 30, "Exit to main site?", {
-      fontSize: "24px",
-      color: "#ffffff"
-    }).setOrigin(0.5);
-
-    const yesButton = this.add.text(width / 2 - 60, height / 2 + 40, "Yes", {
-      fontSize: "20px",
-      color: "#ffffff",
-      backgroundColor: "#F44336",
-      padding: { x: 15, y: 8 }
-    }).setOrigin(0.5).setInteractive();
-
-    const noButton = this.add.text(width / 2 + 60, height / 2 + 40, "No", {
-      fontSize: "20px",
-      color: "#ffffff",
-      backgroundColor: "#4CAF50",
-      padding: { x: 15, y: 8 }
-    }).setOrigin(0.5).setInteractive();
-
-    yesButton.on('pointerdown', () => {
-      window.location.href = "/games";
-    });
-
-    noButton.on('pointerdown', () => {
-      confirmBg.destroy();
-      confirmFrame.destroy();
-      confirmText.destroy();
-      yesButton.destroy();
-      noButton.destroy();
-    });
-  }
-
   update() {
-    // Add subtle camera movements for dynamic feel
     this.cameras.main.setScroll(
       Math.sin(this.time.now * 0.001) * 2,
       Math.cos(this.time.now * 0.0008) * 1

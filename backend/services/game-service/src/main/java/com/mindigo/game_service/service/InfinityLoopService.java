@@ -1,6 +1,6 @@
-package com.mindigo.game_service.services;
+package com.mindigo.game_service.service;
 
-import com.mindigo.game_service.dto.GridResponse;
+import com.mindigo.game_service.dto.response.GridResponse;
 import com.mindigo.game_service.exceptions.InvalidParameterException;
 import com.mindigo.game_service.utils.GameUtils;
 import org.springframework.stereotype.Service;

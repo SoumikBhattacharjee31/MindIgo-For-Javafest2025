@@ -1,4 +1,4 @@
-package com.mindigo.game_service.dto;
+package com.mindigo.game_service.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
