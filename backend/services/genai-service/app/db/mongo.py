@@ -50,11 +50,12 @@ class MindIgoDatabase:
             
             result = self.messages.insert_one(message_doc)
             
-            # Update session last activity
+            # Update session last activity and ensure user_id is at top level
             self.sessions.update_one(
                 {"session_id": session_id},
                 {
                     "$set": {
+                        "user_id": user_id,  # Ensure user_id is at top level
                         "last_activity": datetime.now(),
                         "last_message": user_message,
                         "last_response": ai_response
@@ -140,14 +141,19 @@ class MindIgoDatabase:
     def update_session_metadata(self, session_id: str, metadata: Dict):
         """Update session metadata."""
         try:
+            # Store user_id at top level for easier querying
+            update_data = {
+                "metadata": metadata,
+                "last_activity": datetime.now()
+            }
+            
+            # If metadata contains user_id, also store it at top level
+            if "user_id" in metadata:
+                update_data["user_id"] = metadata["user_id"]
+                
             self.sessions.update_one(
                 {"session_id": session_id},
-                {
-                    "$set": {
-                        "metadata": metadata,
-                        "last_activity": datetime.utcnow()
-                    }
-                },
+                {"$set": update_data},
                 upsert=True
             )
         except Exception as e:

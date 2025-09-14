@@ -11,7 +11,7 @@ def get_gemini_model(model_type: str = "lite", **kwargs) -> BaseChatModel:
     model_names = {
         "lite": "gemini-1.5-flash-lite",      
         "flash_lite": "gemini-2.0-flash-lite", 
-        "flash": "gemini-2.0-flash",          
+        "flash": "gemini-2.5-flash-lite",          
         "flash_pro": "gemini-2.5-flash"        
     }
     model_name = model_names.get(model_type)

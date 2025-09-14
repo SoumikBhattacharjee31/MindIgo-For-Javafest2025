@@ -140,13 +140,14 @@ def get_user_session_history(
     try:
         validated_user_id, _ = validate_headers(user_id, user_name)
         
-        # Check if session exists
+        # Get user sessions
         sessions = chat_service.get_user_sessions(user_id=validated_user_id)
         if not sessions:
-            logger.error(f"No sessions found for user {validated_user_id}")
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Session not found"
+            logger.info(f"No sessions found for user {validated_user_id}")
+            return APIResponseClass(
+                success=True,
+                message="No sessions found for user",
+                data=[]
             )
         
         
