@@ -1,4 +1,5 @@
 import { Scene } from "phaser";
+import { musicService } from "../../services/musicService";
 
 export class Preloader extends Scene {
   constructor() {
@@ -6,42 +7,45 @@ export class Preloader extends Scene {
   }
 
   init() {
-    //  We loaded this image in our Boot Scene, so we can display it here
-    this.add.image(512, 384, "background");
-    // this.add.image(512, 384, 'snowybg');
-
-    //  A simple progress bar. This is the outline of the bar.
+    this.add.image(512, 384, "snowybg");
     this.add.rectangle(512, 384, 468, 32).setStrokeStyle(1, 0xffffff);
-
-    //  This is the progress bar itself. It will increase in size from the left based on the % of progress.
     const bar = this.add.rectangle(512 - 230, 384, 4, 28, 0xffffff);
 
-    //  Use the 'progress' event emitted by the LoaderPlugin to update the loading bar
     this.load.on("progress", (progress: number) => {
-      //  Update the progress bar (our bar is 464px wide, so 100% = 464px)
       bar.width = 4 + 460 * progress;
     });
   }
 
   preload() {
-    //  Load the assets for the game - Replace with your own assets
-    // this.load.setPath("../../../public/assets");
-
+    // Load images
     this.load.image("snowybg", "/snowybg.png");
     this.load.image("snowboarder", "/snowboarder.png");
     this.load.image("bird", "/bird.png");
     this.load.image("stone", "/stone.png");
-
-    this.load.audio("backgroundMusic", "/perfect-beauty-191271.mp3");
+    this.load.image("coin", "/coin.png");
+    this.load.image("speedIcon", "/speed.png");
+    this.load.image("invulnerabilityIcon", "/star.png");
+    this.load.image("magnetIcon", "/magnet.png");
+    
+    // Load UI elements
     this.load.image("musicOnButton", "/soundon.png");
     this.load.image("musicOffButton", "/soundoff.png");
+
+    // Load audio files
+    this.load.audio("backgroundMusic", ["/bgm.mp3", "/bgm.ogg"]);
+    
+    // Load sound effects (you'll need these files)
+    this.load.audio("jumpSound", ["/jump.mp3", "/jump.ogg"]);
+    this.load.audio("coinSound", ["/coin-collect.mp3", "/coin-collect.ogg"]);
+    this.load.audio("trickSound", ["/trick.mp3", "/trick.ogg"]);
+    this.load.audio("crashSound", ["/crash.mp3", "/crash.ogg"]);
+    this.load.audio("powerupSound", ["/powerup.mp3", "/powerup.ogg"]);
+    
+    // Set the music service scene
+    musicService.setScene(this);
   }
 
   create() {
-    //  When all the assets have loaded, it's often worth creating global objects here that the rest of the game can use.
-    //  For example, you can define global animations here, so we can use them in other scenes.
-
-    //  Move to the MainMenu. You could also swap this for a Scene Transition, such as a camera fade.
     this.scene.start("MainMenuScene");
   }
-}
+};

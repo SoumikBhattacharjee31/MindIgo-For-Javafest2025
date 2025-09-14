@@ -286,28 +286,16 @@ public class AppointmentService {
     private CounselorResponse getCounselorProfile(Long counselorId) {
         try {
             String authServiceUrl = "http://AUTH-SERVICE/api/v1/auth/profilebyid/" + counselorId.intValue();
-            System.out.println("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
-            System.out.println(counselorId);
-//            ResponseEntity<ApiResponseClass> response = restTemplate.getForEntity(authServiceUrl, ApiResponseClass.class);
-
-            ResponseEntity<ApiResponseClass<CounselorResponse>> response = restTemplate.exchange(
-                    authServiceUrl,
-                    HttpMethod.GET,
-                    null,
-                    new ParameterizedTypeReference<ApiResponseClass<CounselorResponse>>() {}
-            );
-            ApiResponseClass<CounselorResponse> apiResponse = response.getBody();
-            return apiResponse != null ? apiResponse.getData() : null;
-
-//            if (response.getBody() != null && response.getBody().isSuccess()) {
-//                Map<String, Object> userData = (Map<String, Object>) response.getBody().getData();
-//                return CounselorResponse.builder()
-//                        .id(counselorId)
-//                        .name((String) userData.get("name"))
-//                        .email((String) userData.get("email"))
-//                        .profileImageUrl((String) userData.get("profileImageUrl"))
-//                        .build();
-//            }
+            ResponseEntity<ApiResponseClass> response = restTemplate.getForEntity(authServiceUrl, ApiResponseClass.class);
+            if (response.getBody() != null && response.getBody().isSuccess()) {
+                Map<String, Object> userData = (Map<String, Object>) response.getBody().getData();
+                return CounselorResponse.builder()
+                        .id(counselorId)
+                        .name((String) userData.get("name"))
+                        .email((String) userData.get("email"))
+                        .profileImageUrl((String) userData.get("profileImageUrl"))
+                        .build();
+            }
         } catch (Exception e) {
             log.error("Error fetching counselor profile: {}", e.getMessage());
         }
