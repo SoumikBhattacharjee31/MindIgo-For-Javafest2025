@@ -29,7 +29,7 @@ class Response(BaseModel):
     recommendations: List[Recommendation] = []
     escalate: bool = False
     safety_alert: SafetyAlert = SafetyAlert(level="none")
-
+    
 class TaskComplexity(BaseModel):
     level: Literal["simple", "moderate", "complex"]
     reasoning: str

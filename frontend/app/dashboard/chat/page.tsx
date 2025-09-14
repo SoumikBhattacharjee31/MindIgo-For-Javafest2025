@@ -1,9 +1,9 @@
-const Analytics = ()=>{
+const Chat = ()=>{
     return(
         <div className="space-y-6">
-            Analytics
+            Chatbot
         </div>
     );
 }
 
-export default Analytics;
+export default Chat;

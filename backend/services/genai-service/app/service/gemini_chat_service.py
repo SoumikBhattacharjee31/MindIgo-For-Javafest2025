@@ -10,14 +10,17 @@ import hashlib
 from pymongo import MongoClient
 from datetime import datetime
 
-from app.config import get_logger
-from app.model import get_chat_model
-from app.tools import get_mood_history, get_recommended_doctors, get_recommended_songs
-from app.db import get_database
-from .helper import *
+from app.config.logger_config import get_logger
+from app.model.model_gen import get_chat_model
+from app.tools.chat_agent_tools import get_mood_history, get_recommended_doctors, get_recommended_songs
+from app.db.mongo import get_database
+from app.service.helper.chat_service_models import *
+from app.service.helper.preprocessor import *
+
 
 logger = get_logger(__name__)
 
+@DeprecationWarning
 class GeminiChatService:
     def __init__(self, mongo_uri: str = "mongodb://mindigo:1234@localhost:27017/", **kwargs):
         """Simplified, efficient chat service with four-tier model architecture."""

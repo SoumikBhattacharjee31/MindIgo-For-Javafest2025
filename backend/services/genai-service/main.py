@@ -1,11 +1,14 @@
 from fastapi import FastAPI
-from app import include_routers, settings, eureka_client
 import signal
-import logging
 from contextlib import asynccontextmanager
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+from app.route_helper import include_routers
+from app.config.settings import settings
+from app.config.eureka_client import eureka_client
+from app.config.logger_config import get_logger
+
+
+logger = get_logger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -38,7 +41,6 @@ include_routers(app)
 if __name__ == "__main__":
     import uvicorn
     
-    # Handle graceful shutdown
     def signal_handler(signum, frame):
         logger.info(f"Received signal {signum}, initiating graceful shutdown...")
     

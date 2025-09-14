@@ -24,6 +24,10 @@ const useStore = () => {
 
   const updateUser = (newUser: User | null) => {
     setUser(newUser);
+    if (newUser === null) {
+      localStorage.removeItem("user");
+      return;
+    }
     localStorage.setItem("user", JSON.stringify(newUser));
   };
 

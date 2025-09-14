@@ -1,12 +1,12 @@
 from langchain.chat_models import init_chat_model
 from langchain_core.language_models.chat_models import BaseChatModel
-from app.config import settings
+from app.config.settings import settings
 from os import environ
-from app.config import get_logger
+from app.config.logger_config import get_logger
 
 logger = get_logger(__name__)
 
-environ["GOOGLE_API_KEY"] = settings.GEMINI_API_KEY
+environ["GOOGLE_API_KEY"] = settings.GOOGLE_API_KEY
 environ["LANGSMITH_API_KEY"] = settings.LANGSMITH_API_KEY
 environ["LANGSMITH_TRACING"] = "true"
 

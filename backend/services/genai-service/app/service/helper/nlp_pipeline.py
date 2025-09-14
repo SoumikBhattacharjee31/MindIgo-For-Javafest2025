@@ -3,7 +3,7 @@ import re
 from typing import Dict, List, Tuple
 from dataclasses import dataclass
 from enum import Enum
-from app.config import get_logger
+from app.config.logger_config import get_logger
 
 logger = get_logger(__name__)
 

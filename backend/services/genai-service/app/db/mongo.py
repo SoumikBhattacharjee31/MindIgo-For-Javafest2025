@@ -1,9 +1,9 @@
 from pymongo import MongoClient
-from typing import List, Dict, Optional, Any
+from typing import List, Dict, Optional
 from datetime import datetime
-import logging
+from app.config.logger_config import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 class MindIgoDatabase:
     """Simple MongoDB database handler for MindIgo chat service."""
@@ -14,14 +14,12 @@ class MindIgoDatabase:
             self.client = MongoClient(mongo_uri)
             self.db = self.client.mindigo_chat
             
-            # Collections
             self.messages = self.db.messages
             self.sessions = self.db.sessions
             
-            # Create indexes for better performance
             self._create_indexes()
-            
             logger.info("MongoDB database initialized successfully")
+            
         except Exception as e:
             logger.error(f"Failed to initialize MongoDB: {str(e)}")
             raise
@@ -29,12 +27,8 @@ class MindIgoDatabase:
     def _create_indexes(self):
         """Create database indexes for better performance."""
         try:
-            # Index for messages by session_id and timestamp
             self.messages.create_index([("session_id", 1), ("timestamp", 1)])
-            
-            # Index for sessions by user_id
             self.sessions.create_index([("user_id", 1)])
-            
             logger.info("Database indexes created successfully")
         except Exception as e:
             logger.warning(f"Failed to create indexes: {str(e)}")
@@ -50,7 +44,7 @@ class MindIgoDatabase:
                 "user_name": user_name,
                 "user_message": user_message,
                 "ai_response": ai_response,
-                "timestamp": datetime.utcnow(),
+                "timestamp": datetime.now(),
                 "metadata": metadata or {}
             }
             
@@ -61,7 +55,7 @@ class MindIgoDatabase:
                 {"session_id": session_id},
                 {
                     "$set": {
-                        "last_activity": datetime.utcnow(),
+                        "last_activity": datetime.now(),
                         "last_message": user_message,
                         "last_response": ai_response
                     }
@@ -84,7 +78,6 @@ class MindIgoDatabase:
                 ).sort("timestamp", 1).skip(offset).limit(limit)
             )
             
-            # Convert ObjectId to string for JSON serialization
             for msg in messages:
                 msg["_id"] = str(msg["_id"])
             
@@ -103,10 +96,8 @@ class MindIgoDatabase:
                 ).sort("timestamp", -1).limit(count)
             )
             
-            # Reverse to get chronological order
             messages.reverse()
             
-            # Convert ObjectId to string for JSON serialization
             for msg in messages:
                 msg["_id"] = str(msg["_id"])
             
@@ -200,7 +191,6 @@ class MindIgoDatabase:
         except Exception as e:
             logger.error(f"Error closing MongoDB connection: {str(e)}")
 
-# Global database instance
 _db_instance = None
 
 def get_database(mongo_uri: str = "mongodb://mindigo:1234@localhost:27017/") -> MindIgoDatabase:

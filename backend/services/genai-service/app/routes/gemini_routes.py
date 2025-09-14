@@ -1,12 +1,11 @@
 from fastapi import APIRouter, Header, BackgroundTasks, HTTPException, status
-from fastapi.responses import StreamingResponse
-from app.dto import APIResponseClass, ChatRequest, ChatResponse, MessageHistoryRequest, MessageHistoryResponse, SessionResponse
-from app.service import GeminiChatService 
+from app.dto.api_response_class import APIResponseClass
+from app.dto.gemini_response import ChatRequest, MessageHistoryResponse
+from app.service.simplified_gemini_chat_service import GeminiChatService 
 from typing import Annotated
-import json
-import asyncio
 
-from app.config import get_logger
+
+from app.config.logger_config import get_logger
 
 router = APIRouter()
 chat_service = GeminiChatService()
@@ -132,6 +131,38 @@ def get_session_history(
             detail="Internal server error while retrieving session history"
         )
 
+@router.get("/user-sessions")
+def get_user_session_history(
+    user_id: Annotated[str | None, Header(alias="X-User-Id")] = None,
+    user_name: Annotated[str | None, Header(alias="X-User-Name")] = None
+) -> APIResponseClass:
+    """Get user sessions"""
+    try:
+        validated_user_id, _ = validate_headers(user_id, user_name)
+        
+        # Check if session exists
+        sessions = chat_service.get_user_sessions(user_id=validated_user_id)
+        if not sessions:
+            logger.error(f"No sessions found for user {validated_user_id}")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Session not found"
+            )
+        
+        
+        return APIResponseClass(
+            success=True,
+            message="User sessions  retrieved successfully",
+            data=sessions
+        )
+        
+    except Exception as e:
+        logger.error(f"Error getting session history for {user_id}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error while retrieving session history"
+        )
+
 
 @router.post("/chat")
 def chat_endpoint(
@@ -164,19 +195,13 @@ def chat_endpoint(
         )
         
         # Log safety alerts in background
-        if response.get("safety_alert") and response["safety_alert"].get("level") in ["warning", "crisis"]:
-            background_tasks.add_task(log_safety_alert, user_id, response["safety_alert"])
-        
+        if response.safety_alert and response.safety_alert in ["warning", "crisis"]:
+            background_tasks.add_task(log_safety_alert, user_id, response.safety_alert)
+
         return APIResponseClass(
             success=True, 
             message="Response generated successfully", 
-            data=ChatResponse(
-                res=response["message"], 
-                recommendations=response.get("recommendations", []),
-                escalate=response.get("escalate", False),
-                safety_alert=response.get("safety_alert", {}),
-                session_id=response["session_id"]
-            )
+            data= response
         )
         
     except HTTPException:
@@ -188,114 +213,3 @@ def chat_endpoint(
             detail="Internal server error while processing chat request"
         )
 
-
-@router.post("/chat/stream")
-async def chat_stream_endpoint(
-    request: ChatRequest, 
-    background_tasks: BackgroundTasks,
-    user_id: Annotated[str | None, Header(alias="X-User-Id")] = None,
-    user_name: Annotated[str | None, Header(alias="X-User-Name")] = None
-):
-    """Streaming chat endpoint - sends message first, then metadata"""
-    try:
-        validated_user_id, validated_user_name = validate_headers(user_id, user_name)
-        
-        if not request.prompt or not request.prompt.strip():
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Message prompt is required and cannot be empty"
-            )
-        
-        if not request.session_id:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Session ID is required"
-            )
-
-        async def stream_generator():
-            try:
-                # Store message data for metadata
-                message_data = {}
-                full_response = ""
-                
-                # First, stream the text response
-                async for chunk in chat_service.chat_stream(
-                    message=request.prompt.strip(), 
-                    user_id=validated_user_id,
-                    user_name=validated_user_name,
-                    session_id=request.session_id
-                ):
-                    full_response += chunk
-                    # Send each character immediately and flush
-                    chunk_data = f"data: {json.dumps({'type': 'text', 'content': chunk})}\n\n"
-                    yield chunk_data
-                    # Force flush by yielding empty string
-                    yield ""
-                
-                # Wait a moment for processing to complete
-                await asyncio.sleep(0.2)
-                
-                # Get the latest message metadata from the database
-                try:
-                    recent_messages = chat_service.get_recent_messages(request.session_id, count=1)
-                    if recent_messages:
-                        latest_message = recent_messages[0]
-                        metadata = latest_message.get('metadata', {})
-                        
-                        # Send recommendations if available
-                        recommendations = metadata.get('recommendations', [])
-                        if recommendations:
-                            yield f"data: {json.dumps({'type': 'recommendations', 'content': recommendations})}\n\n"
-                        
-                        # Send safety alert if present
-                        safety_alert = metadata.get('safety_alert', {})
-                        if safety_alert and safety_alert.get('level') != 'none':
-                            yield f"data: {json.dumps({'type': 'safety_alert', 'content': safety_alert})}\n\n"
-                            
-                            # Log safety alerts in background
-                            if safety_alert.get("level") in ["warning", "crisis"]:
-                                background_tasks.add_task(log_safety_alert, user_id, safety_alert)
-                        
-                        # Send escalation flag
-                        escalate = metadata.get('escalate', False)
-                        if escalate:
-                            yield f"data: {json.dumps({'type': 'escalate', 'content': True})}\n\n"
-                        
-                        # Send mood if available
-                        mood = metadata.get('mood')
-                        if mood:
-                            yield f"data: {json.dumps({'type': 'mood', 'content': mood})}\n\n"
-                        
-                        # Send session info
-                        yield f"data: {json.dumps({'type': 'session_id', 'content': request.session_id})}\n\n"
-                        
-                except Exception as meta_error:
-                    logger.error(f"Error getting metadata: {str(meta_error)}")
-                
-                # Send completion marker
-                yield f"data: {json.dumps({'type': 'complete', 'content': 'done'})}\n\n"
-                
-            except Exception as e:
-                logger.error(f"Streaming error for user {user_id}: {str(e)}")
-                yield f"data: {json.dumps({'type': 'error', 'content': 'An error occurred while processing your request'})}\n\n"
-        
-        return StreamingResponse(
-            stream_generator(), 
-            media_type="text/plain",
-            headers={
-                "Cache-Control": "no-cache",
-                "Connection": "keep-alive",
-                "Content-Type": "text/plain; charset=utf-8",
-                "X-Accel-Buffering": "no",  # Disable nginx buffering
-                "Transfer-Encoding": "chunked"  # Force chunked encoding
-            }
-        )
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error setting up stream for user {user_id}: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error while setting up chat stream"
-        )

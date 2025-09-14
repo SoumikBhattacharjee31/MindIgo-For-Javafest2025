@@ -1,0 +1,63 @@
+[
+  {
+    "id": 1,
+    "title": "Box",
+    "description": "Relaxation",
+    "pattern": "4-4-4-4",
+    "duration": 5,
+    "cycle": {
+      "duration": 16,
+      "task": [
+        { "order": 1, "type": "inhale", "duration": 4 },
+        { "order": 2, "type": "hold", "duration": 4 },
+        { "order": 3, "type": "exhale", "duration": 4 },
+        { "order": 4, "type": "hold", "duration": 4 }
+      ]
+    }
+  },
+  {
+    "id": 2,
+    "title": "Long exhale",
+    "description": "Sleep",
+    "pattern": "4-7-8",
+    "duration": 5,
+    "cycle": {
+      "duration": 19,
+      "task": [
+        { "order": 1, "type": "inhale", "duration": 4 },
+        { "order": 2, "type": "hold", "duration": 7 },
+        { "order": 3, "type": "exhale", "duration": 8 }
+      ]
+    }
+  },
+  {
+    "id": 3,
+    "title": "Equal",
+    "description": "Focus",
+    "pattern": "5-0-5",
+    "duration": 5,
+    "cycle": {
+      "duration": 10,
+      "task": [
+        { "order": 1, "type": "inhale", "duration": 5 },
+        { "order": 2, "type": "hold", "duration": 0 },
+        { "order": 3, "type": "exhale", "duration": 5 }
+      ]
+    }
+  },
+  {
+    "id": 4,
+    "title": "Custom",
+    "description": "Personalized",
+    "pattern": "3-2-5",
+    "duration": 5,
+    "cycle": {
+      "duration": 10,
+      "task": [
+        { "order": 1, "type": "inhale", "duration": 3 },
+        { "order": 2, "type": "hold", "duration": 2 },
+        { "order": 3, "type": "exhale", "duration": 5 }
+      ]
+    }
+  }
+]

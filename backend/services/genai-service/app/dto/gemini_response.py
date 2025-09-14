@@ -1,16 +1,11 @@
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
+from app.model.mindigo_ai_agent import Recommendation
 
 class ChatRequest(BaseModel):
     prompt: str
     session_id: str | None = None
     
-class ChatResponse(BaseModel):
-    res: str
-    recommendations: List[str] = []
-    escalate: bool = False
-    safety_alert: Dict[str, Any] = {}
-    session_id: str
 
 class SessionResponse(BaseModel):
     session_id: str

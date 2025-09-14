@@ -1,7 +1,8 @@
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse 
-from app.routes import *
-from app.config import get_logger
+from app.routes.gemini_routes import router as gemini_router
+from app.routes.test_routes import router as test_router
+from app.config.logger_config import get_logger
 
 logger = get_logger(__name__)
 
