@@ -218,6 +218,33 @@ public class AuthController {
                 .build());
     }
 
+    @GetMapping("/counselorprofilebyid/{id}")
+    @Operation(summary = "Get counselor profile by ID")
+    public ResponseEntity<ApiResponseClass<CounselorProfileResponse>> getCounselorProfileFromId(
+            @PathVariable("id") Integer userId) {
+
+        CounselorProfileResponse profile = authenticationService.getCounselorProfileById(userId);
+
+        return ResponseEntity.ok(ApiResponseClass.<CounselorProfileResponse>builder()
+                .success(true)
+                .data(profile)
+                .message("Profile retrieved successfully")
+                .build());
+    }
+
+    @GetMapping("/counselorprofiles")
+    @Operation(summary = "Get all counselor profiles")
+    public ResponseEntity<ApiResponseClass<List<CounselorProfileResponse>>> getAllDoctorProfile() {
+
+        List<CounselorProfileResponse> profiles = authenticationService.getAllCounselorProfile();
+
+        return ResponseEntity.ok(ApiResponseClass.<List<CounselorProfileResponse>>builder()
+                .success(true)
+                .data(profiles)
+                .message("Profile retrieved successfully")
+                .build());
+    }
+
     // Add this endpoint to your existing AuthController class
 
     @PostMapping(value = "/register-counselor", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

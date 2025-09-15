@@ -20,4 +20,10 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     List<User> findByRoleAndCounselorStatus(Role role, CounselorStatus status);
     @Query("SELECT u FROM User u WHERE u.email = :email AND u.provider = 'LOCAL'")
     Optional<User> findByEmailAndLocalProvider(@Param("email") String email);
+    /**
+     * Finds all users with a specific role.
+     * @param role The role to search for (e.g., Role.COUNSELOR).
+     * @return A list of users matching the specified role.
+     */
+    List<User> findByRole(Role role);
 }
