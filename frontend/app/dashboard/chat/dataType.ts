@@ -40,6 +40,7 @@ export interface SessionResponse {
   _id: string;
   session_id: string;
   last_activity: string;
+  created_at: string;
   metadata: {
     user_id: number;
     user_name: string;
@@ -48,7 +49,9 @@ export interface SessionResponse {
   user_id: number;
   last_message?: string;
   last_response?: string;
+  message_count?: number;
 }
+
 
 export interface MessageHistoryResponse {
   messages: ApiMessage[];

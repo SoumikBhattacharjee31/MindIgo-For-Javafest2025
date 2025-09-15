@@ -21,3 +21,5 @@ spacy
 nltk
 scikit-learn
 joblib
+PyPDF2
+langchain-chroma
