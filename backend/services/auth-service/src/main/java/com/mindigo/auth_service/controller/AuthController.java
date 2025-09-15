@@ -220,12 +220,12 @@ public class AuthController {
 
     @GetMapping("/doctorprofilebyid/{id}")
     @Operation(summary = "Get doctor profile by ID")
-    public ResponseEntity<ApiResponseClass<UserProfileResponse>> getDoctorProfileFromId(
+    public ResponseEntity<ApiResponseClass<DoctorProfileResponse>> getDoctorProfileFromId(
             @PathVariable("id") Integer userId) {
 
         DoctorProfileResponse profile = authenticationService.getDoctorProfileById(userId);
 
-        return ResponseEntity.ok(ApiResponseClass.<UserProfileResponse>builder()
+        return ResponseEntity.ok(ApiResponseClass.<DoctorProfileResponse>builder()
                 .success(true)
                 .data(profile)
                 .message("Profile retrieved successfully")
