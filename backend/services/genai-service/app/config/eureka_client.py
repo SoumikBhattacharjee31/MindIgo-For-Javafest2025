@@ -1,6 +1,5 @@
 import os
-from app.config.settings import settings
-from .settings import Settings
+from app.config.settings import settings, Settings
 import asyncio
 from typing import Optional
 import socket
@@ -9,24 +8,6 @@ from app.config.logger_config import get_logger
 
 logger = get_logger(__name__)
 
-# async def init_eureka():
-#     eureka_server = settings.EUREKA_SERVER_URL
-#     app_name = settings.APP_NAME
-#     instance_port = settings.SERVER_PORT
-#     instance_host = settings.EUREKA_HOSTNAME
-#     instance_id = f"{app_name}:{os.urandom(4).hex()}"
-#     health_check_url = f"http://{instance_host}:{instance_port}/health"  # For Eureka to monitor health
-
-
-#     await eureka_client.init_async(
-#         eureka_server=eureka_server,
-#         app_name=app_name,
-#         instance_port=instance_port,
-#         instance_host=instance_host,
-#         instance_id=instance_id,
-#         health_check_url=health_check_url
-#     )
-    
 class EurekaClient:
     def __init__(self, settings: Settings):
         self.settings = settings
@@ -153,12 +134,12 @@ class EurekaClient:
         """Start the heartbeat task"""
         async def heartbeat_loop():
             while True:
-                await asyncio.sleep(self.settings.health_check_interval)
+                await asyncio.sleep(self.settings.HEALTH_CHECK_INTERVAL)
                 await self.send_heartbeat()
         
         self.heartbeat_task = asyncio.create_task(heartbeat_loop())
-        logger.info(f"Started heartbeat task with interval: {self.settings.health_check_interval}s")
-    
+        logger.info(f"Started heartbeat task with interval: {self.settings.HEALTH_CHECK_INTERVAL}s")
+
     async def stop_heartbeat(self):
         """Stop the heartbeat task"""
         if self.heartbeat_task:
@@ -168,5 +149,31 @@ class EurekaClient:
             except asyncio.CancelledError:
                 pass
             logger.info("Stopped heartbeat task")
+        
+    async def get_service_instance(self, service_name: str) -> Optional[str]:
+        """Fetch a service instance URL from Eureka"""
+        try:
+            url = f"{self.eureka_url}/apps/{service_name.upper()}"
             
+            async with httpx.AsyncClient() as client:
+                response = await client.get(url, headers={'Accept':'application/json'}, timeout=10.0)
+
+            if response.status_code == 200:
+                data = response.json()
+                instances = data["application"]["instance"]
+                instance = instances[0] 
+                ip = instance["ipAddr"]
+                port = instance["port"]["$"]
+
+                logger.info(f"Discovered service instance: {service_name} at {ip}:{port}")
+                return f"http://{ip}:{port}"
+            else:
+                logger.error(f"Failed to fetch service from Eureka: {service_name}, status={response.status_code}")
+                return None
+
+        except Exception as e:
+            logger.error(f"Error discovering service {service_name}: {e}")
+            return None
+            
+
 eureka_client = EurekaClient(settings)

@@ -6,17 +6,21 @@ from typing import List, Optional, Dict, Any
 import asyncio
 import re
 import json
+import hashlib
 from pymongo import MongoClient
 from datetime import datetime
 
-from app.config import get_logger
-from app.model import get_chat_model
-from app.tools import get_mood_history, get_recommended_doctors, get_recommended_songs
-from app.db import get_database
-from .helper import *
+from app.config.logger_config import get_logger
+from app.model.model_gen import get_chat_model
+from app.tools.chat_agent_tools import get_mood_history, get_recommended_doctors, get_recommended_songs
+from app.db.mongo import get_database
+from app.service.helper.chat_service_models import *
+from app.service.helper.preprocessor import *
+
 
 logger = get_logger(__name__)
 
+@DeprecationWarning
 class GeminiChatService:
     def __init__(self, mongo_uri: str = "mongodb://mindigo:1234@localhost:27017/", **kwargs):
         """Simplified, efficient chat service with four-tier model architecture."""
@@ -33,10 +37,10 @@ class GeminiChatService:
             
             # Four-tier model architecture for cost/performance optimization
             self.models = {
-                "lite": get_chat_model("gemini", model_name="gemini-2.0-flash-lite", **kwargs),      # Quick analysis
-                "flash_lite": get_chat_model("gemini", model_name="gemini-2.5-flash-lite", **kwargs), # Simple responses
-                "flash": get_chat_model("gemini", model_name="gemini-2.5-flash", **kwargs),           # Standard processing
-                "pro": get_chat_model("gemini", model_name="gemini-2.5-pro", **kwargs)                # Complex/crisis cases
+                "lite": get_chat_model("gemini", model_name="gemini-1.5-flash-lite", **kwargs),      # Quick analysis
+                "flash_lite": get_chat_model("gemini", model_name="gemini-2.0-flash-lite", **kwargs), # Simple responses
+                "flash": get_chat_model("gemini", model_name="gemini-2.0-flash", **kwargs),           # Standard processing
+                "pro": get_chat_model("gemini", model_name="gemini-2.5-flash", **kwargs)                # Complex/crisis cases
             }
             
             # Extensible tool registry
@@ -430,8 +434,6 @@ class GeminiChatService:
 
     def _generate_session_id(self, user_id: int) -> str:
         """Generate simple session ID."""
-        import hashlib
-        from datetime import datetime
         timestamp = datetime.now().isoformat()
         raw_id = f"{user_id}_{timestamp}"
         return hashlib.md5(raw_id.encode()).hexdigest()
@@ -472,13 +474,30 @@ class GeminiChatService:
             logger.error(f"Error getting user sessions for {user_id}: {str(e)}")
             return []
 
-    def get_message_history(self, session_id: str, limit: int = 50) -> List[Dict]:
-        """Get complete message history for a session."""
+    def get_message_history(self, session_id: str, page: int = 1, per_page: int = 20) -> Dict[str, Any]:
+        """Get complete message history for a session with pagination."""
         try:
-            return self.db.get_message_history(session_id, limit)
+            offset = (page - 1) * per_page
+            messages = self.db.get_message_history(session_id, limit=per_page, offset=offset)
+            total_count = self.db.get_message_count(session_id)
+            has_more = offset + per_page < total_count
+            
+            return {
+                "messages": messages,
+                "total_messages": total_count,
+                "page": page,
+                "per_page": per_page,
+                "has_more": has_more
+            }
         except Exception as e:
             logger.error(f"Error getting message history for {session_id}: {str(e)}")
-            return []
+            return {
+                "messages": [],
+                "total_messages": 0,
+                "page": page,
+                "per_page": per_page,
+                "has_more": False
+            }
 
     def get_recent_messages(self, session_id: str, count: int = 10) -> List[Dict]:
         """Get recent messages for context."""
@@ -515,7 +534,15 @@ class GeminiChatService:
             
             # Extract structured data from the last message
             last_message = final_state["messages"][-1]
-            structured_data = last_message.additional_kwargs.get("structured", {})
+            structured_data_raw = last_message.additional_kwargs.get("structured", {})
+            
+            # Convert Pydantic models to dictionaries if needed
+            if hasattr(structured_data_raw, 'dict'):
+                structured_data = structured_data_raw.dict()
+            elif hasattr(structured_data_raw, 'model_dump'):
+                structured_data = structured_data_raw.model_dump()
+            else:
+                structured_data = structured_data_raw
             
             # Store message in database
             try:
@@ -553,7 +580,7 @@ class GeminiChatService:
             return {
                 "message": last_message.content,
                 "mood": structured_data.get("mood"),
-                "recommendations": structured_data.get("recommendations", []),
+                "recommendations": self._format_recommendations(structured_data.get("recommendations", [])),
                 "escalate": structured_data.get("escalate", False),
                 "safety_alert": safety_alert,
                 "session_id": final_session_id,
@@ -575,7 +602,7 @@ class GeminiChatService:
                           user_id: int, 
                           user_name: str,
                           session_id: str = None):
-        """Enhanced streaming with simplified session management."""
+        """True streaming with immediate AI model response."""
         try:
             # Get or create session using database only
             final_session_id = self._get_or_create_session(user_id, user_name, session_id)
@@ -589,65 +616,150 @@ class GeminiChatService:
                 
                 for char in crisis_response:
                     yield char
-                    await asyncio.sleep(0.02)
+                    await asyncio.sleep(0.03)
                 return
             
-            # For non-crisis situations, process normally
-            config = {"configurable": {"thread_id": final_session_id}}
-            
+            # For real-time streaming, bypass complex workflow and use direct model streaming
             session_data = self.db.get_session_info(final_session_id)
             initial_safety_score = session_data.get('metadata', {}).get('safety_score', 0) if session_data else 0
             
-            initial_state = {
-                "messages": [HumanMessage(content=message)],
-                "user_id": user_id,
-                "user_name": user_name,
-                "session_id": final_session_id,
-                "safety_score": initial_safety_score
-            }
-
-            final_state = self.app.invoke(initial_state, config)
-            last_message = final_state["messages"][-1]
+            # Prepare messages for direct model call
+            messages = [SystemMessage(content=self.system_message)]
             
-            if isinstance(last_message, AIMessage) and last_message.content:
-                # Standard streaming speed
-                for char in last_message.content:
-                    yield char
-                    await asyncio.sleep(0.01)
-            
-            # Store message in database
+            # Add recent context (last 5 messages)
             try:
-                structured_data = last_message.additional_kwargs.get("structured", {})
-                metadata = {
-                    "safety_score": final_state.get('safety_score', initial_safety_score),
-                    "safety_alert": structured_data.get("safety_alert", {}),
-                    "escalate": structured_data.get("escalate", False),
-                    "streaming": True
-                }
-                
-                self.db.store_message(
-                    session_id=final_session_id,
-                    user_id=user_id,
-                    user_name=user_name,
-                    user_message=message,
-                    ai_response=last_message.content,
-                    metadata=metadata
-                )
-                
-                # Update session metadata
-                self.db.update_session_metadata(final_session_id, {
-                    "safety_score": final_state.get('safety_score', initial_safety_score)
-                })
-                
+                recent_messages = self.db.get_recent_messages(final_session_id, count=5)
+                for msg_record in recent_messages:
+                    messages.append(HumanMessage(content=msg_record['user_message']))
+                    messages.append(AIMessage(content=msg_record['ai_response']))
             except Exception as e:
-                logger.error(f"Failed to store streamed message: {str(e)}")
+                logger.warning(f"Could not load recent messages: {str(e)}")
+            
+            # Add current message
+            cleaned_message = self.preprocess_text(message)
+            messages.append(HumanMessage(content=cleaned_message))
+            
+            # Quick analysis to choose model
+            analysis = await self._quick_stream_analysis(cleaned_message)
+            
+            # Select appropriate model based on analysis
+            model_choice = self._select_streaming_model(analysis, has_crisis)
+            model = self.models[model_choice]
+            
+            # For tool-requiring cases, bind tools
+            if analysis.get("needs_tools") == "yes":
+                tools = self._get_all_tools()
+                model = model.bind_tools(tools)
+            
+            # Stream directly from the model
+            full_response = ""
+            
+            try:
+                # Use model streaming directly
+                async for chunk in model.astream(messages):
+                    if hasattr(chunk, 'content') and chunk.content:
+                        full_response += chunk.content
+                        for char in chunk.content:
+                            yield char
+                            await asyncio.sleep(0.02)  # Slower for better readability
+                
+            except Exception as stream_error:
+                logger.warning(f"Model streaming failed: {str(stream_error)}")
+                # Fallback to synchronous call with character streaming
+                response = model.invoke(messages)
+                full_response = response.content if hasattr(response, 'content') else str(response)
+                
+                for char in full_response:
+                    yield char
+                    await asyncio.sleep(0.03)
+            
+            # Store the complete message after streaming
+            asyncio.create_task(self._store_streamed_message(
+                final_session_id, user_id, user_name, message, 
+                full_response, analysis, initial_safety_score
+            ))
             
         except Exception as e:
             logger.error(f"Error in chat_stream: {str(e)}")
             fallback_msg = f"Hi {user_name}, I'm here to support you. Let's talk about how you're feeling."
             for char in fallback_msg:
                 yield char
-                await asyncio.sleep(0.01)
+                await asyncio.sleep(0.03)
+
+    async def _quick_stream_analysis(self, text: str) -> Dict:
+        """Fast analysis for streaming without complex workflow."""
+        try:
+            # Use lite model for quick analysis
+            model = self.models["lite"]
+            
+            prompt = f"""Analyze this message quickly and respond in JSON:
+            
+            Message: "{text}"
+            
+            {{
+                "intent": "greeting|crisis|question|support|off_topic",
+                "complexity": "simple|moderate|complex",
+                "needs_tools": "yes|no",
+                "sentiment": "positive|neutral|negative"
+            }}
+            """
+            
+            response = await model.ainvoke([HumanMessage(content=prompt)])
+            return self._parse_json_response(response.content)
+            
+        except Exception as e:
+            logger.error(f"Quick stream analysis error: {str(e)}")
+            return {
+                "intent": "support",
+                "complexity": "moderate", 
+                "needs_tools": "no",
+                "sentiment": "neutral"
+            }
+
+    def _select_streaming_model(self, analysis: Dict, has_crisis: bool) -> str:
+        """Select appropriate model for streaming based on analysis."""
+        if has_crisis or analysis.get("intent") == "crisis":
+            return "pro"
+        
+        if analysis.get("complexity") == "complex" or analysis.get("needs_tools") == "yes":
+            return "flash"
+        
+        if analysis.get("intent") == "greeting" or analysis.get("complexity") == "simple":
+            return "flash_lite"
+        
+        return "flash"  # Default
+
+    async def _store_streamed_message(self, session_id: str, user_id: int, user_name: str, 
+                                    user_message: str, ai_response: str, analysis: Dict, 
+                                    initial_safety_score: int):
+        """Store message in background after streaming."""
+        try:
+            # Create metadata based on analysis
+            metadata = {
+                "safety_score": initial_safety_score,
+                "safety_alert": {"level": "crisis" if self.quick_crisis_check(user_message) else "none"},
+                "escalate": self.quick_crisis_check(user_message),
+                "mood": analysis.get("sentiment", "neutral"),
+                "streaming": True,
+                "analysis": analysis
+            }
+            
+            self.db.store_message(
+                session_id=session_id,
+                user_id=user_id,
+                user_name=user_name,
+                user_message=user_message,
+                ai_response=ai_response,
+                metadata=metadata
+            )
+            
+            # Update session metadata
+            self.db.update_session_metadata(session_id, {
+                "safety_score": initial_safety_score
+            })
+            
+        except Exception as e:
+            logger.error(f"Failed to store streamed message: {str(e)}")
     
     def provide_session_to_user(self, user_id: int, user_name: str) -> str:
         """Create and return a new session ID for the user."""
@@ -668,3 +780,76 @@ class GeminiChatService:
                 logger.info("Database connection closed")
         except Exception as e:
             logger.error(f"Error closing connections: {str(e)}")
+
+    def _parse_json_response(self, content: str) -> Dict:
+        """Parse JSON response from model, with fallback."""
+        try:
+            # Try to extract JSON from response
+            import json
+            import re
+            
+            # Look for JSON pattern
+            json_match = re.search(r'\{.*\}', content, re.DOTALL)
+            if json_match:
+                return json.loads(json_match.group())
+            else:
+                # Fallback if no JSON found
+                return {
+                    "intent": "support",
+                    "complexity": "moderate",
+                    "needs_tools": "no", 
+                    "sentiment": "neutral"
+                }
+        except Exception:
+            return {
+                "intent": "support",
+                "complexity": "moderate",
+                "needs_tools": "no",
+                "sentiment": "neutral"
+            }
+
+    def _format_recommendations(self, recommendations) -> List[str]:
+        """Convert Recommendation objects to strings for API response."""
+        try:
+            formatted = []
+            for rec in recommendations:
+                if isinstance(rec, dict):
+                    # Handle dictionary format (from structured output)
+                    rec_type = rec.get("type", "activity")
+                    title = rec.get("title", "Recommendation")
+                    reason = rec.get("reason", "")
+                    urgency = rec.get("urgency", "low")
+                    
+                    if rec_type == "song":
+                        formatted.append(f"🎵 Listen to: {title} ({reason})")
+                    elif rec_type == "doctor":
+                        formatted.append(f"👩‍⚕️ Consider: {title} - {reason}")
+                    elif rec_type == "activity":
+                        formatted.append(f"🎯 Try this: {title} - {reason}")
+                    elif rec_type == "emergency_contact":
+                        formatted.append(f"🚨 Emergency: {title} - {reason}")
+                    else:
+                        formatted.append(f"{title}: {reason}")
+                        
+                elif hasattr(rec, 'title') and hasattr(rec, 'reason'):
+                    # Handle Recommendation object instances
+                    rec_type = getattr(rec, 'type', 'activity')
+                    
+                    if rec_type == "song":
+                        formatted.append(f"🎵 Listen to: {rec.title} ({rec.reason})")
+                    elif rec_type == "doctor":
+                        formatted.append(f"👩‍⚕️ Consider: {rec.title} - {rec.reason}")
+                    elif rec_type == "activity":
+                        formatted.append(f"🎯 Try this: {rec.title} - {rec.reason}")
+                    elif rec_type == "emergency_contact":
+                        formatted.append(f"🚨 Emergency: {rec.title} - {rec.reason}")
+                    else:
+                        formatted.append(f"{rec.title}: {rec.reason}")
+                else:
+                    # Fallback for any other format
+                    formatted.append(str(rec))
+            
+            return formatted
+        except Exception as e:
+            logger.error(f"Error formatting recommendations: {str(e)}")
+            return []

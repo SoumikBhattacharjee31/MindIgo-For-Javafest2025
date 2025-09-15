@@ -15,4 +15,5 @@ public class ValidateResponse {
     private String email;
     private boolean valid;
     private String role;
+    private String userName;
 }

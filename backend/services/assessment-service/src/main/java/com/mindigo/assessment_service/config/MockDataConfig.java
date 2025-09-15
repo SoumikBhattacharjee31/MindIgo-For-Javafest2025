@@ -8,7 +8,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.time.LocalDate;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Configuration
 public class MockDataConfig {
@@ -16,41 +17,54 @@ public class MockDataConfig {
     @Bean
     public CommandLineRunner initDatabase(MoodRepository moodRepository) {
         Long userId = 1L;
-        return args -> {
-            if (moodRepository.count() == 0) {
-                List<Mood> moods = List.of(
-                        Mood.builder().userId(userId).date(LocalDate.parse("2025-08-10"))
-                                .mood(MoodType.HAPPY).description("Feeling great!").reason("Had a productive day.").build(),
-                        Mood.builder().userId(userId).date(LocalDate.parse("2025-08-11"))
-                                .mood(MoodType.SAD).description("Feeling down.").reason("Had a rough night.").build(),
-                        Mood.builder().userId(userId).date(LocalDate.parse("2025-08-12"))
-                                .mood(MoodType.TERRIBLE).description("Feeling awful.").reason("Everything went wrong.").build(),
-                        Mood.builder().userId(userId).date(LocalDate.parse("2025-08-13"))
-                                .mood(MoodType.SAD).description("Feeling down.").reason("Had a rough night.").build(),
-                        Mood.builder().userId(userId).date(LocalDate.parse("2025-08-14"))
-                                .mood(MoodType.SAD).description("Feeling down.").reason("Had a rough night.").build(),
-                        Mood.builder().userId(userId).date(LocalDate.parse("2025-08-15"))
-                                .mood(MoodType.TERRIBLE).description("Feeling awful.").reason("Everything went wrong.").build(),
-                        Mood.builder().userId(userId).date(LocalDate.parse("2025-08-16"))
-                                .mood(MoodType.SAD).description("Feeling down.").reason("Had a rough night.").build(),
-                        Mood.builder().userId(userId).date(LocalDate.parse("2025-08-17"))
-                                .mood(MoodType.SAD).description("Feeling down.").reason("Had a rough night.").build(),
-                        Mood.builder().userId(userId).date(LocalDate.parse("2025-08-18"))
-                                .mood(MoodType.TERRIBLE).description("Feeling awful.").reason("Everything went wrong.").build(),
-                        Mood.builder().userId(userId).date(LocalDate.parse("2025-08-19"))
-                                .mood(MoodType.SAD).description("Feeling down.").reason("Had a rough night.").build(),
-                        Mood.builder().userId(userId).date(LocalDate.parse("2025-08-20"))
-                                .mood(MoodType.HAPPY).description("Feeling great!").reason("Had a productive day.").build(),
-                        Mood.builder().userId(userId).date(LocalDate.parse("2025-08-21"))
-                                .mood(MoodType.AMAZING).description("Feeling awesome!").reason("Had an amazing day.").build(),
-                        Mood.builder().userId(userId).date(LocalDate.parse("2025-08-22"))
-                                .mood(MoodType.HAPPY).description("Feeling great!").reason("Had a productive day.").build(),
-                        Mood.builder().userId(userId).date(LocalDate.parse("2025-08-23"))
-                                .mood(MoodType.HAPPY).description("Feeling great!").reason("Had a productive day.").build()
-                );
 
-                moodRepository.saveAll(moods);
-                System.out.println("✅ Mood data initialized!");
+        return args -> {
+            LocalDate today = LocalDate.now();
+
+            List<MoodType> moodTypes = List.of(
+                    MoodType.HAPPY, MoodType.SAD, MoodType.TERRIBLE, MoodType.AMAZING
+            );
+
+            Map<MoodType, String> reasons = Map.of(
+                    MoodType.HAPPY, "Had a productive day.",
+                    MoodType.SAD, "Had a rough night.",
+                    MoodType.TERRIBLE, "Everything went wrong.",
+                    MoodType.AMAZING, "Had an amazing day."
+            );
+
+            Map<MoodType, String> descriptions = Map.of(
+                    MoodType.HAPPY, "Feeling great!",
+                    MoodType.SAD, "Feeling down.",
+                    MoodType.TERRIBLE, "Feeling awful.",
+                    MoodType.AMAZING, "Feeling awesome!"
+            );
+
+            List<Mood> newMoods = new ArrayList<>();
+
+            for (int i = 0; i < 14; i++) {
+                LocalDate date = today.minusDays(i);
+
+                boolean exists = moodRepository.existsByUserIdAndDate(userId, date);
+                if (!exists) {
+                    MoodType moodType = moodTypes.get(ThreadLocalRandom.current().nextInt(moodTypes.size()));
+
+                    newMoods.add(
+                            Mood.builder()
+                                    .userId(userId)
+                                    .date(date)
+                                    .mood(moodType)
+                                    .description(descriptions.get(moodType))
+                                    .reason(reasons.get(moodType))
+                                    .build()
+                    );
+                }
+            }
+
+            if (!newMoods.isEmpty()) {
+                moodRepository.saveAll(newMoods);
+                System.out.println("✅ Mood data initialized for " + newMoods.size() + " missing days!");
+            } else {
+                System.out.println("ℹ️ All mood data already exists for the past 14 days.");
             }
         };
     }
