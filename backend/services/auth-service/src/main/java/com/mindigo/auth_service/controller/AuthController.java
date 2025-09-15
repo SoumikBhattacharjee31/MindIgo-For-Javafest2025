@@ -218,6 +218,20 @@ public class AuthController {
                 .build());
     }
 
+    @GetMapping("/doctorprofilebyid/{id}")
+    @Operation(summary = "Get doctor profile by ID")
+    public ResponseEntity<ApiResponseClass<UserProfileResponse>> getDoctorProfileFromId(
+            @PathVariable("id") Integer userId) {
+
+        DoctorProfileResponse profile = authenticationService.getDoctorProfileById(userId);
+
+        return ResponseEntity.ok(ApiResponseClass.<UserProfileResponse>builder()
+                .success(true)
+                .data(profile)
+                .message("Profile retrieved successfully")
+                .build());
+    }
+
     // Add this endpoint to your existing AuthController class
 
     @PostMapping(value = "/register-counselor", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

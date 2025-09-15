@@ -1,10 +1,7 @@
 package com.mindigo.auth_service.services;
 
 import com.mindigo.auth_service.dto.request.*;
-import com.mindigo.auth_service.dto.response.AuthenticationResponse;
-import com.mindigo.auth_service.dto.response.CounselorStatusResponse;
-import com.mindigo.auth_service.dto.response.UserProfileResponse;
-import com.mindigo.auth_service.dto.response.ValidateResponse;
+import com.mindigo.auth_service.dto.response.*;
 import com.mindigo.auth_service.exception.*;
 import com.mindigo.auth_service.entity.*;
 import com.mindigo.auth_service.repositories.ImageService;
@@ -616,6 +613,19 @@ public class AuthenticationService {
             throw new UserNotFoundException("User not found");
 
         return UserProfileResponse.fromUser(user.get());
+    }
+
+    public DoctorProfileResponse getDoctorProfileById(Integer id) {
+
+        if (id == null) {
+            throw new InvalidTokenException("Invalid session");
+        }
+
+        Optional<User> user = userRepository.findById(id);
+        if(user.isEmpty())
+            throw new UserNotFoundException("User not found");
+
+        return DoctorProfileResponse.fromUser(user.get());
     }
 
     // Helper methods
