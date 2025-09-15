@@ -218,16 +218,29 @@ public class AuthController {
                 .build());
     }
 
-    @GetMapping("/doctorprofilebyid/{id}")
-    @Operation(summary = "Get doctor profile by ID")
-    public ResponseEntity<ApiResponseClass<DoctorProfileResponse>> getDoctorProfileFromId(
+    @GetMapping("/counselorprofilebyid/{id}")
+    @Operation(summary = "Get counselor profile by ID")
+    public ResponseEntity<ApiResponseClass<CounselorProfileResponse>> getCounselorProfileFromId(
             @PathVariable("id") Integer userId) {
 
-        DoctorProfileResponse profile = authenticationService.getDoctorProfileById(userId);
+        CounselorProfileResponse profile = authenticationService.getCounselorProfileById(userId);
 
-        return ResponseEntity.ok(ApiResponseClass.<DoctorProfileResponse>builder()
+        return ResponseEntity.ok(ApiResponseClass.<CounselorProfileResponse>builder()
                 .success(true)
                 .data(profile)
+                .message("Profile retrieved successfully")
+                .build());
+    }
+
+    @GetMapping("/counselorprofiles")
+    @Operation(summary = "Get all counselor profiles")
+    public ResponseEntity<ApiResponseClass<List<CounselorProfileResponse>>> getAllDoctorProfile() {
+
+        List<CounselorProfileResponse> profiles = authenticationService.getAllCounselorProfile();
+
+        return ResponseEntity.ok(ApiResponseClass.<List<CounselorProfileResponse>>builder()
+                .success(true)
+                .data(profiles)
                 .message("Profile retrieved successfully")
                 .build());
     }

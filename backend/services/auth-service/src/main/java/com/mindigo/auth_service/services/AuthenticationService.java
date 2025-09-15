@@ -617,7 +617,7 @@ public class AuthenticationService {
         return UserProfileResponse.fromUser(user.get());
     }
 
-    public DoctorProfileResponse getDoctorProfileById(Integer id) {
+    public CounselorProfileResponse getCounselorProfileById(Integer id) {
 
         if (id == null) {
             throw new InvalidTokenException("Invalid session");
@@ -627,7 +627,14 @@ public class AuthenticationService {
         if(user.isEmpty())
             throw new UserNotFoundException("User not found");
 
-        return DoctorProfileResponse.fromUser(user.get());
+        return CounselorProfileResponse.fromUser(user.get());
+    }
+
+    public List<CounselorProfileResponse> getAllCounselorProfile() {
+
+        List<User> users = userRepository.findByRole(Role.COUNSELOR);
+
+        return CounselorProfileResponse.fromUsers(users);
     }
 
     // Helper methods
