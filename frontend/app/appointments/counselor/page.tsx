@@ -1,4 +1,3 @@
-// app/appointments/counselor/page.tsx
 "use client";
 import React, { useState, useEffect } from "react";
 import {
@@ -9,22 +8,13 @@ import {
   Plus,
   Filter,
   Search,
-  BarChart3,
   CheckCircle,
   XCircle,
   AlertCircle,
-  TrendingUp,
-  Eye,
-  MessageSquare,
-  Bell,
   RefreshCw,
-  ChevronDown,
   Loader2,
-  Star,
-  Award,
-  Target,
-  DollarSign,
-  Activity,
+  Trash2,
+  Edit,
 } from "lucide-react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -39,29 +29,50 @@ import {
 } from "@/app/api/appointmentService";
 import AppointmentCard from "@/app/components/appointments/AppointmentCard";
 
-type TabType =
-  | "dashboard"
-  | "appointments"
-  | "availability"
-  | "settings"
-  | "analytics";
+type TabType = "dashboard" | "appointments" | "availability" | "settings";
+
+// Utility function to format time as HH:mm:ss
+const formatTimeForApi = (time: string): string => {
+  return time.includes(":") && time.split(":").length === 2 ? `${time}:00` : time;
+};
 
 const CounselorDashboardPage = () => {
   const [activeTab, setActiveTab] = useState<TabType>("dashboard");
   const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [filteredAppointments, setFilteredAppointments] = useState<
-    Appointment[]
-  >([]);
+  const [filteredAppointments, setFilteredAppointments] = useState<Appointment[]>([]);
   const [availability, setAvailability] = useState<Availability[]>([]);
-  const [dateSpecificAvailability, setDateSpecificAvailability] = useState<
-    DateSpecificAvailability[]
-  >([]);
+  const [dateSpecificAvailability, setDateSpecificAvailability] = useState<DateSpecificAvailability[]>([]);
   const [settings, setSettings] = useState<CounselorSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [activeFilter, setActiveFilter] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+
+  // Form states for availability
+  const [newAvailability, setNewAvailability] = useState({
+    dayOfWeek: "MONDAY",
+    startTime: "09:00",
+    endTime: "17:00",
+    slotDurationMinutes: 60,
+  });
+  const [newDateSpecificAvailability, setNewDateSpecificAvailability] = useState({
+    specificDate: dayjs().format("YYYY-MM-DD"),
+    startTime: "09:00",
+    endTime: "17:00",
+    slotDurationMinutes: 60,
+    type: "AVAILABLE",
+    reason: "",
+  });
+
+  // Form state for settings
+  const [settingsForm, setSettingsForm] = useState({
+    maxBookingDays: 30,
+    defaultSlotDurationMinutes: 60,
+    autoAcceptAppointments: false,
+    requireApproval: true,
+    bufferTimeMinutes: 15,
+  });
 
   // Statistics
   const [stats, setStats] = useState({
@@ -70,11 +81,6 @@ const CounselorDashboardPage = () => {
     todayAppointments: 0,
     completedThisMonth: 0,
     totalClients: 0,
-    averageRating: 4.8,
-    responseTime: 2.3,
-    completionRate: 98,
-    weeklyEarnings: 1240,
-    monthlyGrowth: 15,
   });
 
   useEffect(() => {
@@ -128,8 +134,7 @@ const CounselorDashboardPage = () => {
 
   const fetchDateSpecificAvailability = async () => {
     try {
-      const response =
-        await appointmentServiceApi.getMyDateSpecificAvailability();
+      const response = await appointmentServiceApi.getMyDateSpecificAvailability();
       if (response.data.success) {
         setDateSpecificAvailability(response.data.data || []);
       }
@@ -141,8 +146,15 @@ const CounselorDashboardPage = () => {
   const fetchSettings = async () => {
     try {
       const response = await appointmentServiceApi.getCounselorSettings();
-      if (response.data.success) {
+      if (response.data.success && response.data.data) {
         setSettings(response.data.data);
+        setSettingsForm({
+          maxBookingDays: response.data.data.maxBookingDays || 30,
+          defaultSlotDurationMinutes: response.data.data.defaultSlotDurationMinutes || 60,
+          autoAcceptAppointments: response.data.data.autoAcceptAppointments || false,
+          requireApproval: response.data.data.requireApproval || true,
+          bufferTimeMinutes: response.data.data.bufferTimeMinutes || 15,
+        });
       }
     } catch (error) {
       console.error("Failed to fetch settings:", error);
@@ -156,13 +168,11 @@ const CounselorDashboardPage = () => {
     const todayStart = now.startOf("day");
     const todayEnd = now.endOf("day");
 
-    const uniqueClients = new Set(appointmentData.map((apt) => apt.clientEmail))
-      .size;
+    const uniqueClients = new Set(appointmentData.map((apt) => apt.clientEmail)).size;
 
     const stats = {
       totalAppointments: appointmentData.length,
-      pendingApproval: appointmentData.filter((apt) => apt.status === "PENDING")
-        .length,
+      pendingApproval: appointmentData.filter((apt) => apt.status === "PENDING").length,
       todayAppointments: appointmentData.filter((apt) => {
         const appointmentDate = dayjs(apt.startTime);
         return (
@@ -177,19 +187,6 @@ const CounselorDashboardPage = () => {
           dayjs(apt.startTime).isBetween(startOfMonth, endOfMonth, null, "[]")
       ).length,
       totalClients: uniqueClients,
-      averageRating: 4.8, // This would come from API
-      responseTime: 2.3, // This would come from API
-      completionRate:
-        appointmentData.length > 0
-          ? Math.round(
-              (appointmentData.filter((apt) => apt.status === "COMPLETED")
-                .length /
-                appointmentData.length) *
-                100
-            )
-          : 0,
-      weeklyEarnings: 1240, // This would come from API
-      monthlyGrowth: 15, // This would come from API
     };
     setStats(stats);
   };
@@ -199,9 +196,7 @@ const CounselorDashboardPage = () => {
 
     if (activeFilter !== "all") {
       if (activeFilter === "today") {
-        filtered = filtered.filter((apt) =>
-          dayjs(apt.startTime).isSame(dayjs(), "day")
-        );
+        filtered = filtered.filter((apt) => dayjs(apt.startTime).isSame(dayjs(), "day"));
       } else if (activeFilter === "upcoming") {
         filtered = filtered.filter(
           (apt) =>
@@ -209,24 +204,19 @@ const CounselorDashboardPage = () => {
             ["CONFIRMED", "PENDING"].includes(apt.status)
         );
       } else {
-        filtered = filtered.filter(
-          (apt) => apt.status === activeFilter.toUpperCase()
-        );
+        filtered = filtered.filter((apt) => apt.status === activeFilter.toUpperCase());
       }
     }
 
     if (searchTerm) {
       filtered = filtered.filter(
         (apt) =>
-          (apt.clientName &&
-            apt.clientName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (apt.clientName && apt.clientName.toLowerCase().includes(searchTerm.toLowerCase())) ||
           apt.clientEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (apt.clientNotes &&
-            apt.clientNotes.toLowerCase().includes(searchTerm.toLowerCase()))
+          (apt.clientNotes && apt.clientNotes.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     }
 
-    // Sort: pending first, then by date
     filtered.sort((a, b) => {
       if (a.status === "PENDING" && b.status !== "PENDING") return -1;
       if (a.status !== "PENDING" && b.status === "PENDING") return 1;
@@ -248,11 +238,7 @@ const CounselorDashboardPage = () => {
     }
   };
 
-  const handleStatusUpdate = async (
-    appointmentId: number,
-    status: string,
-    notes?: string
-  ) => {
+  const handleStatusUpdate = async (appointmentId: number, status: string, notes?: string) => {
     try {
       await appointmentServiceApi.updateAppointmentStatus({
         appointmentId,
@@ -263,27 +249,146 @@ const CounselorDashboardPage = () => {
       toast.success(`Appointment ${status.toLowerCase()} successfully`);
       fetchAppointments();
     } catch (error: any) {
-      toast.error(
-        error.response?.data?.message || "Failed to update appointment"
-      );
+      toast.error(error.response?.data?.message || "Failed to update appointment");
     }
   };
 
-  // Enhanced Statistics Card Component
-  const StatCard = ({
-    title,
-    value,
-    icon: Icon,
-    color,
-    subtitle,
-    trend,
-    onClick,
-  }: any) => (
+  const handleCreateAvailability = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const formattedAvailability = {
+        ...newAvailability,
+        startTime: formatTimeForApi(newAvailability.startTime),
+        endTime: formatTimeForApi(newAvailability.endTime),
+      };
+      await appointmentServiceApi.createAvailability(formattedAvailability);
+      toast.success("Availability created successfully");
+      fetchAvailability();
+      setNewAvailability({ dayOfWeek: "MONDAY", startTime: "09:00", endTime: "17:00", slotDurationMinutes: 60 });
+    } catch (error) {
+      toast.error("Failed to create availability");
+    }
+  };
+
+  const handleUpdateAvailability = async (availabilityId: number, updates: Partial<Availability>) => {
+    try {
+      const formattedUpdates = {
+        ...updates,
+        startTime: updates.startTime ? formatTimeForApi(updates.startTime) : undefined,
+        endTime: updates.endTime ? formatTimeForApi(updates.endTime) : undefined,
+      };
+      await appointmentServiceApi.updateAvailability(availabilityId, formattedUpdates);
+      toast.success("Availability updated successfully");
+      fetchAvailability();
+    } catch (error) {
+      toast.error("Failed to update availability");
+    }
+  };
+
+  const handleDeleteAvailability = async (availabilityId: number) => {
+    if (confirm("Are you sure you want to delete this availability?")) {
+      try {
+        await appointmentServiceApi.deleteAvailability(availabilityId);
+        toast.success("Availability deleted successfully");
+        fetchAvailability();
+      } catch (error) {
+        toast.error("Failed to delete availability");
+      }
+    }
+  };
+
+  const handleToggleAvailability = async (availabilityId: number) => {
+    try {
+      await appointmentServiceApi.toggleAvailability(availabilityId);
+      toast.success("Availability status toggled");
+      fetchAvailability();
+    } catch (error) {
+      toast.error("Failed to toggle availability");
+    }
+  };
+
+  const handleCreateDateSpecificAvailability = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      if (newDateSpecificAvailability.type === "UNAVAILABLE" && !newDateSpecificAvailability.reason.trim()) {
+        toast.error("Reason is required when setting availability to Unavailable");
+        return;
+      }
+      const formattedAvailability = {
+        specificDate: newDateSpecificAvailability.specificDate,
+        startTime: formatTimeForApi(newDateSpecificAvailability.startTime),
+        endTime: formatTimeForApi(newDateSpecificAvailability.endTime),
+        slotDurationMinutes: newDateSpecificAvailability.slotDurationMinutes,
+        type: newDateSpecificAvailability.type,
+        reason: newDateSpecificAvailability.reason,
+      };
+      await appointmentServiceApi.createDateSpecificAvailability(formattedAvailability);
+      toast.success("Date-specific availability created successfully");
+      fetchDateSpecificAvailability();
+      setNewDateSpecificAvailability({
+        specificDate: dayjs().format("YYYY-MM-DD"),
+        startTime: "09:00",
+        endTime: "17:00",
+        slotDurationMinutes: 60,
+        type: "AVAILABLE",
+        reason: "",
+      });
+    } catch (error) {
+      toast.error("Failed to create date-specific availability");
+    }
+  };
+
+  const handleUpdateDateSpecificAvailability = async (
+    availabilityId: number,
+    updates: Partial<DateSpecificAvailability>
+  ) => {
+    try {
+      if (updates.type === "UNAVAILABLE" && !updates.reason?.trim()) {
+        toast.error("Reason is required when setting availability to Unavailable");
+        return;
+      }
+      const formattedUpdates = {
+        ...updates,
+        specificDate: updates.date ? updates.date : undefined,
+        startTime: updates.startTime ? formatTimeForApi(updates.startTime) : undefined,
+        endTime: updates.endTime ? formatTimeForApi(updates.endTime) : undefined,
+        type: updates.type,
+        reason: updates.reason,
+      };
+      await appointmentServiceApi.updateDateSpecificAvailability(availabilityId, formattedUpdates);
+      toast.success("Date-specific availability updated successfully");
+      fetchDateSpecificAvailability();
+    } catch (error) {
+      toast.error("Failed to update date-specific availability");
+    }
+  };
+
+  const handleDeleteDateSpecificAvailability = async (availabilityId: number, reason: string | null) => {
+    if (confirm("Are you sure you want to delete this date-specific availability?")) {
+      try {
+        await appointmentServiceApi.deleteDateSpecificAvailability(availabilityId, reason);
+        toast.success("Date-specific availability deleted successfully");
+        fetchDateSpecificAvailability();
+      } catch (error) {
+        toast.error("Failed to delete date-specific availability");
+      }
+    }
+  };
+
+  const handleUpdateSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await appointmentServiceApi.updateCounselorSettings(settingsForm);
+      toast.success("Settings updated successfully");
+      fetchSettings();
+    } catch (error) {
+      toast.error("Failed to update settings");
+    }
+  };
+
+  const StatCard = ({ title, value, icon: Icon, color, subtitle }: any) => (
     <div
-      className={`bg-gradient-to-br ${color} rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 ${
-        onClick ? "cursor-pointer" : ""
-      }`}
-      onClick={onClick}
+      className={`bg-gradient-to-br ${color} rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300`}
     >
       <div className="flex items-start justify-between">
         <div className="flex-1">
@@ -298,22 +403,9 @@ const CounselorDashboardPage = () => {
           <Icon className="w-6 h-6" />
         </div>
       </div>
-      {trend && (
-        <div className="mt-4 flex items-center justify-between">
-          <span
-            className={`text-sm flex items-center ${
-              trend.positive ? "text-green-200" : "text-red-200"
-            }`}
-          >
-            {trend.positive ? "↗" : "↘"} {trend.value}%
-          </span>
-          <span className="text-white/60 text-xs">{trend.period}</span>
-        </div>
-      )}
     </div>
   );
 
-  // Tab Navigation Component
   const TabButton = ({ tab, label, icon: Icon, count }: any) => (
     <button
       onClick={() => setActiveTab(tab)}
@@ -339,7 +431,6 @@ const CounselorDashboardPage = () => {
     </button>
   );
 
-  // Dashboard Overview Component
   const DashboardOverview = () => {
     const getTodayAppointments = () => {
       const today = dayjs();
@@ -358,20 +449,8 @@ const CounselorDashboardPage = () => {
         .sort((a, b) => dayjs(a.createdAt).unix() - dayjs(b.createdAt).unix());
     };
 
-    const getUpcomingAppointments = () => {
-      const now = dayjs();
-      return appointments
-        .filter(
-          (a) =>
-            dayjs(a.startTime).isAfter(now) &&
-            (a.status === "CONFIRMED" || a.status === "PENDING")
-        )
-        .slice(0, 5);
-    };
-
     return (
       <div className="space-y-8">
-        {/* Key Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard
             title="Total Clients"
@@ -379,12 +458,6 @@ const CounselorDashboardPage = () => {
             icon={Users}
             color="from-blue-500 to-blue-600"
             subtitle="Active clients"
-            trend={{
-              positive: true,
-              value: stats.monthlyGrowth,
-              period: "this month",
-            }}
-            onClick={() => setActiveTab("appointments")}
           />
           <StatCard
             title="Pending Approval"
@@ -409,198 +482,49 @@ const CounselorDashboardPage = () => {
             }}
           />
           <StatCard
-            title="Completion Rate"
-            value={`${stats.completionRate}%`}
-            icon={Target}
+            title="This Month"
+            value={stats.completedThisMonth}
+            icon={CheckCircle}
             color="from-purple-500 to-purple-600"
-            subtitle="All time average"
+            subtitle="Completed sessions"
           />
         </div>
 
-        {/* Performance Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Performance Metrics
-              </h3>
-              <Award className="w-6 h-6 text-blue-600" />
-            </div>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Average Rating</span>
-                <div className="flex items-center">
-                  <Star className="w-4 h-4 text-yellow-400 mr-1" />
-                  <span className="font-semibold">
-                    {stats.averageRating}/5.0
-                  </span>
-                </div>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Response Time</span>
-                <span className="font-semibold">{stats.responseTime}h avg</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">This Month</span>
-                <span className="font-semibold">
-                  {stats.completedThisMonth} sessions
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Quick Actions */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Quick Actions
-            </h3>
-            <div className="space-y-3">
-              <button
-                onClick={() => setActiveTab("availability")}
-                className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gray-50 rounded-lg transition-colors"
-              >
-                <Clock className="w-5 h-5 text-blue-600" />
-                <span className="text-gray-700">Manage Availability</span>
-              </button>
-              <button
-                onClick={() => setActiveTab("settings")}
-                className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gray-50 rounded-lg transition-colors"
-              >
-                <Settings className="w-5 h-5 text-gray-600" />
-                <span className="text-gray-700">Update Settings</span>
-              </button>
-              <button
-                onClick={() => setActiveTab("analytics")}
-                className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gray-50 rounded-lg transition-colors"
-              >
-                <BarChart3 className="w-5 h-5 text-green-600" />
-                <span className="text-gray-700">View Analytics</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Recent Activity */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Recent Activity
-            </h3>
-            <div className="space-y-3">
-              {appointments.slice(0, 3).map((apt) => (
-                <div
-                  key={apt.id}
-                  className="flex items-center space-x-3 p-2 rounded-lg bg-gray-50"
-                >
-                  <div
-                    className={`w-2 h-2 rounded-full ${
-                      apt.status === "PENDING"
-                        ? "bg-amber-400"
-                        : apt.status === "CONFIRMED"
-                        ? "bg-green-400"
-                        : apt.status === "COMPLETED"
-                        ? "bg-blue-400"
-                        : "bg-gray-400"
-                    }`}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">
-                      {apt.clientName || apt.clientEmail}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {dayjs(apt.startTime).format("MMM D, h:mm A")}
-                    </p>
-                  </div>
-                  <span
-                    className={`text-xs px-2 py-1 rounded-full font-medium ${
-                      apt.status === "PENDING"
-                        ? "bg-amber-100 text-amber-700"
-                        : apt.status === "CONFIRMED"
-                        ? "bg-green-100 text-green-700"
-                        : apt.status === "COMPLETED"
-                        ? "bg-blue-100 text-blue-700"
-                        : "bg-gray-100 text-gray-700"
-                    }`}
-                  >
-                    {apt.status}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Today's Schedule & Pending Approvals */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Today's Schedule */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-semibold text-gray-900">
-                Today's Schedule
-              </h3>
+              <h3 className="text-xl font-semibold text-gray-900">Today's Schedule</h3>
               <span className="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full">
                 {getTodayAppointments().length} sessions
               </span>
             </div>
-
             <div className="space-y-4">
               {getTodayAppointments().length === 0 ? (
                 <div className="text-center py-8">
                   <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500">
-                    No appointments scheduled for today
-                  </p>
-                  <p className="text-sm text-gray-400 mt-1">
-                    Enjoy your day off!
-                  </p>
+                  <p className="text-gray-500">No appointments scheduled for today</p>
+                  <p className="text-sm text-gray-400 mt-1">Enjoy your day off!</p>
                 </div>
               ) : (
                 getTodayAppointments().map((appointment) => (
-                  <div
+                  <AppointmentCard
                     key={appointment.id}
-                    className="flex items-center justify-between p-4 bg-blue-50 rounded-xl border border-blue-200"
-                  >
-                    <div className="flex-1">
-                      <p className="font-medium text-gray-900">
-                        {appointment.clientName || appointment.clientEmail}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        {dayjs(appointment.startTime).format("h:mm A")} -{" "}
-                        {dayjs(appointment.endTime).format("h:mm A")}
-                      </p>
-                      <span
-                        className={`inline-block text-xs px-2 py-1 rounded-full mt-1 ${
-                          appointment.status === "CONFIRMED"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-amber-100 text-amber-800"
-                        }`}
-                      >
-                        {appointment.status}
-                      </span>
-                    </div>
-                    <div className="flex space-x-2">
-                      <button className="p-2 text-gray-600 hover:bg-white rounded-lg transition-colors">
-                        <Eye className="w-4 h-4" />
-                      </button>
-                      <button className="p-2 text-gray-600 hover:bg-white rounded-lg transition-colors">
-                        <MessageSquare className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
+                    appointment={appointment}
+                    userRole="COUNSELOR"
+                    onStatusUpdate={handleStatusUpdate}
+                  />
                 ))
               )}
             </div>
           </div>
 
-          {/* Pending Approvals */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-semibold text-gray-900">
-                Pending Approvals
-              </h3>
+              <h3 className="text-xl font-semibold text-gray-900">Pending Approvals</h3>
               <span className="bg-amber-100 text-amber-800 text-sm font-medium px-3 py-1 rounded-full">
                 {getPendingAppointments().length} pending
               </span>
             </div>
-
             <div className="space-y-4">
               {getPendingAppointments().length === 0 ? (
                 <div className="text-center py-8">
@@ -609,57 +533,14 @@ const CounselorDashboardPage = () => {
                   <p className="text-sm text-gray-400 mt-1">All caught up!</p>
                 </div>
               ) : (
-                getPendingAppointments()
-                  .slice(0, 4)
-                  .map((appointment) => (
-                    <div
-                      key={appointment.id}
-                      className="flex items-center justify-between p-4 bg-amber-50 rounded-xl border border-amber-200"
-                    >
-                      <div className="flex-1">
-                        <p className="font-medium text-gray-900">
-                          {appointment.clientName || appointment.clientEmail}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          {dayjs(appointment.startTime).format("MMM D, h:mm A")}
-                        </p>
-                        {appointment.clientNotes && (
-                          <p className="text-xs text-gray-500 mt-1 line-clamp-2">
-                            "{appointment.clientNotes}"
-                          </p>
-                        )}
-                      </div>
-                      <div className="flex space-x-2 ml-4">
-                        <button
-                          onClick={() =>
-                            handleStatusUpdate(appointment.id, "CONFIRMED")
-                          }
-                          className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors"
-                          title="Approve"
-                        >
-                          <CheckCircle className="w-5 h-5" />
-                        </button>
-                        <button
-                          onClick={() => {
-                            const reason = prompt(
-                              "Please provide a rejection reason:"
-                            );
-                            if (reason) {
-                              handleStatusUpdate(
-                                appointment.id,
-                                "REJECTED",
-                                reason
-                              );
-                            }
-                          }}
-                          className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
-                          title="Reject"
-                        >
-                          <XCircle className="w-5 h-5" />
-                        </button>
-                      </div>
-                    </div>
-                  ))
+                getPendingAppointments().map((appointment) => (
+                  <AppointmentCard
+                    key={appointment.id}
+                    appointment={appointment}
+                    userRole="COUNSELOR"
+                    onStatusUpdate={handleStatusUpdate}
+                  />
+                ))
               )}
             </div>
           </div>
@@ -667,6 +548,311 @@ const CounselorDashboardPage = () => {
       </div>
     );
   };
+
+  const AvailabilityTab = () => (
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+      <h3 className="text-xl font-semibold text-gray-900 mb-6">Manage Availability</h3>
+      
+      {/* Weekly Availability */}
+      <div className="mb-8">
+        <h4 className="text-lg font-semibold text-gray-900 mb-4">Weekly Availability</h4>
+        <form onSubmit={handleCreateAvailability} className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Day of Week</label>
+            <select
+              value={newAvailability.dayOfWeek}
+              onChange={(e) => setNewAvailability({ ...newAvailability, dayOfWeek: e.target.value })}
+              className="w-full border border-gray-300 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              {["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"].map((day) => (
+                <option key={day} value={day}>{day}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Start Time</label>
+            <input
+              type="time"
+              value={newAvailability.startTime}
+              onChange={(e) => setNewAvailability({ ...newAvailability, startTime: e.target.value })}
+              className="w-full border border-gray-300 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">End Time</label>
+            <input
+              type="time"
+              value={newAvailability.endTime}
+              onChange={(e) => setNewAvailability({ ...newAvailability, endTime: e.target.value })}
+              className="w-full border border-gray-300 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Slot Duration (min)</label>
+            <input
+              type="number"
+              value={newAvailability.slotDurationMinutes}
+              onChange={(e) => setNewAvailability({ ...newAvailability, slotDurationMinutes: parseInt(e.target.value) })}
+              className="w-full border border-gray-300 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              min="15"
+              step="15"
+              required
+            />
+          </div>
+          <div className="md:col-span-4">
+            <button
+              type="submit"
+              className="w-full md:w-auto bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-all duration-200"
+            >
+              Add Weekly Availability
+            </button>
+          </div>
+        </form>
+
+        <div className="space-y-4">
+          {availability.map((avail) => (
+            <div key={avail.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200">
+              <div>
+                <p className="font-medium text-gray-900">{avail.dayOfWeek}</p>
+                <p className="text-sm text-gray-600">
+                  {avail.startTime} - {avail.endTime} ({avail.slotDurationMinutes} min slots)
+                </p>
+                <p className={`text-sm ${avail.isActive ? "text-green-600" : "text-red-600"}`}>
+                  {avail.isActive ? "Active" : "Inactive"}
+                </p>
+              </div>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => handleToggleAvailability(avail.id)}
+                  className="p-2 text-gray-600 hover:bg-white rounded-lg transition-colors"
+                >
+                  {avail.isActive ? <XCircle className="w-5 h-5 text-red-600" /> : <CheckCircle className="w-5 h-5 text-green-600" />}
+                </button>
+                <button
+                  onClick={() => {
+                    const updates = prompt("Enter new start time (HH:mm):", avail.startTime.split(':').slice(0, 2).join(':'));
+                    if (updates) {
+                      handleUpdateAvailability(avail.id, { startTime: updates });
+                    }
+                  }}
+                  className="p-2 text-gray-600 hover:bg-white rounded-lg transition-colors"
+                >
+                  <Edit className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={() => handleDeleteAvailability(avail.id)}
+                  className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                >
+                  <Trash2 className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Date-Specific Availability */}
+      <div>
+        <h4 className="text-lg font-semibold text-gray-900 mb-4">Date-Specific Availability</h4>
+        <form onSubmit={handleCreateDateSpecificAvailability} className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Date</label>
+            <input
+              type="date"
+              value={newDateSpecificAvailability.specificDate}
+              onChange={(e) => setNewDateSpecificAvailability({ ...newDateSpecificAvailability, specificDate: e.target.value })}
+              className="w-full border border-gray-300 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              min={dayjs().format("YYYY-MM-DD")}
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Start Time</label>
+            <input
+              type="time"
+              value={newDateSpecificAvailability.startTime}
+              onChange={(e) => setNewDateSpecificAvailability({ ...newDateSpecificAvailability, startTime: e.target.value })}
+              className="w-full border border-gray-300 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">End Time</label>
+            <input
+              type="time"
+              value={newDateSpecificAvailability.endTime}
+              onChange={(e) => setNewDateSpecificAvailability({ ...newDateSpecificAvailability, endTime: e.target.value })}
+              className="w-full border border-gray-300 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Slot Duration (min)</label>
+            <input
+              type="number"
+              value={newDateSpecificAvailability.slotDurationMinutes}
+              onChange={(e) => setNewDateSpecificAvailability({ ...newDateSpecificAvailability, slotDurationMinutes: parseInt(e.target.value) })}
+              className="w-full border border-gray-300 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              min="15"
+              step="15"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Availability</label>
+            <select
+              value={newDateSpecificAvailability.type}
+              onChange={(e) => setNewDateSpecificAvailability({ ...newDateSpecificAvailability, type: e.target.value, reason: e.target.value === "UNAVAILABLE" ? newDateSpecificAvailability.reason : "" })}
+              className="w-full border border-gray-300 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            >
+              <option value="AVAILABLE">Available</option>
+              <option value="UNAVAILABLE">Unavailable</option>
+            </select>
+          </div>
+          {newDateSpecificAvailability.type === "UNAVAILABLE" && (
+            <div className="md:col-span-5">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Reason for Unavailability</label>
+              <input
+                type="text"
+                value={newDateSpecificAvailability.reason}
+                onChange={(e) => setNewDateSpecificAvailability({ ...newDateSpecificAvailability, reason: e.target.value })}
+                className="w-full border border-gray-300 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Enter reason for unavailability"
+                required
+              />
+            </div>
+          )}
+          <div className="md:col-span-5">
+            <button
+              type="submit"
+              className="w-full md:w-auto bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-all duration-200"
+            >
+              Add Date-Specific Availability
+            </button>
+          </div>
+        </form>
+
+        <div className="space-y-4">
+          {dateSpecificAvailability.map((avail) => (
+            <div key={avail.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200">
+              <div>
+                <p className="font-medium text-gray-900">{dayjs(avail.date).format("MMMM D, YYYY")}</p>
+                <p className="text-sm text-gray-600">
+                  {avail.startTime} - {avail.endTime} ({avail.slotDurationMinutes} min slots)
+                </p>
+                <p className={`text-sm ${avail.type === "AVAILABLE" ? "text-green-600" : "text-red-600"}`}>
+                  {avail.type === "AVAILABLE" ? "Available" : `Unavailable${avail.reason ? `: ${avail.reason}` : ""}`}
+                </p>
+              </div>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => {
+                    const newType = avail.type === "AVAILABLE" ? "UNAVAILABLE" : "AVAILABLE";
+                    const reason = newType === "UNAVAILABLE" ? prompt("Enter reason for unavailability:") || "" : "";
+                    if (newType === "UNAVAILABLE" && !reason.trim()) {
+                      toast.error("Reason is required when setting availability to Unavailable");
+                      return;
+                    }
+                    handleUpdateDateSpecificAvailability(avail.id, { type: newType, reason });
+                  }}
+                  className="p-2 text-gray-600 hover:bg-white rounded-lg transition-colors"
+                >
+                  {avail.type === "AVAILABLE" ? <XCircle className="w-5 h-5 text-red-600" /> : <CheckCircle className="w-5 h-5 text-green-600" />}
+                </button>
+                <button
+                  onClick={() => {
+                    const updates = prompt("Enter new start time (HH:mm):", avail.startTime.split(':').slice(0, 2).join(':'));
+                    if (updates) {
+                      handleUpdateDateSpecificAvailability(avail.id, { startTime: updates });
+                    }
+                  }}
+                  className="p-2 text-gray-600 hover:bg-white rounded-lg transition-colors"
+                >
+                  <Edit className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={() => handleDeleteDateSpecificAvailability(avail.id, null)}
+                  className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                >
+                  <Trash2 className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  const SettingsTab = () => (
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+      <h3 className="text-xl font-semibold text-gray-900 mb-6">Counselor Settings</h3>
+      <form onSubmit={handleUpdateSettings} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Max Booking Days</label>
+          <input
+            type="number"
+            value={settingsForm.maxBookingDays}
+            onChange={(e) => setSettingsForm({ ...settingsForm, maxBookingDays: parseInt(e.target.value) })}
+            className="w-full border border-gray-300 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            min="1"
+            max="365"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Default Slot Duration (min)</label>
+          <input
+            type="number"
+            value={settingsForm.defaultSlotDurationMinutes}
+            onChange={(e) => setSettingsForm({ ...settingsForm, defaultSlotDurationMinutes: parseInt(e.target.value) })}
+            className="w-full border border-gray-300 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            min="15"
+            step="15"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Buffer Time (min)</label>
+          <input
+            type="number"
+            value={settingsForm.bufferTimeMinutes}
+            onChange={(e) => setSettingsForm({ ...settingsForm, bufferTimeMinutes: parseInt(e.target.value) })}
+            className="w-full border border-gray-300 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            min="0"
+            step="5"
+          />
+        </div>
+        <div className="flex items-center space-x-3">
+          <input
+            type="checkbox"
+            checked={settingsForm.autoAcceptAppointments}
+            onChange={(e) => setSettingsForm({ ...settingsForm, autoAcceptAppointments: e.target.checked })}
+            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+          />
+          <label className="text-sm font-medium text-gray-700">Auto-Accept Appointments</label>
+        </div>
+        <div className="flex items-center space-x-3">
+          <input
+            type="checkbox"
+            checked={settingsForm.requireApproval}
+            onChange={(e) => setSettingsForm({ ...settingsForm, requireApproval: e.target.checked })}
+            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+          />
+          <label className="text-sm font-medium text-gray-700">Require Approval</label>
+        </div>
+        <div className="md:col-span-2">
+          <button
+            type="submit"
+            className="w-full md:w-auto bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-all duration-200"
+          >
+            Save Settings
+          </button>
+        </div>
+      </form>
+    </div>
+  );
 
   if (loading) {
     return (
@@ -687,7 +873,6 @@ const CounselorDashboardPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Enhanced Header */}
         <div className="mb-8">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
             <div className="flex items-center space-x-4">
@@ -710,77 +895,103 @@ const CounselorDashboardPage = () => {
                 disabled={refreshing}
                 className="flex items-center space-x-2 px-4 py-2.5 text-gray-600 hover:text-gray-900 hover:bg-white rounded-xl transition-all duration-200 border border-gray-200"
               >
-                <RefreshCw
-                  className={`w-5 h-5 ${refreshing ? "animate-spin" : ""}`}
-                />
+                <RefreshCw className={`w-5 h-5 ${refreshing ? "animate-spin" : ""}`} />
                 <span className="hidden sm:inline">Refresh</span>
-              </button>
-
-              <button className="relative flex items-center space-x-2 px-4 py-2.5 text-gray-600 hover:text-gray-900 hover:bg-white rounded-xl transition-all duration-200 border border-gray-200">
-                <Bell className="w-5 h-5" />
-                <span className="hidden sm:inline">Notifications</span>
-                {stats.pendingApproval > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-xs text-white font-bold">
-                    {stats.pendingApproval}
-                  </span>
-                )}
               </button>
             </div>
           </div>
         </div>
 
-        {/* Enhanced Tab Navigation */}
         <div className="mb-8">
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-2">
             <div className="flex flex-wrap gap-2">
-              <TabButton tab="dashboard" label="Dashboard" icon={BarChart3} />
-              <TabButton
-                tab="appointments"
-                label="Appointments"
-                icon={Calendar}
-                count={stats.pendingApproval}
-              />
+              <TabButton tab="dashboard" label="Dashboard" icon={Calendar} />
+              <TabButton tab="appointments" label="Appointments" icon={Calendar} count={stats.pendingApproval} />
               <TabButton tab="availability" label="Availability" icon={Clock} />
               <TabButton tab="settings" label="Settings" icon={Settings} />
-              <TabButton tab="analytics" label="Analytics" icon={TrendingUp} />
             </div>
           </div>
         </div>
 
-        {/* Tab Content */}
         {activeTab === "dashboard" && <DashboardOverview />}
-        {activeTab === "appointments" && <AppointmentsTab />}
-        {activeTab === "availability" && (
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 text-center">
-            <Clock className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              Availability Management
-            </h3>
-            <p className="text-gray-600">
-              Availability management interface would go here
-            </p>
+        {activeTab === "appointments" && (
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+            <h3 className="text-xl font-semibold text-gray-900 mb-6">Appointments</h3>
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+              <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={() => setActiveFilter("all")}
+                  className={`px-4 py-2.5 rounded-xl text-sm font-medium ${
+                    activeFilter === "all"
+                      ? "bg-blue-600 text-white"
+                      : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200"
+                  }`}
+                >
+                  All
+                </button>
+                <button
+                  onClick={() => setActiveFilter("today")}
+                  className={`px-4 py-2.5 rounded-xl text-sm font-medium ${
+                    activeFilter === "today"
+                      ? "bg-blue-600 text-white"
+                      : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200"
+                  }`}
+                >
+                  Today
+                </button>
+                <button
+                  onClick={() => setActiveFilter("upcoming")}
+                  className={`px-4 py-2.5 rounded-xl text-sm font-medium ${
+                    activeFilter === "upcoming"
+                      ? "bg-blue-600 text-white"
+                      : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200"
+                  }`}
+                >
+                  Upcoming
+                </button>
+                <button
+                  onClick={() => setActiveFilter("pending")}
+                  className={`px-4 py-2.5 rounded-xl text-sm font-medium ${
+                    activeFilter === "pending"
+                      ? "bg-blue-600 text-white"
+                      : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200"
+                  }`}
+                >
+                  Pending
+                </button>
+              </div>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search appointments..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full md:w-64"
+                />
+              </div>
+            </div>
+            <div className="space-y-4">
+              {filteredAppointments.length === 0 ? (
+                <div className="text-center py-8">
+                  <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500">No appointments found</p>
+                </div>
+              ) : (
+                filteredAppointments.map((appointment) => (
+                  <AppointmentCard
+                    key={appointment.id}
+                    appointment={appointment}
+                    userRole="COUNSELOR"
+                    onStatusUpdate={handleStatusUpdate}
+                  />
+                ))
+              )}
+            </div>
           </div>
         )}
-        {activeTab === "settings" && (
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 text-center">
-            <Settings className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              Counselor Settings
-            </h3>
-            <p className="text-gray-600">
-              Settings management interface would go here
-            </p>
-          </div>
-        )}
-        {activeTab === "analytics" && (
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 text-center">
-            <BarChart3 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              Analytics & Reports
-            </h3>
-            <p className="text-gray-600">Analytics dashboard would go here</p>
-          </div>
-        )}
+        {activeTab === "availability" && <AvailabilityTab />}
+        {activeTab === "settings" && <SettingsTab />}
       </div>
 
       <ToastContainer

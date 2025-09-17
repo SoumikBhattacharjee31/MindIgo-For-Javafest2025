@@ -3,12 +3,21 @@ package com.mindigo.appointment_service.service;
 import com.mindigo.appointment_service.dto.request.*;
 import com.mindigo.appointment_service.dto.response.*;
 import com.mindigo.appointment_service.entity.*;
+import com.mindigo.appointment_service.exception.InvalidEmailException;
+import com.mindigo.appointment_service.exception.MailServerException;
 import com.mindigo.appointment_service.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.MailAuthenticationException;
+import org.springframework.mail.MailException;
+import org.springframework.mail.MailSendException;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
@@ -31,6 +40,10 @@ public class AppointmentService {
     private final CounselorAvailabilityRepository availabilityRepository;
     private final CounselorSettingsRepository settingsRepository;
     private final RestTemplate restTemplate;
+    @Autowired
+    private JavaMailSender mailSender;
+    @Value("${spring.mail.username}")
+    private String sender;
 
     @Transactional
     public AppointmentResponse createAppointment(CreateAppointmentRequest request, Long clientId, String clientEmail) {
@@ -307,20 +320,65 @@ public class AppointmentService {
                 .build();
     }
 
+    private boolean isValidEmailFormat(String email) {
+        String emailRegex = "^[A-Za-z0-9+_.-]+@(.+)$";
+        return email != null && email.matches(emailRegex);
+    }
+
+    private void validateRequest(MailSendRequest request) {
+        if (request.getReceiver() == null || request.getReceiver().trim().isEmpty()) {
+            throw new InvalidEmailException("Receiver email cannot be empty");
+        }
+        if (!isValidEmailFormat(request.getReceiver())) {
+            throw new InvalidEmailException("Invalid receiver email format: " + request.getReceiver());
+        }
+        if (request.getSubject() == null || request.getSubject().trim().isEmpty()) {
+            throw new InvalidEmailException("Subject cannot be empty");
+        }
+        if (request.getBody() == null || request.getBody().trim().isEmpty()) {
+            throw new InvalidEmailException("Email body cannot be empty");
+        }
+    }
+
     private void sendAppointmentNotification(Appointment appointment, String action) {
+//        try {
+//            String mailServiceUrl = "http://MAIL-SERVICE/api/v1/mail/send-mail";
+//
+//            // Create mail request (you'll need to define this DTO)
+//            Map<String, Object> mailRequest = Map.of(
+//                    "to", List.of(appointment.getClientEmail(), appointment.getCounselorEmail()),
+//                    "subject", "Appointment " + action,
+//                    "body", buildEmailBody(appointment, action)
+//            );
+//
+//            restTemplate.postForEntity(mailServiceUrl, mailRequest, Object.class);
+//        } catch (Exception e) {
+//            log.error("Error sending appointment notification: {}", e.getMessage());
+//        }
         try {
-            String mailServiceUrl = "http://MAIL-SERVICE/api/v1/mail/send-mail";
 
-            // Create mail request (you'll need to define this DTO)
-            Map<String, Object> mailRequest = Map.of(
-                    "to", List.of(appointment.getClientEmail(), appointment.getCounselorEmail()),
-                    "subject", "Appointment " + action,
-                    "body", buildEmailBody(appointment, action)
-            );
+//            MailSendRequest mailRequest = new MailSendRequest(receiver, subject, body);
+//            String mailServiceUrl = "http://MAIL-SERVICE/api/v1/mail/send-mail"; // Adjust to your mail-service URL
+//            ResponseEntity<MailSendResponse> mailResponse = restTemplate.postForEntity(mailServiceUrl, mailRequest, MailSendResponse.class);
 
-            restTemplate.postForEntity(mailServiceUrl, mailRequest, Object.class);
+            MailSendRequest mailRequest = new MailSendRequest(appointment.getClientEmail(), "Appointment " + action, buildEmailBody(appointment, action));
+
+            validateRequest(mailRequest);
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(sender);
+            message.setTo(mailRequest.getReceiver());
+            message.setSubject(mailRequest.getSubject());
+            message.setText(mailRequest.getBody());
+            mailSender.send(message);
+
+        } catch (MailAuthenticationException e) {
+            throw new MailServerException("Authentication failed: Invalid mail server credentials");
+        } catch (MailSendException e) {
+            throw new MailServerException("Failed to send email: " + e.getMessage());
+        } catch (MailException e) {
+            throw new MailServerException("Mail server error: " + e.getMessage());
         } catch (Exception e) {
-            log.error("Error sending appointment notification: {}", e.getMessage());
+            throw new RuntimeException("Failed to send mail: Unexpected error occurred" + e.getMessage());
         }
     }
 

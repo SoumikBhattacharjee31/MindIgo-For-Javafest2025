@@ -111,11 +111,12 @@ export const appointmentServiceApi = {
 
   // Date-specific availability APIs
   createDateSpecificAvailability: (dateSpecificData: {
-    date: string;
+    specificDate: string;
     startTime: string;
     endTime: string;
     slotDurationMinutes: number;
-    isAvailable?: boolean;
+    type: string;
+    reason: string;
   }) =>
     axios.post(
       `${API_BASE_URL}/appointments/availability/date-specific`,
