@@ -7,6 +7,7 @@ import com.mindigo.admin_service.dto.request.CounselorApplicationCreateRequest;
 import com.mindigo.admin_service.dto.request.CounselorApplicationStatusUpdateRequest;
 import com.mindigo.admin_service.dto.response.AdminDashboardResponse;
 import com.mindigo.admin_service.dto.response.CounselorApplicationDto;
+import com.mindigo.admin_service.dto.response.UserStatsResponse;
 import com.mindigo.admin_service.entity.*;
 import com.mindigo.admin_service.repository.AdminAuditLogRepository;
 import com.mindigo.admin_service.repository.CounselorApplicationRepository;
@@ -39,14 +40,34 @@ public class AdminService {
     public AdminDashboardResponse getDashboardStats() {
         LocalDateTime sevenDaysAgo = LocalDateTime.now().minusDays(7);
 
-        return AdminDashboardResponse.builder()
+        // 1. Fetch user stats from the auth-service
+        UserStatsResponse userStats;
+        try {
+            userStats = authServiceClient.getUserStats();
+        } catch (Exception e) {
+            // If the auth-service call fails, log the error and default to zero values
+            log.error("Could not fetch user stats from auth-service. Dashboard stats will be incomplete.", e);
+            userStats = new UserStatsResponse(); // Provides 0s instead of nulls
+        }
+        System.out.println(1);
+        System.out.println(userStats);
+        System.out.println(2);
+
+        // 2. Build the complete dashboard response, combining local and remote data
+        AdminDashboardResponse adminDashboardResponse = AdminDashboardResponse.builder()
+                // Data from local admin-service repository
                 .totalApplications(applicationRepository.count())
                 .pendingApplications(applicationRepository.countByStatus(CounselorApplicationStatus.PENDING))
                 .approvedApplications(applicationRepository.countByStatus(CounselorApplicationStatus.APPROVED))
                 .rejectedApplications(applicationRepository.countByStatus(CounselorApplicationStatus.REJECTED))
                 .recentApplications(applicationRepository.countRecentApplications(sevenDaysAgo))
-                // Note: totalUsers, totalCounselors, activeUsers would come from Auth Service
+                // Data from remote auth-service
+                .totalUsers(userStats.getTotalUsers())
+                .totalCounselors(userStats.getTotalCounselors())
+                .activeUsers(userStats.getTotalActiveUsers())
                 .build();
+        System.out.println(adminDashboardResponse);
+        return adminDashboardResponse;
     }
 
     public Page<CounselorApplicationDto> getAllApplications(Pageable pageable) {

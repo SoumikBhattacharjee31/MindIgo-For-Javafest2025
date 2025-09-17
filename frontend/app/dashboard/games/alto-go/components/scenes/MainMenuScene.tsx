@@ -271,7 +271,7 @@ export class MainMenuScene extends Scene {
         y: height / 2 + 230,
         color: "#F44336",
         hoverColor: "#D32F2F",
-        action: () => { window.location.href = '/games'; }
+        action: () => { window.location.href = '/dashboard/games'; }
       }
     ];
 

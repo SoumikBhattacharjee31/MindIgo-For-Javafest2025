@@ -9,7 +9,6 @@ const AdminSidebar = () => {
   const menuItems = [
     { name: "Dashboard", href: "/admin/dashboard", icon: "📊" },
     { name: "Applications", href: "/admin/applications", icon: "📋" },
-    { name: "Create Doctor", href: "/admin/create-doctor", icon: "➕" },
   ];
 
   return (

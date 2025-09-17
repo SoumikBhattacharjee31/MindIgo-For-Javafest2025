@@ -333,4 +333,16 @@ public class AuthController {
                 .message("Approved counselors retrieved successfully")
                 .build());
     }
+
+    @GetMapping("/stats")
+    @Operation(summary = "Get user statistics (total users, counselors, active users)")
+    @ApiResponse(responseCode = "200", description = "Statistics retrieved successfully")
+    public ResponseEntity<ApiResponseClass<UserStatsResponse>> getUserStatistics() {
+        UserStatsResponse stats = authenticationService.getUserStats();
+        return ResponseEntity.ok(ApiResponseClass.<UserStatsResponse>builder()
+                .success(true)
+                .data(stats)
+                .message("User statistics retrieved successfully")
+                .build());
+    }
 }

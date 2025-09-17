@@ -10,10 +10,10 @@ import {
   ApiResponse,
   Page,
   COMMENT_SORT_TYPES,
-} from "../../../api/discussionService";
-import PostCard from "../../../components/discussion/PostCard";
-import CommentSection from "../../../components/discussion/CommentSection";
-import CommentForm from "../../../components/discussion/CommentForm";
+} from "../../../../api/discussionService";
+import PostCard from "../../../../components/discussion/PostCard";
+import CommentSection from "../../../../components/discussion/CommentSection";
+import CommentForm from "../../../../components/discussion/CommentForm";
 
 const PostDetailPage = () => {
   const router = useRouter();
@@ -46,12 +46,12 @@ const PostDetailPage = () => {
         setPost(apiResponse.data);
       } else {
         toast.error(apiResponse.message);
-        router.push("/discussion");
+        router.push("/dashboard/discussion");
       }
     } catch (error) {
       console.error("Error fetching post:", error);
       toast.error("Failed to fetch post");
-      router.push("/discussion");
+      router.push("/dashboard/discussion");
     } finally {
       setLoading(false);
     }
@@ -99,7 +99,7 @@ const PostDetailPage = () => {
 
   const handlePostDeleted = () => {
     toast.success("Post deleted successfully!");
-    router.push("/discussion");
+    router.push("/dashboard/discussion");
   };
 
   const handlePostUpdated = (updatedPost: PostResponse) => {
@@ -187,7 +187,7 @@ const PostDetailPage = () => {
             Post not found
           </h2>
           <button
-            onClick={() => router.push("/discussion")}
+            onClick={() => router.push("/dashboard/discussion")}
             className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg"
           >
             Back to Discussion
@@ -204,7 +204,7 @@ const PostDetailPage = () => {
           {/* Back Button */}
           <div className="mb-6">
             <button
-              onClick={() => router.push("/discussion")}
+              onClick={() => router.push("/dashboard/discussion")}
               className="flex items-center text-gray-600 hover:text-gray-900 transition-colors"
             >
               <svg

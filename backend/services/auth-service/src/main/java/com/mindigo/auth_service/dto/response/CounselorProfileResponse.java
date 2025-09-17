@@ -1,7 +1,7 @@
-// UserProfileResponse.java
 package com.mindigo.auth_service.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.mindigo.auth_service.entity.Counselor;
 import com.mindigo.auth_service.entity.CounselorStatus;
 import com.mindigo.auth_service.entity.User;
 import lombok.AllArgsConstructor;
@@ -13,6 +13,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Data
 @Builder
@@ -30,44 +31,60 @@ public class CounselorProfileResponse {
     private String profileImageUrl;
     private LocalDateTime createdAt;
     private LocalDateTime lastLoginAt;
+
+    // Counselor-specific fields
     private String licenseNumber;
-    private String speciality;
+    private String specialization; // Renamed from speciality for consistency
     private String verificationDocumentUrl;
-    private CounselorStatus counselorStatus = CounselorStatus.PENDING_VERIFICATION;
+    private CounselorStatus counselorStatus;
     private Long adminVerifiedBy;
     private LocalDateTime adminVerifiedAt;
     private String verificationNotes;
-    private Double ratings;
-    private Boolean accepts_insurance;
+    private Boolean acceptsInsurance; // Renamed for consistency
+    private Double ratings; // This seems to be hardcoded, which is fine for now
 
     public static CounselorProfileResponse fromUser(User user) {
-        return CounselorProfileResponse.builder()
+        if (user == null) {
+            return null;
+        }
+
+        // ✅ Get the counselor details from the nested object
+        Counselor counselorDetails = user.getCounselorDetails();
+
+        CounselorProfileResponseBuilder builder = CounselorProfileResponse.builder()
                 .id(user.getId())
                 .name(user.getName())
                 .email(user.getEmail())
                 .role(user.getRole().name())
                 .dateOfBirth(user.getDateOfBirth())
-                .gender(String.valueOf(user.getGender()))
+                .gender(user.getGender() != null ? user.getGender().name() : null)
                 .isEmailVerified(user.getIsEmailVerified())
                 .profileImageUrl(user.getProfileImageUrl())
                 .createdAt(user.getCreatedAt())
                 .lastLoginAt(user.getLastLoginAt())
-                .licenseNumber(user.getLicenseNumber())
-                .speciality(user.getSpecialization())
-                .verificationDocumentUrl(user.getVerificationDocumentUrl())
-                .counselorStatus(user.getCounselorStatus())
-                .adminVerifiedBy(user.getAdminVerifiedBy())
-                .adminVerifiedAt(user.getAdminVerifiedAt())
-                .verificationNotes(user.getVerificationNotes())
-                .ratings(5.0)
-                .accepts_insurance(true)
-                .build();
+                .ratings(user.getCounselorDetails().getAverageRating()); // Example value
+
+        // ✅ Populate counselor-specific fields ONLY if counselorDetails exists
+        if (counselorDetails != null) {
+            builder.licenseNumber(counselorDetails.getLicenseNumber())
+                    .specialization(counselorDetails.getSpecialization())
+                    .verificationDocumentUrl(counselorDetails.getVerificationDocumentUrl())
+                    .counselorStatus(counselorDetails.getCounselorStatus())
+                    .adminVerifiedBy(counselorDetails.getAdminVerifiedBy())
+                    .adminVerifiedAt(counselorDetails.getAdminVerifiedAt())
+                    .verificationNotes(counselorDetails.getVerificationNotes())
+                    .acceptsInsurance(counselorDetails.getAcceptsInsurance());
+        }
+
+        return builder.build();
     }
 
     public static List<CounselorProfileResponse> fromUsers(List<User> users) {
-        List<CounselorProfileResponse> counselors = new ArrayList<>();
-        for(User user: users)
-                counselors.add(fromUser(user));
-        return counselors;
+        if (users == null) {
+            return new ArrayList<>();
+        }
+        return users.stream()
+                .map(CounselorProfileResponse::fromUser)
+                .collect(Collectors.toList());
     }
 }

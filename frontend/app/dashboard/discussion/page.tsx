@@ -10,10 +10,10 @@ import {
   Page,
   POST_CATEGORIES,
   USER_ROLES,
-} from "../api/discussionService";
-import PostCard from "../components/discussion/PostCard";
-import CreatePostModal from "../components/discussion/CreatePostModal";
-import FilterSidebar from "../components/discussion/FilterSidebar";
+} from "../../api/discussionService";
+import PostCard from "../../components/discussion/PostCard";
+import CreatePostModal from "../../components/discussion/CreatePostModal";
+import FilterSidebar from "../../components/discussion/FilterSidebar";
 
 const DiscussionPage = () => {
   const router = useRouter();
@@ -173,7 +173,7 @@ const DiscussionPage = () => {
                       onDelete={handlePostDeleted}
                       onUpdate={handlePostUpdated}
                       onClick={() =>
-                        router.push(`/discussion/posts/${post.id}`)
+                        router.push(`/dashboard/discussion/posts/${post.id}`)
                       }
                     />
                   ))}

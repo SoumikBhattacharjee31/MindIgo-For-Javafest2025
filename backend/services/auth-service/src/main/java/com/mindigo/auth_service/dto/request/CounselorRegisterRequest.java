@@ -66,4 +66,6 @@ public class CounselorRegisterRequest {
 
     @Size(max = 1000, message = "Bio must not exceed 1000 characters", groups = AuthValidationGroups.CounselorRegistration.class)
     private String bio;
+
+    private Boolean acceptsInsurance = false;
 }

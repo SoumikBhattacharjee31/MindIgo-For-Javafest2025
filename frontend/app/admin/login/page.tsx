@@ -2,8 +2,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
-import { successToast, errorToast } from '../../../util/toastHelper';
-import { setCookie } from 'cookies-next';
+import { successToast, errorToast, warningToast } from '../../../util/toastHelper';
 
 const AdminLogin = () => {
   const [email, setEmail] = useState('');
@@ -13,25 +12,64 @@ const AdminLogin = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
 
+    // Validate inputs
+    if (!email || !password) {
+      warningToast('Please fill in all fields');
+      return;
+    }
+
+    setLoading(true);
     try {
-      const res = await axios.post('http://localhost:8080/api/v1/auth/login', {
+      const response = await axios.post('http://localhost:8080/api/v1/auth/login', {
         email,
         password,
       }, {
         withCredentials: true,
       });
-      
 
-      if (res.data.success) {
-        const { token } = res.data.data;
-        setCookie('authToken', token, { maxAge: 60 * 60 * 24 });
-        successToast('Logged in successfully');
-        router.push('/admin/dashboard');
+      if (response.data.success) {
+        const userRole = response.data.data.user.role;
+
+        // Check if the user is an admin
+        if (userRole === 'ADMIN') {
+          successToast('Logged in successfully');
+          router.push('/admin/dashboard');
+        } else {
+          // Prevent non-admins from accessing the admin panel
+          errorToast('Access denied. Not an admin account.');
+        }
+      } else {
+        errorToast(response.data.message || 'Login failed');
       }
-    } catch (err) {
-      errorToast('Invalid credentials or server error');
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 401) {
+          errorToast('Invalid email or password');
+        } else if (error.response?.status === 403) {
+          const { message, errorCode } = error.response.data;
+          if (errorCode === 'COUNSELOR_PENDING_APPROVAL' || message.includes('pending admin approval')) {
+            errorToast('Your counselor account is pending admin approval');
+            router.push("/counselor-status");
+          } else if (errorCode === 'EMAIL_NOT_VERIFIED' || message.includes('Email not verified')) {
+            errorToast('Please verify your email before logging in');
+            router.push("/sign-up-verification");
+          } else if (errorCode === 'COUNSELOR_REJECTED' || message.includes('rejected')) {
+            errorToast('Your counselor account has been rejected. Please contact support.');
+          } else if (errorCode === 'COUNSELOR_SUSPENDED' || message.includes('suspended')) {
+            errorToast('Your counselor account has been suspended. Please contact support.');
+          } else {
+            errorToast(message || 'Account access denied');
+          }
+        } else if (error.response?.status === 429) {
+          errorToast('Too many login attempts. Please try again later.');
+        } else {
+          errorToast('Login failed. Please try again.');
+        }
+      } else {
+        errorToast('Network error. Please check your connection.');
+      }
+      console.error('Login error:', error);
     } finally {
       setLoading(false);
     }
