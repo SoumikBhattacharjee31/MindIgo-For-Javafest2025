@@ -74,7 +74,7 @@ function generateMockBeatmap(bpm: number, duration: number) {
 }
 
 class EnhancedRhythmScene extends Phaser.Scene {
-  music!: Phaser.Sound.BaseSound;
+  music!: Phaser.Sound.WebAudioSound | Phaser.Sound.HTML5AudioSound | any;
   spawnedIdx = 0;
   hitLineY = 450; // MODIFIED: Adjusted hit line Y-position for the new smaller height
   spawnY = -120;
@@ -84,7 +84,7 @@ class EnhancedRhythmScene extends Phaser.Scene {
   leadTime = this.travelTime + 0.2;
   beatmap: { time: number; lane: number; type?: string }[] = [];
   notes: any[] = [];
-  particles!: Phaser.GameObjects.Particles.ParticleEmitterManager;
+  particles!: Phaser.GameObjects.Particles.ParticleEmitter;
   paused = false;
   hitKeys = ["A", "S", "D", "F"];
   gameEnded = false;

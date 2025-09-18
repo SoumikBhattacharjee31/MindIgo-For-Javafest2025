@@ -29,7 +29,7 @@ export default class RhythmScene extends Phaser.Scene {
       },
     });
 
-    this.input.keyboard.on("keydown", (event: KeyboardEvent) => {
+    if(this.input.keyboard) this.input.keyboard.on("keydown", (event: KeyboardEvent) => {
       const lane = this.hitKeys.indexOf(event.key.toUpperCase());
       if (lane !== -1) {
         this.checkHit(lane);

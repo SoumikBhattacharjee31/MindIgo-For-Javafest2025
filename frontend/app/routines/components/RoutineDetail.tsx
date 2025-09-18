@@ -64,8 +64,14 @@ const RoutineDetail: React.FC<RoutineDetailProps> = ({
 
   const calculateTotalDuration = () => {
     const totalMinutes = routine.activities.reduce((sum, activity) => {
-      const startMinutes = activity.startTime.split(':').reduce((h, m) => parseInt(h) * 60 + parseInt(m));
-      const endMinutes = activity.endTime.split(':').reduce((h, m) => parseInt(h) * 60 + parseInt(m));
+      // Parse start time: convert "HH:MM" to total minutes
+      const [startHours, startMins] = activity.startTime.split(':').map(str => parseInt(str));
+      const startMinutes = startHours * 60 + startMins;
+      
+      // Parse end time: convert "HH:MM" to total minutes
+      const [endHours, endMins] = activity.endTime.split(':').map(str => parseInt(str));
+      const endMinutes = endHours * 60 + endMins;
+      
       return sum + (endMinutes - startMinutes);
     }, 0);
 
@@ -221,8 +227,12 @@ const RoutineDetail: React.FC<RoutineDetailProps> = ({
                             <span className="mx-2">•</span>
                             <span>
                               Duration: {(() => {
-                                const startMinutes = activity.startTime.split(':').reduce((h, m) => parseInt(h) * 60 + parseInt(m));
-                                const endMinutes = activity.endTime.split(':').reduce((h, m) => parseInt(h) * 60 + parseInt(m));
+                                const [startHours, startMins] = activity.startTime.split(':').map(str => parseInt(str));
+                                const startMinutes = startHours * 60 + startMins;
+                                
+                                const [endHours, endMins] = activity.endTime.split(':').map(str => parseInt(str));
+                                const endMinutes = endHours * 60 + endMins;
+                                
                                 const duration = endMinutes - startMinutes;
                                 const hours = Math.floor(duration / 60);
                                 const minutes = duration % 60;
