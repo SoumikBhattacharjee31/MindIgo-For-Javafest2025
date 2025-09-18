@@ -11,7 +11,7 @@ spring:
             - id: auth-service
               uri: lb://auth-service
               predicates:
-                - Path=/api/v1/auth/**
+                - Path=/api/v1/auth/**,/api/v1/admin/**
               filters:
                 - name: JwtAuth
             - id: assessment-service
@@ -46,12 +46,6 @@ spring:
               uri: lb://routine-service
               predicates:
                 - Path=/api/v1/routines/**
-              filters:
-                - name: JwtAuth
-            - id: admin-service
-              uri: lb://admin-service
-              predicates:
-                - Path=/api/v1/admin/**
               filters:
                 - name: JwtAuth
             - id: ai-service
