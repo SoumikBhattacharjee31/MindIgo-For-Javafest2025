@@ -762,7 +762,7 @@ const CounselorDashboardPage = () => {
               <div className="flex space-x-2">
                 <button
                   onClick={() => {
-                    const newType = avail.type === "AVAILABLE" ? "UNAVAILABLE" : "AVAILABLE";
+                    const newType: "AVAILABLE" | "UNAVAILABLE" = avail.type === "AVAILABLE" ? "UNAVAILABLE" : "AVAILABLE";
                     const reason = newType === "UNAVAILABLE" ? prompt("Enter reason for unavailability:") : null;
 
                     if (newType === "UNAVAILABLE" && reason === null) {
