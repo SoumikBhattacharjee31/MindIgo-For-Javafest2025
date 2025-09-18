@@ -253,6 +253,41 @@ export const quizApi = {
 
     return response.data.data || [];
   },
+
+  /**
+   * Get analysis link for a completed quiz
+   */
+  getAnalysisLink: async (quizCode: string): Promise<string> => {
+    if (!quizCode?.trim()) {
+      throw new Error('Quiz code is required');
+    }
+
+    const response = await apiClient.get<ApiResponseClass<string>>(
+      `/api/v1/content/quiz/completed/${quizCode}/analysis-link`
+    );
+
+    if (!response.data.success) {
+      throw new Error(response.data.error || 'Failed to fetch analysis link');
+    }
+
+    return response.data.data || '';
+  },
+
+  /**
+   * Fetch analysis report from URL
+   */
+  getAnalysisReport: async (analysisUrl: string): Promise<any> => {
+    if (!analysisUrl?.trim()) {
+      throw new Error('Analysis URL is required');
+    }
+
+    try {
+      const response = await axios.get(analysisUrl);
+      return response.data;
+    } catch (error) {
+      throw new Error('Failed to fetch analysis report');
+    }
+  },
 };
 
 // ============ UTILITY FUNCTIONS ============
