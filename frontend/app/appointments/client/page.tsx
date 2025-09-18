@@ -1,4 +1,3 @@
-// app/appointments/client/page.tsx
 "use client";
 import React, { useState, useEffect } from "react";
 import {
@@ -7,19 +6,11 @@ import {
   Clock,
   Filter,
   Search,
-  Bell,
-  TrendingUp,
+  RefreshCw,
   CheckCircle,
   AlertCircle,
-  XCircle,
-  MapPin,
-  Star,
   Loader2,
   ChevronDown,
-  RefreshCw,
-  Download,
-  Eye,
-  MessageSquare,
 } from "lucide-react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -50,13 +41,11 @@ const ClientAppointmentsPage = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
-  // Statistics
   const [stats, setStats] = useState({
     total: 0,
     upcoming: 0,
     completed: 0,
     pending: 0,
-    cancelled: 0,
     thisMonth: 0,
     nextWeek: 0,
   });
@@ -85,7 +74,6 @@ const ClientAppointmentsPage = () => {
       const response = await appointmentServiceApi.getMyAppointments();
       if (response.data.success) {
         const appointmentData = response.data.data || [];
-        console.log(appointmentData);
         setAppointments(appointmentData);
         calculateStats(appointmentData);
       }
@@ -123,9 +111,6 @@ const ClientAppointmentsPage = () => {
       completed: appointmentData.filter((apt) => apt.status === "COMPLETED")
         .length,
       pending: appointmentData.filter((apt) => apt.status === "PENDING").length,
-      cancelled: appointmentData.filter((apt) =>
-        ["CANCELLED", "REJECTED"].includes(apt.status)
-      ).length,
       thisMonth: appointmentData.filter((apt) =>
         dayjs(apt.startTime).isBetween(startOfMonth, endOfMonth, null, "[]")
       ).length,
@@ -141,7 +126,6 @@ const ClientAppointmentsPage = () => {
   const filterAppointments = () => {
     let filtered = appointments;
 
-    // Status/type filter
     if (activeFilter !== "all") {
       if (activeFilter === "upcoming") {
         filtered = filtered.filter(
@@ -166,7 +150,6 @@ const ClientAppointmentsPage = () => {
       }
     }
 
-    // Search filter
     if (searchTerm) {
       filtered = filtered.filter(
         (apt) =>
@@ -176,7 +159,6 @@ const ClientAppointmentsPage = () => {
       );
     }
 
-    // Date range filter
     if (dateRange !== "all") {
       const now = dayjs();
       if (dateRange === "week") {
@@ -194,7 +176,6 @@ const ClientAppointmentsPage = () => {
       }
     }
 
-    // Sort appointments
     filtered.sort((a, b) => {
       const aTime = dayjs(a.startTime);
       const bTime = dayjs(b.startTime);
@@ -203,15 +184,13 @@ const ClientAppointmentsPage = () => {
       const aIsUpcoming = aTime.isAfter(now);
       const bIsUpcoming = bTime.isAfter(now);
 
-      // Prioritize upcoming appointments
       if (aIsUpcoming && !bIsUpcoming) return -1;
       if (!aIsUpcoming && bIsUpcoming) return 1;
 
-      // Within same category, sort by date
       if (aIsUpcoming && bIsUpcoming) {
-        return aTime.diff(now) - bTime.diff(now); // Closest first
+        return aTime.diff(now) - bTime.diff(now);
       } else {
-        return bTime.diff(now) - aTime.diff(now); // Most recent first
+        return bTime.diff(now) - aTime.diff(now);
       }
     });
 
@@ -251,18 +230,15 @@ const ClientAppointmentsPage = () => {
   };
 
   const handleRescheduleAppointment = (appointmentId: number) => {
-    // In a real app, this would open a reschedule modal
     toast.info("Reschedule feature will be available soon");
   };
 
-  // Component for stat cards
   const StatCard = ({
     title,
     value,
     icon: Icon,
     color,
     subtitle,
-    trend,
   }: any) => (
     <div
       className={`bg-gradient-to-br ${color} rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300`}
@@ -277,22 +253,9 @@ const ClientAppointmentsPage = () => {
           <Icon className="w-6 h-6" />
         </div>
       </div>
-      {trend && (
-        <div className="mt-4 flex items-center text-sm">
-          <span
-            className={`${
-              trend.positive ? "text-green-200" : "text-red-200"
-            } flex items-center`}
-          >
-            {trend.positive ? "↗" : "↘"} {trend.value}%
-          </span>
-          <span className="text-white/60 ml-2">vs last month</span>
-        </div>
-      )}
     </div>
   );
 
-  // Component for filter buttons
   const FilterButton = ({ filter, label, count, color = "blue" }: any) => (
     <button
       onClick={() => setActiveFilter(filter)}
@@ -336,7 +299,6 @@ const ClientAppointmentsPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Enhanced Header */}
         <div className="mb-8">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
             <div className="flex items-center space-x-4">
@@ -354,28 +316,16 @@ const ClientAppointmentsPage = () => {
             </div>
 
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-3">
-                <button
-                  onClick={handleRefresh}
-                  disabled={refreshing}
-                  className="flex items-center space-x-2 px-4 py-2.5 text-gray-600 hover:text-gray-900 hover:bg-white rounded-xl transition-all duration-200 border border-gray-200"
-                >
-                  <RefreshCw
-                    className={`w-5 h-5 ${refreshing ? "animate-spin" : ""}`}
-                  />
-                  <span className="hidden sm:inline">Refresh</span>
-                </button>
-
-                <button className="relative flex items-center space-x-2 px-4 py-2.5 text-gray-600 hover:text-gray-900 hover:bg-white rounded-xl transition-all duration-200 border border-gray-200">
-                  <Bell className="w-5 h-5" />
-                  <span className="hidden sm:inline">Notifications</span>
-                  {stats.pending > 0 && (
-                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-xs text-white font-bold">
-                      {stats.pending}
-                    </span>
-                  )}
-                </button>
-              </div>
+              <button
+                onClick={handleRefresh}
+                disabled={refreshing}
+                className="flex items-center space-x-2 px-4 py-2.5 text-gray-600 hover:text-gray-900 hover:bg-white rounded-xl transition-all duration-200 border border-gray-200"
+              >
+                <RefreshCw
+                  className={`w-5 h-5 ${refreshing ? "animate-spin" : ""}`}
+                />
+                <span className="hidden sm:inline">Refresh</span>
+              </button>
 
               <button
                 onClick={() => setShowBookingModal(true)}
@@ -388,7 +338,6 @@ const ClientAppointmentsPage = () => {
           </div>
         </div>
 
-        {/* Enhanced Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <StatCard
             title="Total Sessions"
@@ -396,7 +345,6 @@ const ClientAppointmentsPage = () => {
             icon={Calendar}
             color="from-blue-500 to-blue-600"
             subtitle={`${stats.thisMonth} this month`}
-            trend={{ positive: true, value: 12 }}
           />
           <StatCard
             title="Upcoming"
@@ -404,7 +352,6 @@ const ClientAppointmentsPage = () => {
             icon={Clock}
             color="from-green-500 to-green-600"
             subtitle={`${stats.nextWeek} next week`}
-            trend={{ positive: true, value: 8 }}
           />
           <StatCard
             title="Completed"
@@ -412,7 +359,6 @@ const ClientAppointmentsPage = () => {
             icon={CheckCircle}
             color="from-purple-500 to-purple-600"
             subtitle="Sessions finished"
-            trend={{ positive: true, value: 5 }}
           />
           <StatCard
             title="Pending Approval"
@@ -423,10 +369,8 @@ const ClientAppointmentsPage = () => {
           />
         </div>
 
-        {/* Enhanced Filters Section */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-8">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-            {/* Filter Buttons */}
             <div className="flex flex-wrap gap-3">
               <FilterButton
                 filter="all"
@@ -455,7 +399,6 @@ const ClientAppointmentsPage = () => {
               <FilterButton filter="past" label="Past" color="gray" />
             </div>
 
-            {/* Search and View Controls */}
             <div className="flex items-center space-x-4">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -506,7 +449,6 @@ const ClientAppointmentsPage = () => {
             </div>
           </div>
 
-          {/* Advanced Filters */}
           {showFilters && (
             <div className="mt-6 pt-6 border-t border-gray-200">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -558,7 +500,6 @@ const ClientAppointmentsPage = () => {
           )}
         </div>
 
-        {/* Appointments Display */}
         <div className="space-y-6">
           {filteredAppointments.length === 0 ? (
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-12 text-center">
@@ -605,13 +546,12 @@ const ClientAppointmentsPage = () => {
           )}
         </div>
 
-        {/* Call-to-Action Section */}
         {appointments.length > 0 && (
           <div className="mt-16 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-3xl p-8 lg:p-12 text-white shadow-2xl">
             <div className="max-w-4xl mx-auto text-center">
               <div className="flex justify-center mb-6">
                 <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
-                  <Star className="w-8 h-8" />
+                  <CheckCircle className="w-8 h-8" />
                 </div>
               </div>
               <h3 className="text-3xl lg:text-4xl font-bold mb-4">
@@ -638,7 +578,6 @@ const ClientAppointmentsPage = () => {
         )}
       </div>
 
-      {/* Booking Modal */}
       <BookingModal
         isOpen={showBookingModal}
         onClose={() => setShowBookingModal(false)}

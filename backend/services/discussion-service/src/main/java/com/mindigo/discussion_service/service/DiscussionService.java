@@ -810,7 +810,7 @@ public class DiscussionService {
         if (roleHeader == null) {
             throw new DiscussionServiceException("User role not found in request");
         }
-        if(roleHeader.equalsIgnoreCase("ADMINISTRATOR"))
+        if(roleHeader.equalsIgnoreCase("ADMIN"))
             roleHeader="ADMIN";
         return UserRole.valueOf(roleHeader.toUpperCase());
     }

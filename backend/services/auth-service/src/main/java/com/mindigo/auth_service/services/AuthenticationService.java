@@ -4,14 +4,12 @@ import com.mindigo.auth_service.dto.request.*;
 import com.mindigo.auth_service.dto.response.*;
 import com.mindigo.auth_service.exception.*;
 import com.mindigo.auth_service.entity.*;
-import com.mindigo.auth_service.repositories.ImageService;
-import com.mindigo.auth_service.repositories.UserOTPRepository;
-import com.mindigo.auth_service.repositories.UserRepository;
-import com.mindigo.auth_service.repositories.UserTokenRepository;
+import com.mindigo.auth_service.repositories.*;
 import com.mindigo.auth_service.utils.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
+import jakarta.ws.rs.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -66,6 +64,7 @@ public class AuthenticationService {
     private final AuditLogService auditLogService;
     private final PasswordValidatorService passwordValidatorService;
     private final AdminServiceClient adminServiceClient;
+    private final CounselorRepository counselorRepository;
 
     @Transactional
     public AuthenticationResponse register(MultipartFile profileImage, RegisterRequest request, HttpServletResponse response) {
@@ -162,32 +161,39 @@ public class AuthenticationService {
                     .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password"));
 
             // Counselor check
-            if (user.getRole() == Role.COUNSELOR && !user.isCounselorApproved()) {
-                auditLogService.logSecurityEvent("LOGIN_FAILED", email,
-                        "Counselor not approved by admin", clientIp);
+            if (user.getRole() == Role.COUNSELOR) {
+                // isEnabled() method on User entity now handles this logic
+                if (!user.isEnabled()) {
+                    auditLogService.logSecurityEvent("LOGIN_FAILED", email, "Counselor not approved by admin", clientIp);
 
-                String message;
-                String errorCode;
-                switch (user.getCounselorStatus()) {
-                    case PENDING_VERIFICATION:
-                        message = "Your counselor account is pending admin approval. Please wait for verification.";
-                        errorCode = "COUNSELOR_PENDING_APPROVAL";
-                        break;
-                    case REJECTED:
-                        message = "Your counselor account has been rejected. Please contact support for more information.";
-                        errorCode = "COUNSELOR_REJECTED";
-                        break;
-                    case SUSPENDED:
-                        message = "Your counselor account has been suspended. Please contact support.";
-                        errorCode = "COUNSELOR_SUSPENDED";
-                        break;
-                    default:
-                        message = "Your counselor account is not approved for login.";
-                        errorCode = "COUNSELOR_NOT_APPROVED";
+                    String message;
+                    String errorCode;
+                    // Get status from the associated Counselor entity
+                    Counselor counselorDetails = user.getCounselorDetails();
+                    CounselorStatus status = counselorDetails != null ? counselorDetails.getCounselorStatus() : CounselorStatus.PENDING_VERIFICATION;
+
+                    switch (status) {
+                        case PENDING_VERIFICATION:
+                            message = "Your counselor account is pending admin approval. Please wait for verification.";
+                            errorCode = "COUNSELOR_PENDING_APPROVAL";
+                            break;
+                        case REJECTED:
+                            message = "Your counselor account has been rejected. Please contact support for more information.";
+                            errorCode = "COUNSELOR_REJECTED";
+                            break;
+                        case SUSPENDED:
+                            message = "Your counselor account has been suspended. Please contact support.";
+                            errorCode = "COUNSELOR_SUSPENDED";
+                            break;
+                        default:
+                            message = "Your counselor account is not approved for login.";
+                            errorCode = "COUNSELOR_NOT_APPROVED";
+                    }
+                    // We can still issue a short-lived token if needed, or just throw
+                    String accessToken = jwtService.generateAccessToken(user);
+                    cookieHelper.setSecureCookie(response, "accessToken", accessToken, accessTokenExpiry);
+                    throw new AccountNotApprovedException(message, errorCode);
                 }
-                String accessToken = jwtService.generateAccessToken(user);
-                cookieHelper.setSecureCookie(response, "accessToken", accessToken, accessTokenExpiry);
-                throw new AccountNotApprovedException(message, errorCode);
             }
 
             // Check if account is active
@@ -696,8 +702,8 @@ public class AuthenticationService {
                 throw new UserAlreadyExistsException("An account with this email already exists");
             }
 
-            // Check if license number is already registered
-            if (userRepository.existsByLicenseNumber(request.getLicenseNumber())) {
+            // ✅ Use the new CounselorRepository for this check
+            if (counselorRepository.existsByLicenseNumber(request.getLicenseNumber())) {
                 throw new BadRequestException("A counselor with this license number is already registered");
             }
 
@@ -728,30 +734,39 @@ public class AuthenticationService {
                 }
             }
 
-            // Create counselor user
-            User counselor = User.builder()
+            // ✅ Create User and Counselor objects separately
+            // 1. Create the base User
+            User user = User.builder()
                     .name(request.getName())
                     .email(request.getEmail().trim())
                     .password(passwordEncoder.encode(request.getPassword()))
                     .role(Role.COUNSELOR)
                     .dateOfBirth(request.getDateOfBirth())
                     .gender(Gender.valueOf(request.getGender().toUpperCase()))
+                    .profileImageUrl(imageUrl)
+                    .isEmailVerified(false)
+                    .isActive(true)
+                    .build();
+
+            // 2. Create the Counselor details
+            Counselor counselorDetails = Counselor.builder()
+                    .user(user) // Link back to the user
                     .licenseNumber(request.getLicenseNumber())
                     .specialization(request.getSpecialization())
                     .verificationDocumentUrl(verificationDocumentUrl)
-                    .profileImageUrl(imageUrl)
                     .counselorStatus(CounselorStatus.PENDING_VERIFICATION)
-                    .isEmailVerified(false)
-                    .isActive(true)
-                    .createdAt(LocalDateTime.now())
-                    .updatedAt(LocalDateTime.now())
+                    .acceptsInsurance(request.getAcceptsInsurance()) // Assuming this is in the request
                     .build();
 
-            counselor = userRepository.save(counselor);
+            // 3. Set the relationship on the User side
+            user.setCounselorDetails(counselorDetails);
+
+            // 4. Save the User (CascadeType.ALL will save the CounselorDetails too)
+            user = userRepository.save(user);
 
             // Generate tokens
-            String accessToken = jwtService.generateAccessToken(counselor);
-            String refreshToken = jwtService.generateRefreshToken(counselor);
+            String accessToken = jwtService.generateAccessToken(user);
+            String refreshToken = jwtService.generateRefreshToken(user);
 
             // Set secure cookies
             cookieHelper.setSecureCookie(response, "accessToken", accessToken, accessTokenExpiry);
@@ -782,15 +797,15 @@ public class AuthenticationService {
                 }
             });
 
-            auditLogService.logSecurityEvent("COUNSELOR_REGISTERED", counselor.getEmail(),
+            auditLogService.logSecurityEvent("COUNSELOR_REGISTERED", user.getEmail(),
                     "Counselor registration submitted", clientIp);
 
-            log.info("Counselor registered successfully (pending approval): {}", counselor.getEmail());
+            log.info("Counselor registered successfully (pending approval): {}", user.getEmail());
 
             return AuthenticationResponse.builder()
                     .accessToken(accessToken)
                     .refreshToken(refreshToken)
-                    .user(UserProfileResponse.fromUser(counselor))
+                    .user(UserProfileResponse.fromUser(user))
                     .tokenType("Bearer")
                     .expiresIn(accessTokenExpiry)
                     .build();
@@ -816,11 +831,18 @@ public class AuthenticationService {
             throw new BadRequestException("This endpoint is only for counselors");
         }
 
+        Counselor details = user.getCounselorDetails();
+
+        if (details == null) {
+            log.warn("Data inconsistency: User {} has COUNSELOR role but no counselor details.", user.getEmail());
+            throw new NotFoundException("Counselor details not found for this user.");
+        }
+
         return CounselorStatusResponse.builder()
-                .status(user.getCounselorStatus())
-                .verificationNotes(user.getVerificationNotes())
-                .verifiedAt(user.getAdminVerifiedAt())
-                .canLogin(user.isCounselorApproved() && user.getIsEmailVerified())
+                .status(details.getCounselorStatus())
+                .verificationNotes(details.getVerificationNotes())
+                .verifiedAt(details.getAdminVerifiedAt())
+                .canLogin(user.isEnabled()) // Use the updated isEnabled() logic
                 .build();
     }
 
@@ -833,24 +855,28 @@ public class AuthenticationService {
         log.info("Updating counselor status for email: {} to status: {}", email, request.getStatus());
 
         try {
-            User counselor = userRepository.findByEmail(email)
+            User user = userRepository.findByEmail(email)
                     .orElseThrow(() -> new UserNotFoundException("Counselor not found with email: " + email));
 
-            if (counselor.getRole() != Role.COUNSELOR) {
+            if (user.getRole() != Role.COUNSELOR) {
                 throw new BadRequestException("User is not a counselor");
             }
+
+            // ✅ Get the Counselor object to modify it
+            Counselor counselorDetails = user.getCounselorDetails();
 
             // Update counselor status based on admin decision
             switch (request.getStatus().toUpperCase()) {
                 case "APPROVED":
-                    counselor.setCounselorStatus(CounselorStatus.APPROVED);
-                    counselor.setVerificationNotes(request.getComments());
-                    counselor.setAdminVerifiedAt(LocalDateTime.now());
+                    counselorDetails.setCounselorStatus(CounselorStatus.APPROVED);
+                    counselorDetails.setVerificationNotes(request.getComments());
+                    counselorDetails.setAdminVerifiedAt(LocalDateTime.now());
+                    counselorDetails.approve(1L,request.getComments());
 
                     // Send approval email
                     CompletableFuture.runAsync(() -> {
                         try {
-                            emailService.sendCounselorApprovalEmail(email, counselor.getName());
+                            emailService.sendCounselorApprovalEmail(email, user.getName());
                         } catch (Exception e) {
                             log.error("Failed to send counselor approval email", e);
                         }
@@ -858,14 +884,15 @@ public class AuthenticationService {
                     break;
 
                 case "REJECTED":
-                    counselor.setCounselorStatus(CounselorStatus.REJECTED);
-                    counselor.setVerificationNotes(request.getComments());
-                    counselor.setAdminVerifiedAt(LocalDateTime.now());
+                    counselorDetails.setCounselorStatus(CounselorStatus.REJECTED);
+                    counselorDetails.setVerificationNotes(request.getComments());
+                    counselorDetails.setAdminVerifiedAt(LocalDateTime.now());
+                    counselorDetails.reject(1L,request.getComments());
 
                     // Send rejection email
                     CompletableFuture.runAsync(() -> {
                         try {
-                            emailService.sendCounselorRejectionEmail(email, counselor.getName(), request.getComments());
+                            emailService.sendCounselorRejectionEmail(email, user.getName(), request.getComments());
                         } catch (Exception e) {
                             log.error("Failed to send counselor rejection email", e);
                         }
@@ -873,14 +900,14 @@ public class AuthenticationService {
                     break;
 
                 case "ADDITIONAL_INFO_REQUIRED":
-                    counselor.setCounselorStatus(CounselorStatus.ADDITIONAL_INFO_REQUIRED);
-                    counselor.setVerificationNotes(request.getComments());
-                    counselor.setAdminVerifiedAt(LocalDateTime.now());
+                    counselorDetails.setCounselorStatus(CounselorStatus.ADDITIONAL_INFO_REQUIRED);
+                    counselorDetails.setVerificationNotes(request.getComments());
+                    counselorDetails.setAdminVerifiedAt(LocalDateTime.now());
 
                     // Send additional info request email
                     CompletableFuture.runAsync(() -> {
                         try {
-                            emailService.sendCounselorAdditionalInfoEmail(email, counselor.getName(), request.getComments());
+                            emailService.sendCounselorAdditionalInfoEmail(email, user.getName(), request.getComments());
                         } catch (Exception e) {
                             log.error("Failed to send counselor additional info email", e);
                         }
@@ -888,16 +915,18 @@ public class AuthenticationService {
                     break;
 
                 case "SUSPENDED":
-                    counselor.setCounselorStatus(CounselorStatus.SUSPENDED);
-                    counselor.setVerificationNotes(request.getComments());
-                    counselor.setAdminVerifiedAt(LocalDateTime.now());
+                    counselorDetails.setCounselorStatus(CounselorStatus.SUSPENDED);
+                    counselorDetails.setVerificationNotes(request.getComments());
+                    counselorDetails.setAdminVerifiedAt(LocalDateTime.now());
                     break;
 
                 default:
                     throw new BadRequestException("Invalid counselor status: " + request.getStatus());
             }
 
-            userRepository.save(counselor);
+            user.setIsEmailVerified(true);
+            userRepository.save(user);
+//            counselorRepository.save(counselorDetails);
 
             auditLogService.logSecurityEvent("COUNSELOR_STATUS_UPDATED", email,
                     "Status updated to: " + request.getStatus(), getClientIpFromRequest());
@@ -920,5 +949,25 @@ public class AuthenticationService {
         return counselors.stream()
                 .map(UserProfileResponse::fromUser)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Retrieves statistics about users.
+     * @return A DTO containing total users, total counselors, and total active users.
+     */
+    public UserStatsResponse getUserStats() {
+        log.info("Fetching user statistics");
+
+        // Use repository methods to get counts
+        long totalUsers = userRepository.count();
+        long totalCounselors = userRepository.countByRole(Role.COUNSELOR);
+        long totalActiveUsers = userRepository.countByIsActive(true);
+
+        // Build and return the response DTO
+        return UserStatsResponse.builder()
+                .totalUsers(totalUsers)
+                .totalCounselors(totalCounselors)
+                .totalActiveUsers(totalActiveUsers)
+                .build();
     }
 }

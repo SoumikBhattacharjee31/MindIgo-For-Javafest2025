@@ -17,7 +17,7 @@ public enum Role {
             Permission.MODERATE_CONTENT
     )),
 
-    ADMIN("Administrator", Set.of(
+    ADMIN("ADMIN", Set.of(
             Permission.READ_PROFILE,
             Permission.UPDATE_PROFILE,
             Permission.UPLOAD_PROFILE_IMAGE,

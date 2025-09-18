@@ -697,7 +697,7 @@ export default function EnhancedRhythmGame() {
 
   const handleSongSelect = (song: any) => { setSelectedSong(song); setCurrentView('game'); };
   const handleBackToMenu = () => { setCurrentView('menu'); setSelectedSong(null); };
-  const handleBackToGames = () => { window.location.href = '/games'; };
+  const handleBackToGames = () => { window.location.href = '/dashboard/games'; };
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-b from-blue-50 via-indigo-50 to-purple-50 flex flex-col items-center justify-center p-4">

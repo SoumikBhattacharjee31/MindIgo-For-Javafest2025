@@ -61,7 +61,7 @@ const MainMenu: React.FC<MainMenuProps> = ({ setCurPage, sound, setArr }) => {
           <button className="btn btn-secondary" onClick={handleHelp}>
             Help
           </button>
-          <Link href="/games">
+          <Link href="/dashboard/games">
             <button className=" w-full btn btn-accent" onClick={clickSound}>
               Exit
             </button>

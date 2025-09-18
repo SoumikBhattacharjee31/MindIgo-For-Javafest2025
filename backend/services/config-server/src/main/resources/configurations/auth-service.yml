@@ -20,6 +20,17 @@ spring:
     password: ${REDIS_PASSWORD}
     database: 0
     timeout: 60000
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${SMTP_USER}
+    password: ${SMTP_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 
 eureka:
   client:

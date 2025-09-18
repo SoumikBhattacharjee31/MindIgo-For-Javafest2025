@@ -2,9 +2,17 @@ package com.mindigo.auth_service.services;
 
 import com.mindigo.auth_service.dto.request.MailSendRequest;
 import com.mindigo.auth_service.dto.response.MailSendResponse;
+import com.mindigo.auth_service.exception.InvalidEmailException;
+import com.mindigo.auth_service.exception.MailServerException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.MailAuthenticationException;
+import org.springframework.mail.MailException;
+import org.springframework.mail.MailSendException;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
@@ -14,6 +22,12 @@ public class EmailService {
 
     @Autowired
     public RestTemplate restTemplate;
+
+    @Autowired
+    private JavaMailSender mailSender;
+
+    @Value("${spring.mail.username}")
+    private String sender;
 
     public void sendPasswordChangeConfirmationEmail(String email, String userName) {
         sendMail(email, "Password Change Confirmation", "Password for user "+userName+" changed successfully");
@@ -31,22 +45,49 @@ public class EmailService {
         sendMail(email, "Registration is pending", "Dear "+userName+", Please wait for an admin to approve you request");
     }
 
+    private boolean isValidEmailFormat(String email) {
+        String emailRegex = "^[A-Za-z0-9+_.-]+@(.+)$";
+        return email != null && email.matches(emailRegex);
+    }
+
+    private void validateRequest(MailSendRequest request) {
+        if (request.getReceiver() == null || request.getReceiver().trim().isEmpty()) {
+            throw new InvalidEmailException("Receiver email cannot be empty");
+        }
+        if (!isValidEmailFormat(request.getReceiver())) {
+            throw new InvalidEmailException("Invalid receiver email format: " + request.getReceiver());
+        }
+        if (request.getSubject() == null || request.getSubject().trim().isEmpty()) {
+            throw new InvalidEmailException("Subject cannot be empty");
+        }
+        if (request.getBody() == null || request.getBody().trim().isEmpty()) {
+            throw new InvalidEmailException("Email body cannot be empty");
+        }
+    }
+
     public void sendMail(String receiver, String subject, String body) {
         try {
 
             MailSendRequest mailRequest = new MailSendRequest(receiver, subject, body);
-            String mailServiceUrl = "http://MAIL-SERVICE/api/v1/mail/send-mail"; // Adjust to your mail-service URL
-            ResponseEntity<MailSendResponse> mailResponse = restTemplate.postForEntity(mailServiceUrl, mailRequest, MailSendResponse.class);
+//            String mailServiceUrl = "http://MAIL-SERVICE/api/v1/mail/send-mail"; // Adjust to your mail-service URL
+//            ResponseEntity<MailSendResponse> mailResponse = restTemplate.postForEntity(mailServiceUrl, mailRequest, MailSendResponse.class);
 
-            if (mailResponse.getStatusCode() != HttpStatus.OK || mailResponse.getBody() == null)
-                throw new RuntimeException("Failed to send email: Invalid response from mail-service");
-            if (mailResponse.getBody().getStatus().startsWith("Failed"))
-                throw new RuntimeException("Failed to send email: " + mailResponse.getBody().getStatus());
+            validateRequest(mailRequest);
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(sender);
+            message.setTo(mailRequest.getReceiver());
+            message.setSubject(mailRequest.getSubject());
+            message.setText(mailRequest.getBody());
+            mailSender.send(message);
 
-        } catch (HttpClientErrorException e) {
-            throw new RuntimeException("Failed to send email: " + e.getMessage());
+        } catch (MailAuthenticationException e) {
+            throw new MailServerException("Authentication failed: Invalid mail server credentials");
+        } catch (MailSendException e) {
+            throw new MailServerException("Failed to send email: " + e.getMessage());
+        } catch (MailException e) {
+            throw new MailServerException("Mail server error: " + e.getMessage());
         } catch (Exception e) {
-            throw new RuntimeException("Error communicating with mail-service: " + e.getMessage());
+            throw new RuntimeException("Failed to send mail: Unexpected error occurred" + e.getMessage());
         }
     }
 

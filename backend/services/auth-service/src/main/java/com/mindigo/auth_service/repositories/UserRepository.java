@@ -13,17 +13,35 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<User, Integer> {
     @Override
     Optional<User> findById(Integer integer);
+
     Optional<User> findByEmail(String email);
-    User findUserByEmail(String email);
+
     boolean existsByEmail(String email);
-    boolean existsByLicenseNumber(String licenseNumber);
-    List<User> findByRoleAndCounselorStatus(Role role, CounselorStatus status);
+
+    // 🛑 This method is removed as licenseNumber is now in the Counselor entity
+    // boolean existsByLicenseNumber(String licenseNumber);
+
+    // ✅ This query is updated to JOIN with the counselorDetails relationship
+    @Query("SELECT u FROM User u JOIN u.counselorDetails cd WHERE u.role = :role AND cd.counselorStatus = :status")
+    List<User> findByRoleAndCounselorStatus(@Param("role") Role role, @Param("status") CounselorStatus status);
+
     @Query("SELECT u FROM User u WHERE u.email = :email AND u.provider = 'LOCAL'")
     Optional<User> findByEmailAndLocalProvider(@Param("email") String email);
-    /**
-     * Finds all users with a specific role.
-     * @param role The role to search for (e.g., Role.COUNSELOR).
-     * @return A list of users matching the specified role.
-     */
+
     List<User> findByRole(Role role);
+
+    // ++ Add these new methods for statistics ++
+    /**
+     * Counts the total number of users with a specific role.
+     * @param role The role to count.
+     * @return The total count of users with the given role.
+     */
+    long countByRole(Role role);
+
+    /**
+     * Counts the total number of users based on their active status.
+     * @param isActive The active status to count (true for active, false for inactive).
+     * @return The total count of users with the given active status.
+     */
+    long countByIsActive(boolean isActive);
 }

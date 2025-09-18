@@ -20,7 +20,7 @@ const ApplicationDetail = () => {
       try {
         const token = getCookie('authToken');
         const res = await axios.get(`http://localhost:8080/api/v1/admin/applications/${id}`, {
-          headers: { Authorization: `Bearer ${token}` },
+          withCredentials: true,
         });
         setApp(res.data.data);
       } catch (err) {
@@ -43,9 +43,12 @@ const ApplicationDetail = () => {
           status: action === 'APPROVE' ? 'APPROVED' : action === 'REJECT' ? 'REJECTED' : 'ADDITIONAL_INFO_REQUIRED',
           comments,
         },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { // The configuration object starts here
+          withCredentials: true,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        } // The configuration object ends here
       );
 
       successToast(res.data.message);

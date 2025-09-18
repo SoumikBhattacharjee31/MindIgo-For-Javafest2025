@@ -25,8 +25,8 @@ const NavigationHeader = ({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navItems: NavItem[] = [
-    { label: "Discussion", href: "/discussion" },
-    { label: "Admin Dashboard", href: "/discussion/admin", adminOnly: true },
+    { label: "Discussion", href: "/dashboard/discussion" },
+    { label: "Admin Dashboard", href: "/dashboard/discussion/admin", adminOnly: true },
   ];
 
   const isAdmin = userRole === "ADMIN";
@@ -43,7 +43,7 @@ const NavigationHeader = ({
           {/* Logo/Brand */}
           <div className="flex items-center">
             <button
-              onClick={() => router.push("/discussion")}
+              onClick={() => router.push("/dashboard/discussion")}
               className="flex items-center space-x-2 text-xl font-bold text-gray-900 hover:text-blue-600 transition-colors"
             >
               <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
