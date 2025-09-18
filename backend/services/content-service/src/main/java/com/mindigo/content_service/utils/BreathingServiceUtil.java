@@ -1,12 +1,12 @@
 package com.mindigo.content_service.utils;
 
 import com.mindigo.content_service.exceptions.breathing.ExerciseNotFound;
-import com.mindigo.content_service.exceptions.breathing.InvalidRequestException;
-import com.mindigo.content_service.models.BreathingExercise;
-import com.mindigo.content_service.models.BreathingTask;
-import com.mindigo.content_service.models.UserSpecificExercise;
-import com.mindigo.content_service.repositories.BreathingExerciseRepository;
-import com.mindigo.content_service.repositories.UserSpecificExerciseRepository;
+import com.mindigo.content_service.exceptions.InvalidRequestException;
+import com.mindigo.content_service.models.breathing.BreathingExercise;
+import com.mindigo.content_service.models.breathing.BreathingTask;
+import com.mindigo.content_service.models.breathing.UserSpecificExercise;
+import com.mindigo.content_service.repositories.breathing.BreathingExerciseRepository;
+import com.mindigo.content_service.repositories.breathing.UserSpecificExerciseRepository;
 import org.springframework.stereotype.Component;
 
 import java.util.Comparator;

@@ -56,7 +56,7 @@ export interface BreathingSessionResponse {
   exerciseTitle: string;
   completedCycles: number;
   totalCycles: number;
-  data: string;
+  date: string;
   duration: number; // in seconds
 }
 
@@ -352,9 +352,17 @@ export const toLastSession = (res: BreathingSessionResponse): LastSession => ({
   exerciseTitle: res.exerciseTitle,
   completedCycles: res.completedCycles,
   totalCycles: res.totalCycles,
-  date: new Date().toISOString(),
+  date: res.date, // Use the date from the response, don't override it
   duration: res.duration,
 });
+
+// Helper function to format date for API (same as moodApi)
+export const formatDateForApi = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
 // ==================== Frontend → Request ====================
 
@@ -377,7 +385,7 @@ export const toBreathingSessionRequest = (
   exerciseTitle: session.exerciseTitle,
   completedCycles: session.completedCycles,
   totalCycles: session.totalCycles,
-  date: session.date,
+  date: session.date.includes('T') ? formatDateForApi(new Date(session.date)) : session.date, // Ensure YYYY-MM-DD format
   duration: session.duration,
 });
 

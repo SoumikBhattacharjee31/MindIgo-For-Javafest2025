@@ -1,10 +1,12 @@
 package com.mindigo.content_service.config;
 
-import com.mindigo.content_service.models.BreathingExercise;
-import com.mindigo.content_service.models.BreathingTask;
-import com.mindigo.content_service.models.BreathingType;
-import com.mindigo.content_service.models.Cycle;
-import com.mindigo.content_service.repositories.BreathingExerciseRepository;
+import com.mindigo.content_service.models.breathing.BreathingExercise;
+import com.mindigo.content_service.models.breathing.BreathingTask;
+import com.mindigo.content_service.models.breathing.BreathingType;
+import com.mindigo.content_service.models.breathing.Cycle;
+import com.mindigo.content_service.repositories.breathing.BreathingExerciseRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,12 +15,14 @@ import java.util.List;
 
 @Configuration
 public class MockDataConfig {
+    private static final Logger logger = LoggerFactory.getLogger(MockDataConfig.class);
+
     @Bean
-    public CommandLineRunner initDatabase(BreathingExerciseRepository breathingExerciseRepository) {
+    public CommandLineRunner initBreathingData(BreathingExerciseRepository breathingExerciseRepository) {
         return args -> {
             if(breathingExerciseRepository.count() != 0)
                 return;
-            // --- Exercise 1: Box ---
+
             BreathingExercise box = BreathingExercise.builder()
                     .title("Box")
                     .description("Relaxation")
@@ -40,7 +44,6 @@ public class MockDataConfig {
             boxCycle.setBreathingTasks(boxTasks);
             box.setCycle(boxCycle);
 
-            // --- Exercise 2: Long exhale ---
             BreathingExercise longExhale = BreathingExercise.builder()
                     .title("Long exhale")
                     .description("Sleep")
@@ -61,7 +64,6 @@ public class MockDataConfig {
             longExhaleCycle.setBreathingTasks(longExhaleTasks);
             longExhale.setCycle(longExhaleCycle);
 
-            // --- Exercise 3: Equal ---
             BreathingExercise equal = BreathingExercise.builder()
                     .title("Equal")
                     .description("Focus")
@@ -82,7 +84,6 @@ public class MockDataConfig {
             equalCycle.setBreathingTasks(equalTasks);
             equal.setCycle(equalCycle);
 
-            // --- Exercise 4: Custom ---
             BreathingExercise custom = BreathingExercise.builder()
                     .title("Custom")
                     .description("Personalized")
@@ -103,7 +104,7 @@ public class MockDataConfig {
             customCycle.setBreathingTasks(customTasks);
             custom.setCycle(customCycle);
 
-            // Save all — cascade takes care of cycle & tasks
+            logger.info("Four basic breathings are incorporated");
             breathingExerciseRepository.saveAll(List.of(box, longExhale, equal, custom));
         };
     }

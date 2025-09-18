@@ -9,6 +9,7 @@ import SessionMainBody from './SessionMainBody';
 import BackgroundAudio from '@/app/components/BackgroundAudio';
 import { BreathingExercise, LastSession } from '../../dataTypes';
 import { infoToast } from '@/util/toastHelper';
+import { formatDateForApi } from '../../api/breathingApi';
 
 export interface BreathingSessionProps {
   exercise: BreathingExercise
@@ -52,7 +53,7 @@ const BreathingSession = ({
     exerciseTitle: exercise.title,
     completedCycles,
     totalCycles,
-    date: new Date().toISOString().split('T')[0],
+    date: formatDateForApi(new Date()), // Use proper local date formatting
     duration: Math.ceil(totalTime / 60)
   }), [exercise.id, exercise.title, totalCycles, totalTime]);
 

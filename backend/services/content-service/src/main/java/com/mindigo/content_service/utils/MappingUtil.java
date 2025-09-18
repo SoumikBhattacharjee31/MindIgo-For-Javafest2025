@@ -4,10 +4,10 @@ import com.mindigo.content_service.dto.breathing.BreathingResponse;
 import com.mindigo.content_service.dto.breathing.BreathingSessionResponse;
 import com.mindigo.content_service.dto.breathing.BreathingTaskResponse;
 import com.mindigo.content_service.dto.breathing.CycleResponse;
-import com.mindigo.content_service.models.BreathingExercise;
-import com.mindigo.content_service.models.BreathingSession;
-import com.mindigo.content_service.models.BreathingTask;
-import com.mindigo.content_service.models.Cycle;
+import com.mindigo.content_service.models.breathing.BreathingExercise;
+import com.mindigo.content_service.models.breathing.BreathingSession;
+import com.mindigo.content_service.models.breathing.BreathingTask;
+import com.mindigo.content_service.models.breathing.Cycle;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

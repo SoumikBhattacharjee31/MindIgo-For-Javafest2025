@@ -14,6 +14,34 @@ services:
     networks:
       - microservices-net
     restart: unless-stopped
+  mongo:
+    image: mongo:latest
+    container_name: mindigo-mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: mindigo
+      MONGO_INITDB_ROOT_PASSWORD: 1234
+    volumes:
+      - mongo_data:/data/db
+
+  mongo-express:
+    image: mongo-express:latest
+    container_name: local-mongo-express
+    restart: always
+    ports:
+      - "9090:8081"
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: mindigo
+      ME_CONFIG_MONGODB_ADMINPASSWORD: 1234
+      ME_CONFIG_MONGODB_SERVER: mongo
+      ME_CONFIG_MONGODB_PORT: 27017
+      ME_CONFIG_OPTIONS_EDITORTHEME: ambiance
+      ME_CONFIG_BASICAUTH_USERNAME: mindigo
+      ME_CONFIG_BASICAUTH_PASSWORD: 1234
+    depends_on:
+      - mongo
 
   config-server:
     build: ./services/config-server
@@ -74,29 +102,6 @@ services:
       retries: 10
     restart: unless-stopped
 
-  assessment-service:
-    build: ./services/assessment-service
-    container_name: assessment-service
-    ports:
-      - "8082:8082"
-    networks:
-      - microservices-net
-    depends_on:
-      eureka-server:
-        condition: service_healthy
-    environment:
-      - CONFIG_SERVER_URL=http://config-server:8888
-      - EUREKA_SERVER_URL=http://eureka-server:8761/eureka/
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - EUREKA_HOSTNAME=assessment-service
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
-      interval: 10s
-      timeout: 10s
-      retries: 10
-    restart: unless-stopped
-  
   mail-service:
     build: ./services/mail-service
     container_name: mail-service
@@ -115,27 +120,6 @@ services:
       - ./services/mail-service/.env
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8083/actuator/health" ]
-      interval: 10s
-      timeout: 10s
-      retries: 10
-    restart: unless-stopped
-
-  game-service:
-    build: ./services/game-service
-    container_name: game-service
-    ports:
-      - "8084:8084"
-    networks:
-      - microservices-net
-    depends_on:
-      eureka-server:
-        condition: service_healthy
-    environment:
-      - CONFIG_SERVER_URL=http://config-server:8888
-      - EUREKA_SERVER_URL=http://eureka-server:8761/eureka/
-      - EUREKA_HOSTNAME=game-service
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8084/actuator/health" ]
       interval: 10s
       timeout: 10s
       retries: 10
@@ -174,11 +158,7 @@ services:
     depends_on:
       auth-service:
         condition: service_healthy
-      assessment-service:
-        condition: service_healthy
       mail-service:
-        condition: service_healthy
-      game-service:
         condition: service_healthy
       file-server:
         condition: service_healthy
@@ -202,3 +182,4 @@ networks:
 
 volumes:
   postgres_data:
+  mongo_data:

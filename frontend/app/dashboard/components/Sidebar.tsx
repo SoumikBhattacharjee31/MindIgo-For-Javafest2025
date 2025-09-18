@@ -1,12 +1,13 @@
 "use client";
-import { useState, useRef, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { AlignJustify, User, Settings, LogOut, Bell, HelpCircle, House, Gamepad2, BotIcon } from "lucide-react";
+import { User, House, Gamepad2, BotIcon } from "lucide-react";
 import { FaUserDoctor } from "react-icons/fa6";
 import { GiMeditation } from "react-icons/gi";
 import useStore from "@/app/store/store";
-import { successToast } from "@/util/toastHelper";
+import { FaQuestionCircle } from "react-icons/fa";
+
 // ========================
 // TYPES & INTERFACES
 // ========================
@@ -15,13 +16,6 @@ interface SidebarItem {
   label: string;
   icon: React.ReactNode;
   link: string;
-}
-
-interface DropdownItem {
-  id: string;
-  label: string;
-  icon: React.ReactNode;
-  variant?: 'default' | 'danger';
 }
 
 // ========================
@@ -33,14 +27,8 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
   { id: "counselor", label: "Counselor", icon: <FaUserDoctor className="w-5 h-5" />, link: "/dashboard/counselor" },
   { id: "mindfulness", label: "Mindfulness", icon: <GiMeditation className="w-5 h-5" />, link: "/dashboard/mindfulness" },
   { id: "chat", label: "Chat", icon: <BotIcon className="w-5 h-5" />, link: "/dashboard/chat" },
+  { id: "quiz", label: "Quiz", icon: <FaQuestionCircle className="w-5 h-5" />, link: "/dashboard/quiz" },
   { id: "profile", label: "Profile", icon: <User className="w-5 h-5" />, link: "/dashboard/profile" },
-];
-
-const DROPDOWN_ITEMS: DropdownItem[] = [
-  { id: "notifications", label: "Notifications", icon: <Bell className="w-4 h-4" /> },
-  { id: "settings", label: "Settings", icon: <Settings className="w-4 h-4" /> },
-  { id: "help", label: "Help & Support", icon: <HelpCircle className="w-4 h-4" /> },
-  { id: "logout", label: "Sign Out", icon: <LogOut className="w-4 h-4" />, variant: 'danger' as const },
 ];
 
 // ========================
@@ -63,29 +51,14 @@ const useActiveSection = () => {
   }, []);
 
   // Update active section when pathname changes
-  useState(() => {
+  useEffect(() => {
     const newActiveSection = getActiveSection(pathname);
     if (newActiveSection !== activeSection) {
       setActiveSection(newActiveSection);
     }
-  });
+  }, [pathname, activeSection]);
 
   return { activeSection, updateActiveSection };
-};
-
-const useDropdown = () => {
-  const [showDropdown, setShowDropdown] = useState<boolean>(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  const toggleDropdown = useCallback(() => {
-    setShowDropdown(prev => !prev);
-  }, []);
-
-  const closeDropdown = useCallback(() => {
-    setShowDropdown(false);
-  }, []);
-
-  return { showDropdown, dropdownRef, toggleDropdown, closeDropdown };
 };
 
 // ========================
@@ -93,14 +66,6 @@ const useDropdown = () => {
 // ========================
 const styles = {
   container: "flex flex-col items-center fixed h-full py-4",
-
-  // Dropdown styles
-  dropdownTrigger: "w-12 h-12 flex items-center justify-center transition-all duration-300 ease-out hover:scale-105 group",
-  dropdownIcon: "w-5 h-5 text-indigo-600 group-hover:text-indigo-700 transition-all duration-200 group-hover:rotate-180",
-  dropdownMenu: "absolute top-14 left-0 w-56 bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl border border-indigo-100/50 py-3 z-50 animate-in slide-in-from-top-2 duration-200",
-  dropdownHeader: "px-4 py-2 border-b border-indigo-50",
-  dropdownTitle: "text-sm font-semibold text-gray-800",
-  dropdownSubtitle: "text-xs text-gray-500",
 
   // Navigation styles
   nav: "flex flex-col items-center space-y-3 flex-1",
@@ -118,92 +83,51 @@ const styles = {
 // ========================
 // SUB-COMPONENTS
 // ========================
-interface DropdownMenuProps {
-  showDropdown: boolean;
-  onClose: () => void;
-  items: DropdownItem[];
-}
-
-const DropdownMenu: React.FC<DropdownMenuProps> = ({ showDropdown, onClose, items }) => {
-  if (!showDropdown) return null;
-
-  const { user, setUser } = useStore();
-
-  const handleItemClick = (item: DropdownItem) => {
-    if (item.id === "logout") {
-      setUser(null);
-      successToast("Logged out successfully");
-    }
-    onClose();
-  };
-
-  return (
-    <div className={styles.dropdownMenu}>
-      {/* Header */}
-      <div className={styles.dropdownHeader}>
-        <p className={styles.dropdownTitle}>MindfulSpace</p>
-        <p className={styles.dropdownSubtitle}>Mental Wellness Hub</p>
-      </div>
-
-      {/* Items */}
-      <div className="py-2">
-        {items.map((item) => (
-          <button
-            key={item.id}
-            onClick={() => handleItemClick(item)}
-            className={`w-full px-4 py-2.5 flex items-center text-left transition-all duration-200 ${item.variant === 'danger'
-                ? "hover:bg-red-50 text-red-600 hover:text-red-700"
-                : "hover:bg-indigo-50/70 text-gray-700 hover:text-indigo-700"
-              }`}
-          >
-            <span className="mr-3 opacity-70">{item.icon}</span>
-            <span className="text-sm font-medium">{item.label}</span>
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-};
-
 interface NavItemProps {
   item: SidebarItem;
   isActive: boolean;
   onActivate: (id: string) => void;
 }
 
-const NavItem: React.FC<NavItemProps> = ({ item, isActive, onActivate }) => (
-  <div className="flex relative group">
-    <Link href={item.link}>
-      <button
-        onClick={() => onActivate(item.id)}
-        className={`${styles.navButton} ${isActive
-            ? "bg-gradient-to-br from-indigo-100 to-blue-100 shadow-md scale-105"
-            : "bg-transparent hover:bg-gradient-to-br hover:from-indigo-50 hover:to-blue-50 hover:shadow-sm hover:scale-105"
-          }`}
-      >
-        {/* Active Indicator */}
-        {isActive && <span className={styles.activeIndicator}></span>}
+const NavItem: React.FC<NavItemProps> = ({ item, isActive, onActivate }) => {
+  const handleClick = useCallback(() => {
+    onActivate(item.id);
+  }, [item.id, onActivate]);
 
-        {/* Ripple Effect */}
-        <span className={styles.rippleEffect}></span>
-
-        {/* Icon */}
-        <span
-          className={`transition-all duration-200 z-10 group-hover:scale-110 ${isActive ? "text-indigo-700" : "text-indigo-400 group-hover:text-indigo-600"
+  return (
+    <div className="flex relative group">
+      <Link href={item.link}>
+        <button
+          onClick={handleClick}
+          className={`${styles.navButton} ${isActive
+              ? "bg-gradient-to-br from-indigo-100 to-blue-100 shadow-md scale-105"
+              : "bg-transparent hover:bg-gradient-to-br hover:from-indigo-50 hover:to-blue-50 hover:shadow-sm hover:scale-105"
             }`}
         >
-          {item.icon}
-        </span>
-      </button>
-    </Link>
+          {/* Active Indicator */}
+          {isActive && <span className={styles.activeIndicator}></span>}
 
-    {/* Tooltip */}
-    <div className={styles.tooltip}>
-      {item.label}
-      <div className={styles.tooltipArrow}></div>
+          {/* Ripple Effect */}
+          <span className={styles.rippleEffect}></span>
+
+          {/* Icon */}
+          <span
+            className={`transition-all duration-200 z-10 group-hover:scale-110 ${isActive ? "text-indigo-700" : "text-indigo-400 group-hover:text-indigo-600"
+              }`}
+          >
+            {item.icon}
+          </span>
+        </button>
+      </Link>
+
+      {/* Tooltip */}
+      <div className={styles.tooltip}>
+        {item.label}
+        <div className={styles.tooltipArrow}></div>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 interface ProfileButtonProps {
   item: SidebarItem;
@@ -211,57 +135,62 @@ interface ProfileButtonProps {
   onActivate: (id: string) => void;
 }
 
-const ProfileButton: React.FC<ProfileButtonProps> = ({ item, isActive, onActivate }) => (
-  <Link href={item.link}>
-    <div className={styles.profileContainer}>
-      <button
-        onClick={() => onActivate(item.id)}
-        className={`${styles.profileButton} ${isActive
-            ? "bg-gradient-to-br from-violet-100 via-indigo-100 to-purple-100 border-gradient-to-r border-violet-300 shadow-xl scale-110 animate-pulse"
-            : "bg-gradient-to-br from-gray-50 to-indigo-50 border-indigo-200/50 hover:border-violet-400 hover:shadow-2xl hover:scale-110 hover:rotate-12"
-          }`}
-        style={{
-          background: isActive
-            ? "linear-gradient(135deg, #f3e8ff 0%, #e0e7ff 50%, #faf5ff 100%)"
-            : undefined,
-        }}
-      >
-        {isActive && (
-          <>
-            <span className="absolute inset-0 rounded-full border-2 border-violet-400 animate-ping"></span>
-            <span className="absolute inset-1 rounded-full border border-indigo-300 animate-pulse"></span>
-          </>
-        )}
+const ProfileButton: React.FC<ProfileButtonProps> = ({ item, isActive, onActivate }) => {
+  const handleClick = useCallback(() => {
+    onActivate(item.id);
+  }, [item.id, onActivate]);
 
-        <span className="absolute inset-0 bg-gradient-conic from-violet-200 via-indigo-200 to-purple-200 rounded-full opacity-0 group-hover:opacity-30 group-hover:animate-spin transition-opacity duration-700"></span>
-
-        <span className="absolute top-1 right-1 w-2 h-2 bg-violet-400 rounded-full opacity-0 group-hover:opacity-100 animate-bounce transition-opacity duration-300 delay-100"></span>
-        <span className="absolute bottom-1 left-1 w-1.5 h-1.5 bg-indigo-400 rounded-full opacity-0 group-hover:opacity-100 animate-bounce transition-opacity duration-300 delay-200"></span>
-
-        <User
-          className={`w-6 h-6 transition-all duration-300 z-10 group-hover:scale-110 group-hover:rotate-12 ${isActive ? "text-violet-700 animate-pulse" : "text-indigo-500 group-hover:text-violet-600"
+  return (
+    <Link href={item.link}>
+      <div className={styles.profileContainer}>
+        <button
+          onClick={handleClick}
+          className={`${styles.profileButton} ${isActive
+              ? "bg-gradient-to-br from-violet-100 via-indigo-100 to-purple-100 border-gradient-to-r border-violet-300 shadow-xl scale-110 animate-pulse"
+              : "bg-gradient-to-br from-gray-50 to-indigo-50 border-indigo-200/50 hover:border-violet-400 hover:shadow-2xl hover:scale-110 hover:rotate-12"
             }`}
-        />
-      </button>
+          style={{
+            background: isActive
+              ? "linear-gradient(135deg, #f3e8ff 0%, #e0e7ff 50%, #faf5ff 100%)"
+              : undefined,
+          }}
+        >
+          {isActive && (
+            <>
+              <span className="absolute inset-0 rounded-full border-2 border-violet-400 animate-ping"></span>
+              <span className="absolute inset-1 rounded-full border border-indigo-300 animate-pulse"></span>
+            </>
+          )}
 
-      {/* Enhanced Tooltip for Profile */}
-      <div className="absolute left-full ml-4 px-4 py-3 bg-gradient-to-r from-violet-900/90 to-indigo-900/90 backdrop-blur-sm text-white text-sm rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none whitespace-nowrap z-50 shadow-2xl transform translate-x-2 group-hover:translate-x-0 border border-violet-400/20">
-        <div className="flex items-center space-x-2">
-          <div className="w-2 h-2 bg-violet-400 rounded-full animate-pulse"></div>
-          <span className="font-medium">Profile</span>
+          <span className="absolute inset-0 bg-gradient-conic from-violet-200 via-indigo-200 to-purple-200 rounded-full opacity-0 group-hover:opacity-30 group-hover:animate-spin transition-opacity duration-700"></span>
+
+          <span className="absolute top-1 right-1 w-2 h-2 bg-violet-400 rounded-full opacity-0 group-hover:opacity-100 animate-bounce transition-opacity duration-300 delay-100"></span>
+          <span className="absolute bottom-1 left-1 w-1.5 h-1.5 bg-indigo-400 rounded-full opacity-0 group-hover:opacity-100 animate-bounce transition-opacity duration-300 delay-200"></span>
+
+          <User
+            className={`w-6 h-6 transition-all duration-300 z-10 group-hover:scale-110 group-hover:rotate-12 ${isActive ? "text-violet-700 animate-pulse" : "text-indigo-500 group-hover:text-violet-600"
+              }`}
+          />
+        </button>
+
+        {/* Enhanced Tooltip for Profile */}
+        <div className="absolute left-full ml-4 px-4 py-3 bg-gradient-to-r from-violet-900/90 to-indigo-900/90 backdrop-blur-sm text-white text-sm rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none whitespace-nowrap z-50 shadow-2xl transform translate-x-2 group-hover:translate-x-0 border border-violet-400/20">
+          <div className="flex items-center space-x-2">
+            <div className="w-2 h-2 bg-violet-400 rounded-full animate-pulse"></div>
+            <span className="font-medium">Profile</span>
+          </div>
+          <div className="absolute -left-2 top-1/2 transform -translate-y-1/2 w-0 h-0 border-t-4 border-b-4 border-r-4 border-transparent border-r-violet-900/90"></div>
         </div>
-        <div className="absolute -left-2 top-1/2 transform -translate-y-1/2 w-0 h-0 border-t-4 border-b-4 border-r-4 border-transparent border-r-violet-900/90"></div>
       </div>
-    </div>
-  </Link>
-);
+    </Link>
+  );
+};
 
 // ========================
 // MAIN COMPONENT
 // ========================
 const Sidebar: React.FC = () => {
   const { activeSection, updateActiveSection } = useActiveSection();
-  const { showDropdown, dropdownRef, toggleDropdown, closeDropdown } = useDropdown();
 
   // Separate profile item from navigation items
   const navigationItems = SIDEBAR_ITEMS.filter((item) => item.id !== "profile");
@@ -269,19 +198,6 @@ const Sidebar: React.FC = () => {
 
   return (
     <div className={styles.container}>
-      {/* Dropdown Section */}
-      <div className="relative mb-4" ref={dropdownRef}>
-        <button onClick={toggleDropdown} className={styles.dropdownTrigger}>
-          <AlignJustify className={styles.dropdownIcon} />
-        </button>
-
-        <DropdownMenu
-          showDropdown={showDropdown}
-          onClose={closeDropdown}
-          items={DROPDOWN_ITEMS}
-        />
-      </div>
-
       {/* Navigation Section */}
       <nav className={styles.nav}>
         {navigationItems.map((item) => (

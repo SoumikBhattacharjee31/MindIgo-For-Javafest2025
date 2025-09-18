@@ -6,11 +6,13 @@ import com.mindigo.content_service.dto.breathing.BreathingSessionRequest;
 import com.mindigo.content_service.dto.breathing.BreathingSessionResponse;
 import com.mindigo.content_service.dto.breathing.CustomBreathingRequest;
 import com.mindigo.content_service.exceptions.breathing.ExerciseNotFound;
-import com.mindigo.content_service.exceptions.breathing.InvalidRequestException;
+import com.mindigo.content_service.exceptions.InvalidRequestException;
 import com.mindigo.content_service.services.BreathingService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,6 +25,7 @@ import java.util.List;
 @RequestMapping("/api/v1/content/breathing")
 @RequiredArgsConstructor
 public class BreathingController {
+    private static final Logger logger = LoggerFactory.getLogger(BreathingController.class);
 
     private final BreathingService breathingService;
 

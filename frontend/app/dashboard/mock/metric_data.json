@@ -16,19 +16,19 @@
             "encouragement": "Your mood data helps us brighten your days! 🌈"
     },
     {
-            "id": "water",
-            "title": "Water Intake",
-            "value": "6/8 cups",
-            "change": "75%",
-            "trend": "neutral",
-            "encouragement": "Stay hydrated, stay amazing! More logs = better tips 💧"
+            "id": "breathing",
+            "title": "Breathing Sessions",
+            "value": "2 completed",
+            "change": "Today",
+            "trend": "up",
+            "encouragement": "Each breath brings you closer to inner peace! 🌸✨"
     },
     {
-            "id": "activity",
-            "title": "Active Minutes",
-            "value": "45 min",
+            "id": "mindfulness",
+            "title": "Mindfulness Minutes",
+            "value": "15 min",
             "change": "+5 min",
             "trend": "up",
-            "encouragement": "Every step counts! Keep tracking for personalized insights 🚀"
+            "encouragement": "Mindful moments create a mindful life! 🧘‍♀️�"
     }
 ]

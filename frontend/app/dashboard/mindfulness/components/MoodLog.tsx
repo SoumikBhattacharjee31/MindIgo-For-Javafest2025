@@ -13,7 +13,13 @@ const MoodLog: React.FC<MoodLogProps> = ({ moodData }) => {
         const today = new Date();
         const dateOffset = new Date();
         dateOffset.setDate(today.getDate() - boundary);
-        return date >= dateOffset && date <= today;
+        
+        // Use date-only comparison to avoid timezone issues
+        const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        const offsetOnly = new Date(dateOffset.getFullYear(), dateOffset.getMonth(), dateOffset.getDate());
+        
+        return dateOnly >= offsetOnly && dateOnly <= todayOnly;
     }
 
     const last7DaysData = moodData.filter((entry) => checkBoundary(new Date(entry.date)));

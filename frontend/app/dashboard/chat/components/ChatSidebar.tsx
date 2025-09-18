@@ -87,7 +87,7 @@ const ChatSidebar = ({ sessionId, onNewSession, onSessionSelect, refreshTrigger 
   }, [refreshTrigger, fetchUserSessions]);
 
   return (
-    <div className={`${isCollapsed ? 'w-14' : 'w-80'} h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 border-r border-slate-700/50 flex flex-col transition-all duration-300 ease-in-out relative overflow-hidden`}>
+    <div className={`${isCollapsed ? 'w-14' : 'w-80'} h-screen bg-gradient-to-b from-blue-300 via-purple-300 to-pink-300 border-r border-slate-700/50 flex flex-col transition-all duration-300 ease-in-out relative overflow-hidden`}>
       
       {/* Header */}
       <div className="flex-shrink-0 p-4 border-b border-slate-700/50">
@@ -115,7 +115,7 @@ const ChatSidebar = ({ sessionId, onNewSession, onSessionSelect, refreshTrigger 
         {!isCollapsed && (
           <button
             onClick={onNewSession}
-            className="w-full mt-4 bg-white/10 hover:bg-white/20 text-white py-2.5 px-4 rounded-xl flex items-center justify-center space-x-2 transition-all duration-200 border border-white/10 hover:border-white/20 group"
+            className="w-full mt-4 bg-white/10 hover:bg-white/20 text-blue-900 py-2.5 px-4 rounded-xl flex items-center justify-center space-x-2 transition-all duration-200 border border-white/10 hover:border-white/20 group"
           >
             <Plus className="w-4 h-4 group-hover:scale-110 transition-transform" />
             <span className="text-sm font-medium">New conversation</span>

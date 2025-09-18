@@ -3,7 +3,7 @@ package com.mindigo.content_service.utils;
 import com.mindigo.content_service.dto.breathing.BreathingSessionRequest;
 import com.mindigo.content_service.dto.breathing.CustomBreathingRequest;
 import com.mindigo.content_service.dto.breathing.CustomTaskRequest;
-import com.mindigo.content_service.exceptions.breathing.InvalidRequestException;
+import com.mindigo.content_service.exceptions.InvalidRequestException;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 

@@ -1,7 +1,7 @@
 "use client"
 import MoodCheckinCard from "./components/MoodCheckinCard";
 import NavigationTab from "./components/NavigationTab";
-import MeditationCard from "./components/MeditationCard";
+import StoryCard from "./components/StoryCard";
 import BreathingCard from "./components/BreathingCard";
 import { parseAsInteger, useQueryState } from "nuqs";
 
@@ -10,7 +10,7 @@ const Mindfulness = () => {
     const tabs = [
         { label: "Mood Check-in", component: <MoodCheckinCard /> },
         { label: "Breathing", component: <BreathingCard /> },
-        { label: "Meditation", component: <MeditationCard /> },
+        { label: "Story", component: <StoryCard /> },
     ];
 
     return (

@@ -1,7 +1,6 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useQueryState } from 'nuqs';
-import { Loader2, Sparkles } from 'lucide-react';
 import { Message, Recommendation, ChatResponse, ApiMessage, MessageHistoryResponse } from '../dataType';
 import ChatSidebar from './ChatSidebar';
 import MainBody from './MainBody';

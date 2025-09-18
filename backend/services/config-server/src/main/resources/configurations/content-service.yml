@@ -35,7 +35,7 @@ management:
 
 logging:
   level:
-    root: INFO               # Default logging level
-    com.mindigo.content_service: DEBUG   # Customize for your package or class
+    root: INFO
+
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"

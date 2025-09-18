@@ -1,12 +1,11 @@
 package com.mindigo.content_service.services;
 
 import com.mindigo.content_service.dto.breathing.*;
-import com.mindigo.content_service.exceptions.breathing.ExerciseNotFound;
-import com.mindigo.content_service.exceptions.breathing.InvalidRequestException;
-import com.mindigo.content_service.models.*;
-import com.mindigo.content_service.repositories.BreathingExerciseRepository;
-import com.mindigo.content_service.repositories.BreathingSessionRepository;
-import com.mindigo.content_service.repositories.UserSpecificExerciseRepository;
+import com.mindigo.content_service.exceptions.InvalidRequestException;
+import com.mindigo.content_service.models.breathing.*;
+import com.mindigo.content_service.repositories.breathing.BreathingExerciseRepository;
+import com.mindigo.content_service.repositories.breathing.BreathingSessionRepository;
+import com.mindigo.content_service.repositories.breathing.UserSpecificExerciseRepository;
 import com.mindigo.content_service.utils.BreathingServiceUtil;
 import com.mindigo.content_service.utils.CloneUtil;
 import com.mindigo.content_service.utils.MappingUtil;
@@ -19,7 +18,6 @@ import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDate;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service

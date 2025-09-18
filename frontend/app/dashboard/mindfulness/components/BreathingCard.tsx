@@ -9,7 +9,7 @@ import LastSessionCard from './breathing-components/LastSessionCard';
 import BreathingSession from './breathing-components/BreathingSession';
 import BreathingCardHeader from './breathing-components/BreathingCardHeader';
 import { successToast, errorToast } from '@/util/toastHelper';
-import { breathingApi, toBreathingExercise, toLastSession, toBreathingRequest, toBreathingSessionRequest } from '../api/breathingApi';
+import { breathingApi, toBreathingExercise, toLastSession, toBreathingRequest, toBreathingSessionRequest, formatDateForApi } from '../api/breathingApi';
 
 interface LoadingState {
   exercises: boolean;
@@ -47,7 +47,7 @@ const BreathingCard = () => {
 
   // Memoized current date to avoid recalculation
   const currentDate = useMemo(() => {
-    return new Date().toISOString().split('T')[0];
+    return formatDateForApi(new Date()); // Use consistent date formatting
   }, []);
 
   // Update loading state helper
