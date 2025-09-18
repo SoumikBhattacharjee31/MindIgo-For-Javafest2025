@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import { User, House, Gamepad2, BotIcon } from "lucide-react";
 import { FaUserDoctor } from "react-icons/fa6";
 import { GiMeditation } from "react-icons/gi";
-import useStore from "@/app/store/store";
 import { FaQuestionCircle } from "react-icons/fa";
 
 // ========================

@@ -28,4 +28,7 @@ public interface QuizRepository extends JpaRepository<Quiz, Long> {
     Boolean existsByFileId(String fileId);
 
     Optional<Quiz> findFirstByQuizCodeOrderBySequenceNumberAsc(String quizCode);
+
+    @Query("SELECT q FROM Quiz q WHERE q.quizCode = :quizCode ORDER BY q.sequenceNumber ASC")
+    List<Quiz> findByQuizCodeOrderBySequenceNumberAsc(@Param("quizCode") String quizCode);
 }

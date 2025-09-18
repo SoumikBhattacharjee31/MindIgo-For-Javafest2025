@@ -1,22 +1,17 @@
 package com.mindigo.content_service.services;
 
 import com.mindigo.content_service.dto.quiz.*;
-import com.mindigo.content_service.exceptions.InvalidRequestException;
-import com.mindigo.content_service.exceptions.quiz.QuizNotFound;
+import com.mindigo.content_service.exceptions.*;
+import com.mindigo.content_service.exceptions.quiz.*;
 import com.mindigo.content_service.models.quiz.*;
 import com.mindigo.content_service.repositories.quiz.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -24,14 +19,14 @@ import java.util.stream.Collectors;
 @Slf4j
 @Transactional
 public class QuizService {
-    private final Logger logger = LoggerFactory.getLogger(QuizService.class);
     private final QuizRepository quizRepository;
     private final UserQuizSessionRepository sessionRepository;
     private final UserQuizAnswerRepository answerRepository;
+    private final UserQuizCompletionRepository completionRepository;
 
 
     public QuizGenerationResponse generateQuiz(QuizGenerationRequest request) {
-        logger.info("Generating quiz for file_id: {}", request.getFile_id());
+        log.info("Generating quiz for file_id: {}", request.getFile_id());
 
         String generatedQuizCode = generateUniqueQuizCode();
 
@@ -58,7 +53,7 @@ public class QuizService {
 
         quizRepository.saveAll(quizzes);
 
-        logger.info("Successfully generated {} questions for file_id: {} with quiz code: {}",
+        log.info("Successfully generated {} questions for file_id: {} with quiz code: {}",
                 quizzes.size(), request.getFile_id(), generatedQuizCode);
 
         return QuizGenerationResponse.builder()
@@ -85,18 +80,18 @@ public class QuizService {
     }
 
     public QuizSessionResponse startQuiz(QuizStartRequest request, String userId) {
-        logger.info("Starting quiz for user: {} with quiz_code: {}", userId, request.getQuizCode());
+        log.info("Starting quiz for user: {} with quiz_code: {}", userId, request.getQuizCode());
 
         Optional<Quiz> firstQuizOpt = quizRepository.findFirstByQuizCodeOrderBySequenceNumberAsc(request.getQuizCode());
         if (firstQuizOpt.isEmpty()) {
-            throw new QuizNotFound("Quiz not found for quiz_code: " + request.getQuizCode());
+            throw new QuizNotFoundException("Quiz not found for quiz_code: " + request.getQuizCode());
         }
         Quiz firstQuiz = firstQuizOpt.get();
         String quizCode = firstQuiz.getQuizCode();
 
         Integer totalQuestions = quizRepository.countByQuizCode(quizCode);
         if (totalQuestions == 0) {
-            throw new RuntimeException("Quiz not found for quiz_code: " + request.getQuizCode());
+            throw new QuizNotFoundException("Quiz not found for quiz_code: " + request.getQuizCode());
         }
 
         Optional<UserQuizSession> existingSession = sessionRepository
@@ -108,7 +103,7 @@ public class QuizService {
 
         if (existingSession.isPresent()) {
             session = existingSession.get();
-            logger.info("Resuming existing session: {}", session.getId());
+            log.info("Resuming existing session: {}", session.getId());
             currentQuestion = getCurrentQuestion(quizCode, session.getCurrentQuestionSequence());
             message = "Quiz resumed successfully";
         } else {
@@ -126,7 +121,7 @@ public class QuizService {
                         .startedAt(LocalDateTime.now())
                         .build();
                 session = sessionRepository.save(session);
-                logger.info("Created new session: {}", session.getId());
+                log.info("Created new session: {}", session.getId());
                 currentQuestion = getCurrentQuestion(quizCode, session.getCurrentQuestionSequence());
                 message = "Quiz started successfully";
             }
@@ -147,24 +142,24 @@ public class QuizService {
     }
 
     public QuizSessionResponse submitAnswer(QuizAnswerRequest request, String userId) {
-        logger.info("Submitting answer for session: {} by user: {}", request.getSessionId(), userId);
+        log.info("Submitting answer for session: {} by user: {}", request.getSessionId(), userId);
 
         UserQuizSession session = sessionRepository.findById(request.getSessionId())
-                .orElseThrow(() -> new RuntimeException("Session not found with id: " + request.getSessionId()));
+                .orElseThrow(() -> new SessionNotFoundException("Session not found with id: " + request.getSessionId()));
 
         if (!session.getUserId().equals(userId)) {
             throw new InvalidRequestException("Unauthorized access to session");
         }
 
         if (session.getStatus() == SessionStatus.COMPLETED) {
-            throw new RuntimeException("Quiz session is already completed");
+            throw new AlreadyCompletedException("Quiz session is already completed");
         }
 
         Quiz quiz = quizRepository.findById(request.getQuizId())
-                .orElseThrow(() -> new RuntimeException("Quiz not found with id: " + request.getQuizId()));
+                .orElseThrow(() -> new QuizNotFoundException("Quiz not found with id: " + request.getQuizId()));
 
         if (!quiz.getSequenceNumber().equals(session.getCurrentQuestionSequence())) {
-            throw new RuntimeException("Submitted answer does not match the current question sequence");
+            throw new SequenceMismatchException("Submitted answer does not match the current question sequence");
         }
 
         Optional<UserQuizAnswer> existingAnswer = answerRepository
@@ -207,6 +202,18 @@ public class QuizService {
             session.setStatus(SessionStatus.COMPLETED);
             session.setCompletedAt(LocalDateTime.now());
             sessionRepository.save(session);
+
+            // Create completion entry if not exists
+            Optional<UserQuizCompletion> completionOpt = completionRepository.findByUserIdAndQuizCode(session.getUserId(), session.getQuizCode());
+            if (completionOpt.isEmpty()) {
+                UserQuizCompletion completion = UserQuizCompletion.builder()
+                        .userId(session.getUserId())
+                        .quizCode(session.getQuizCode())
+                        .analysisReportLink(null)
+                        .build();
+                completionRepository.save(completion);
+            }
+
             return QuizSessionResponse.builder()
                     .sessionId(session.getId())
                     .quizCode(session.getQuizCode())
@@ -224,7 +231,7 @@ public class QuizService {
 
     public QuizSessionResponse getSessionStatus(Long sessionId, String userId) {
         UserQuizSession session = sessionRepository.findById(sessionId)
-                .orElseThrow(() -> new RuntimeException("Session not found with id: " + sessionId));
+                .orElseThrow(() -> new SessionNotFoundException("Session not found with id: " + sessionId));
 
         if (!session.getUserId().equals(userId)) {
             throw new InvalidRequestException("Unauthorized access to session");
@@ -254,7 +261,7 @@ public class QuizService {
 
     public List<UserQuizAnswer> getSessionAnswers(Long sessionId, String userId) {
         UserQuizSession session = sessionRepository.findById(sessionId)
-                .orElseThrow(() -> new RuntimeException("Session not found with id: " + sessionId));
+                .orElseThrow(() -> new SessionNotFoundException("Session not found with id: " + sessionId));
 
         if (!session.getUserId().equals(userId)) {
             throw new InvalidRequestException("Unauthorized access to session");
@@ -271,19 +278,77 @@ public class QuizService {
                 .map(UserQuizSession::getQuizCode)
                 .collect(Collectors.toSet());
 
-        List<String> available = new ArrayList<>();
-        for (String code : allQuizCodes) {
-            if (!userQuizCodes.contains(code)) {
-                available.add(code);
-            }
-        }
+        return allQuizCodes.stream()
+                .filter(code -> !userQuizCodes.contains(code))
+                .collect(Collectors.toList());
+    }
 
-        return available;
+    public String getAnalysisLink(String userId, String quizCode) {
+        UserQuizCompletion completion = completionRepository.findByUserIdAndQuizCode(userId, quizCode)
+                .orElseThrow(() -> new QuizNotCompletedException("No completion found for user: " + userId + " and quiz: " + quizCode));
+        return completion.getAnalysisReportLink();
+    }
+
+    public void updateAnalysisLink(String targetUserId, String quizCode, String link) {
+        UserQuizCompletion completion = completionRepository.findByUserIdAndQuizCode(targetUserId, quizCode)
+                .orElseThrow(() -> new QuizNotCompletedException("No completion found for user: " + targetUserId + " and quiz: " + quizCode));
+        completion.setAnalysisReportLink(link);
+        completionRepository.save(completion);
+    }
+
+    public List<QuizOverviewDto> getAllQuizzesOverview() {
+        List<String> quizCodes = quizRepository.findDistinctQuizCodes();
+        return quizCodes.stream().map(code -> {
+            Optional<Quiz> firstQuiz = quizRepository.findFirstByQuizCodeOrderBySequenceNumberAsc(code);
+            if (firstQuiz.isEmpty()) {
+                return null;
+            }
+            String fileId = firstQuiz.get().getFileId();
+            List<Quiz> questions = quizRepository.findByQuizCodeOrderBySequenceNumberAsc(code);
+            List<UserQuizCompletion> completions = completionRepository.findByQuizCode(code);
+            List<String> completedUsers = completions.stream().map(UserQuizCompletion::getUserId).collect(Collectors.toList());
+            return QuizOverviewDto.builder()
+                    .quizCode(code)
+                    .fileId(fileId)
+                    .questions(questions)
+                    .completedUsers(completedUsers)
+                    .build();
+        }).filter(Objects::nonNull).collect(Collectors.toList());
+    }
+
+    public UserQuizReportDto getUserAnswersForQuiz(String userId, String quizCode) {
+        List<Quiz> quizzes = quizRepository.findByQuizCodeOrderBySequenceNumberAsc(quizCode);
+        if (quizzes.isEmpty()) {
+            throw new QuizNotFoundException("Quiz not found for code: " + quizCode);
+        }
+        String fileId = quizzes.getFirst().getFileId();
+        List<UserQuizAnswer> answers = answerRepository.findByUserIdAndQuizCodeOrderBySequence(userId, quizCode);
+        if (answers.size() != quizzes.size()) {
+            throw new IncompleteQuizException("User has not completed all questions for quiz: " + quizCode);
+        }
+        List<QuizQuestionDto> quizDtos = quizzes.stream().map(this::toQuizQuestionDto).collect(Collectors.toList());
+        List<String> answerList = answers.stream().map(UserQuizAnswer::getAnswer).collect(Collectors.toList());
+        return UserQuizReportDto.builder()
+                .file_id(fileId)
+                .quizzes(quizDtos)
+                .answers(answerList)
+                .build();
+    }
+
+    private QuizQuestionDto toQuizQuestionDto(Quiz quiz) {
+        return QuizQuestionDto.builder()
+                .question(quiz.getQuestion())
+                .type(quiz.getType().name().toLowerCase())
+                .options(quiz.getOptions())
+                .scale_min(quiz.getScaleMin())
+                .scale_max(quiz.getScaleMax())
+                .scale_labels(quiz.getScaleLabels())
+                .build();
     }
 
     private Quiz getCurrentQuestion(String quizCode, Integer sequenceNumber) {
         return quizRepository.findByQuizCodeAndSequenceNumber(quizCode, sequenceNumber)
-                .orElseThrow(() -> new RuntimeException(
+                .orElseThrow(() -> new QuizNotFoundException(
                         String.format("Question not found for quiz code: %s, sequence: %d", quizCode, sequenceNumber)
                 ));
     }
