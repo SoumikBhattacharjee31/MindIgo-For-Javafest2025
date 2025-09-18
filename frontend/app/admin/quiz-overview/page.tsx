@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { successToast, errorToast } from '../../../util/toastHelper';
+import { successToast, errorToast, infoToast } from '../../../util/toastHelper';
 import QuizCard from '../../components/admin/QuizCard';
 import QuizDetailsModal from '../../components/admin/QuizDetailsModal';
 import UserAnswersModal from '../../components/admin/UserAnswersModal';
@@ -47,6 +47,7 @@ const QuizOverview = () => {
   const [selectedQuiz, setSelectedQuiz] = useState<QuizOverview | null>(null);
   const [selectedUserReport, setSelectedUserReport] = useState<{
     userId: string;
+    quizCode: string;
     report: UserQuizReport;
   } | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -97,6 +98,7 @@ const QuizOverview = () => {
       if (response.data.success) {
         setSelectedUserReport({
           userId,
+          quizCode,
           report: response.data.data
         });
       } else {
@@ -122,6 +124,7 @@ const QuizOverview = () => {
 
   const handleUpdateAnalysisLink = async (userId: string, quizCode: string, analysisReportLink: string) => {
     setLoading(true);
+    // infoToast(`Updating analysis link for ${userId} - ${quizCode} - ${analysisReportLink}`);
     try {
       const response = await axios.post(
         'http://localhost:8080/api/v1/content/quiz/update-analysis-link',
@@ -343,6 +346,7 @@ const QuizOverview = () => {
           onClose={() => setSelectedUserReport(null)}
           onUpdateAnalysisLink={handleUpdateAnalysisLink}
           loading={loading}
+          quizCode={selectedUserReport.quizCode}
         />
       )}
     </div>

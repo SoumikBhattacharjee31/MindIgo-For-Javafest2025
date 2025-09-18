@@ -22,17 +22,18 @@ def validate_admin_role(user_role: Optional[str]) -> None:
             detail="Access denied. Admin role required."
         )
 
-def validate_user_role(user_role: Optional[str]) -> None:
-    """
-    Validate that the user has user role.
-    Raises HTTPException if not user.
-    """
-    if not user_role or (user_role.lower() != "user"):
-        logger.warning(f"Access denied: User role '{user_role}' is not user")
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access denied. User role required."
-        )
+# def validate_user_role(user_role: Optional[str]) -> None:
+#     """
+#     Validate that the user has user role.
+#     Raises HTTPException if not user.
+#     """
+#     if not user_role or (user_role.lower() != "user"):
+#         logger.warning(f"Access denied: User role '{user_role}' is not user")
+#         raise HTTPException(
+#             status_code=status.HTTP_403_FORBIDDEN,
+#             detail="Access denied. User role required."
+#         )
+
 
 @router.post("/generate")
 def generate_quiz(
@@ -123,7 +124,7 @@ def evaluate_mood(
     """
     try:
         # Validate user role
-        validate_user_role(x_user_role)
+        validate_admin_role(x_user_role)
 
         logger.info(f"User evaluating mood for file_id: {request.file_id}")
 
