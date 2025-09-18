@@ -1,10 +1,7 @@
 package com.mindigo.assessment_service.repositories;
 
 import com.mindigo.assessment_service.models.Mood;
-import com.mindigo.assessment_service.models.MoodType;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.util.List;

@@ -16,7 +16,7 @@ import java.util.Set;
 @RequestMapping("/api/v1/file")
 public class FileController {
 
-    private static final Set<String> ALLOWED_TYPES = Set.of("images", "cvs","audios");
+    private static final Set<String> ALLOWED_TYPES = Set.of("images", "cvs","audios","paper");
     private static final String ADMIN_ROLE = "ADMIN";
 
     @Autowired

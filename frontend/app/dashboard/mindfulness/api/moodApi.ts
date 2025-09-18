@@ -54,7 +54,7 @@ export const moodApi = {
       console.log('Fetching moods:', { days, today });
       
       const response = await apiClient.get<ApiResponseClass<MoodResponse[]>>(
-        `/api/v1/assessment/mood/get-mood`,
+        `/api/v1/content/mood/get-mood`,
         {
           params: { days, today }
         }
@@ -91,7 +91,7 @@ export const moodApi = {
       }
 
       const response = await apiClient.post<ApiResponseClass<MoodResponse>>(
-        `/api/v1/assessment/mood/set-mood`,
+        `/api/v1/content/mood/set-mood`,
         moodData
       );
 
@@ -115,7 +115,11 @@ export const moodApi = {
 
 // Helper function to format date for API
 export const formatDateForApi = (date: Date): string => {
-  return date.toISOString().split('T')[0];
+  // Use local date formatting to avoid timezone conversion issues
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 };
 
 // Helper function to convert MoodResponse to Entry format

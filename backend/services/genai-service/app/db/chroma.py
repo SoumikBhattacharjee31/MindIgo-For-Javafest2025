@@ -20,3 +20,26 @@ def get_chroma() -> Chroma:
         )
         logger.info("Initialized new Chroma vector store")
     return _vector_store
+
+
+def close_chroma():
+    """Close Chroma vector store connection."""
+    global _vector_store
+    if _vector_store is not None:
+        try:
+            # Chroma doesn't have an explicit close method, but we can reset the instance
+            # This allows proper cleanup on application shutdown
+            _vector_store = None
+            logger.info("Chroma vector store closed.")
+        except Exception as e:
+            logger.error(f"Error closing Chroma vector store: {e}")
+
+
+def initialize_chroma():
+    """Initialize Chroma vector store."""
+    try:
+        get_chroma()
+        logger.info("Chroma vector store initialized successfully.")
+    except Exception as e:
+        logger.error(f"Error initializing Chroma vector store: {e}")
+        raise

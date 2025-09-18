@@ -16,7 +16,16 @@ class Settings(BaseSettings):
     LANGSMITH_API_KEY: str = ""
     MONGO_URI: str = "mongodb://mindigo:1234@localhost:27017/"
     HEALTH_CHECK_INTERVAL: int = 30  # seconds
-
+    DB_HOST: str = "localhost"
+    DB_PORT: int = 5432
+    DB_NAME: str = "Mindigo"
+    DB_USERNAME: str = "mindigo"
+    DB_PASSWORD: str = "1234"
+    ELEVENLABS_API_KEY: str
+    ELEVENLABS_BASE_URL: str ="https://api.elevenlabs.io"
+    ELEVENLABS_MODEL_ID: str ="eleven_multilingual_v2"
+    ELEVENLABS_VOICE_FILENAME: str="voices.json"
+    
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"

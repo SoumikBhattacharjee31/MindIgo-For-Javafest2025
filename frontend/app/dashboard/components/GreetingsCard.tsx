@@ -60,13 +60,13 @@ const GreetingCard = () => {
 
     return isLoading ? (<Loader text="Loading"/>
     ) : (
-        <div className="bg-gradient-to-b from-indigo-300 to-violet-400 rounded-xl p-6 text-gray-900 shadow-lg">
+        <div className="rounded-xl p-6 shadow-lg">
             <div className="flex items-center gap-3 mb-4">
                 <TimeIcon className="w-6 h-6 text-yellow-500" />
-                <h2 className="text-xl font-bold">{greeting} to Your Mental Wellness Journey!</h2>
+                <h2 className="text-xl font-bold text-amber-500">{greeting} to Your Mental Wellness Journey!</h2>
             </div>
 
-            <p className="mb-4 opacity-90">{message}</p>
+            <p className="mb-4 text-black">{message}</p>
 
             <div className="bg-gradient-to-b from-blue-50 via-white to-blue-100 bg-opacity-50 rounded-lg p-4 text-gray-800">
                 <p className="text-lg text-blue-400 mb-2 leading-relaxed font-bold">

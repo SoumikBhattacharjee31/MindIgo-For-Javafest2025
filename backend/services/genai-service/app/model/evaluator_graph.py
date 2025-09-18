@@ -27,13 +27,11 @@ class QuizEvaluatorGraph:
         """Build the quiz evaluation graph."""
         workflow = StateGraph(GraphState)
         
-        # Add nodes
         workflow.add_node("get_file_hash", self.get_file_hash_node)
         workflow.add_node("retrieve_documents", self.retrieve_documents_node)
         workflow.add_node("evaluate_quiz", self.evaluate_quiz_node)
         workflow.add_node("analyze_mental_health", self.analyze_mental_health_node)
         
-        # Add edges
         workflow.set_entry_point("get_file_hash")
         workflow.add_edge("get_file_hash", "retrieve_documents")
         workflow.add_conditional_edges(
@@ -233,7 +231,6 @@ class QuizEvaluatorGraph:
             try:
                 analysis_data = json.loads(response_text)
                 
-                # Convert to structured objects
                 indicators = [MentalHealthIndicator(**ind) for ind in analysis_data["indicators"]]
                 analysis = MentalHealthAnalysis(
                     overall_assessment=analysis_data["overall_assessment"],

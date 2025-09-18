@@ -29,21 +29,17 @@ const LastSessionBody = ({ session }: LastSessionBodyProps) => {
                     />
                 </div>
 
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center text-white/70 text-xs">
-                        <Calendar className="w-3 h-3 mr-1" />
-                        {session.date}
-                    </div>
-                    <span className="text-white/70 text-xs">{session.duration}m</span>
+            <div className="flex items-center justify-between">
+                <div className="flex items-center text-white/70 text-xs">
+                    <Calendar className="w-3 h-3 mr-1" />
+                    {session.date}
                 </div>
+                <span className="text-white/70 text-xs">{session.duration}m</span>
             </div>
-
-            <button className="w-full bg-white/10 hover:bg-white/20 text-white text-sm py-2 px-4 rounded-lg transition-colors">
-                Continue Session
-            </button>
         </div>
-    );
 
-}
+        {/* Continue Session button removed as per requirements */}
+        </div>
+    );}
 
 export default LastSessionBody;

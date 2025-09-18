@@ -2,79 +2,236 @@
 
 import useStore from "@/app/store/store";
 import Image from "next/image";
-import { useState } from "react";
-
-interface Activity {
-  id: number;
-  description: string;
-  timestamp: string;
-}
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 const Profile = () => {
   const { user, setUser } = useStore();
+  const router = useRouter();
+  const [isEditing, setIsEditing] = useState(false);
+  
+  // Local state for editable fields
+  const [editableData, setEditableData] = useState({
+    name: "",
+    email: "",
+    dateOfBirth: "",
+    gender: "",
+    profileImageUrl: "",
+  });
 
-  // Demo data for recent activities
-  const [activities] = useState<Activity[]>([
-    { id: 1, description: "Logged in successfully", timestamp: "2025-08-27 10:00 AM" },
-    { id: 2, description: "Updated profile image", timestamp: "2025-08-26 03:45 PM" },
-    { id: 3, description: "Listened to story: 'The Adventure Begins'", timestamp: "2025-08-25 08:30 PM" },
-    { id: 4, description: "Verified email address", timestamp: "2025-08-24 11:15 AM" },
-    { id: 5, description: "Changed password", timestamp: "2025-08-23 05:00 PM" },
-    { id: 6, description: "Logged out", timestamp: "2025-08-22 09:45 PM" },
-  ]);
+  // Initialize editable data when user changes
+  useEffect(() => {
+    if (user) {
+      setEditableData({
+        name: user.name || "",
+        email: user.email || "",
+        dateOfBirth: user.dateOfBirth || "",
+        gender: user.gender || "",
+        profileImageUrl: user.profileImageUrl || "",
+      });
+    }
+  }, [user]);
 
-  // Demo audio URL (replace with actual link when available)
-  const demoAudioUrl = null;//"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3";
+  const handleEdit = () => {
+    setIsEditing(true);
+  };
+
+  const handleSave = () => {
+    // Update user data in store (API call would go here)
+    // setUser({
+    //   ...user,
+    //   ...editableData
+    // });
+    setIsEditing(false);
+  };
+
+  const handleCancel = () => {
+    // Reset to original data
+    if (user) {
+      setEditableData({
+        name: user.name || "",
+        email: user.email || "",
+        dateOfBirth: user.dateOfBirth || "",
+        gender: user.gender || "",
+        profileImageUrl: user.profileImageUrl || "",
+      });
+    }
+    setIsEditing(false);
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    router.push('/');
+  };
+
+  const handleInputChange = (field: string, value: string) => {
+    setEditableData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-gradient-to-br from-purple-300 via-blue-300 to-indigo-300">
-      {/* Left: Profile Card (40% width) */}
-      <div className="w-[40%] p-8 shadow-lg overflow-y-auto">
-        <h2 className="text-2xl font-bold mb-4 text-blue-600">Profile</h2>
-        <div className="flex flex-col items-center">
-          <Image
-            src={user?.profileImageUrl ? user.profileImageUrl : "/default-profile.png"}
-            alt="Profile Image"
-            width={150}
-            height={150}
-            className="rounded-full mb-4"
-          />
-          <p className="text-xl font-semibold">{user?.name || "N/A"}</p>
-          <p className="text-gray-600">{user?.email || "N/A"}</p>
-        </div>
-        <div className="mt-6 space-y-2">
-          <p><strong>Role:</strong> {user?.role || "N/A"}</p>
-          <p><strong>Date of Birth:</strong> {user?.dateOfBirth || "N/A"}</p>
-          <p><strong>Gender:</strong> {user?.gender || "N/A"}</p>
-          <p><strong>Created At:</strong> {user?.createdAt || "N/A"}</p>
-          <p><strong>Last Login At:</strong> {user?.lastLoginAt || "N/A"}</p>
-          <p><strong>Email Verified:</strong> {user?.emailVerified ? "Yes" : "No"}</p>
-        </div>
-      </div>
+      {/* Main Profile Section */}
+      <div className="w-full p-8 shadow-lg overflow-y-auto">
+        <div className="max-w-2xl mx-auto bg-white/90 backdrop-blur-sm rounded-2xl p-8 shadow-xl">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-3xl font-bold text-blue-600">Profile</h2>
+            <div className="flex gap-3">
+              {!isEditing ? (
+                <button
+                  onClick={handleEdit}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Edit Profile
+                </button>
+              ) : (
+                <>
+                  <button
+                    onClick={handleCancel}
+                    className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSave}
+                    className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    Save Changes
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
 
-      {/* Right: Last Heard Story (top) and Recent Activities (bottom) */}
-      <div className="w-[60%] flex flex-col">
-        {/* Top Right: Last Heard Story */}
-        {demoAudioUrl && (<div className="h-[50%] p-8 bg-white shadow-lg">
-          <h2 className="text-2xl font-bold mb-4 text-blue-600">Last Heard Story</h2>
-          <p className="mb-4 text-gray-600">Demo audio story (replace with actual link)</p>
-          <audio controls className="w-full">
-            <source src={demoAudioUrl} type="audio/mpeg" />
-            Your browser does not support the audio element.
-          </audio>
-        </div>)}
+          {/* Profile Image and Basic Info */}
+          <div className="flex flex-col md:flex-row items-center md:items-start gap-8 mb-8">
+            <div className="flex flex-col items-center">
+              <Image
+                src={editableData.profileImageUrl || "/noimage.png"}
+                alt="Profile Image"
+                width={150}
+                height={150}
+                className="rounded-full mb-4 border-4 border-blue-200"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = "/noimage.png";
+                }}
+              />
+              {isEditing && (
+                <input
+                  type="url"
+                  placeholder="Profile Image URL"
+                  value={editableData.profileImageUrl}
+                  onChange={(e) => handleInputChange('profileImageUrl', e.target.value)}
+                  className="w-48 p-2 border border-gray-300 rounded-lg text-sm"
+                />
+              )}
+            </div>
 
-        {/* Bottom Right: Scrollable Recent Activities */}
-        <div className="h-[50%] p-8 bg-white shadow-lg overflow-y-auto">
-          <h2 className="text-2xl font-bold mb-4 text-blue-600">Recent Activities</h2>
-          <ul className="space-y-2">
-            {activities.map((activity) => (
-              <li key={activity.id} className="border-b py-2">
-                <p className="font-medium">{activity.description}</p>
-                <p className="text-sm text-gray-500">{activity.timestamp}</p>
-              </li>
-            ))}
-          </ul>
+            <div className="flex-1 space-y-4">
+              {/* Name */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    value={editableData.name}
+                    onChange={(e) => handleInputChange('name', e.target.value)}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                ) : (
+                  <p className="text-lg font-semibold text-gray-800">{user?.name || "N/A"}</p>
+                )}
+              </div>
+
+              {/* Email */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                {isEditing ? (
+                  <input
+                    type="email"
+                    value={editableData.email}
+                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                ) : (
+                  <p className="text-lg text-gray-600">{user?.email || "N/A"}</p>
+                )}
+              </div>
+
+              {/* Date of Birth */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
+                {isEditing ? (
+                  <input
+                    type="date"
+                    value={editableData.dateOfBirth}
+                    onChange={(e) => handleInputChange('dateOfBirth', e.target.value)}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                ) : (
+                  <p className="text-lg text-gray-600">{user?.dateOfBirth || "N/A"}</p>
+                )}
+              </div>
+
+              {/* Gender */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Gender</label>
+                {isEditing ? (
+                  <select
+                    value={editableData.gender}
+                    onChange={(e) => handleInputChange('gender', e.target.value)}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">Select Gender</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="other">Other</option>
+                    <option value="prefer-not-to-say">Prefer not to say</option>
+                  </select>
+                ) : (
+                  <p className="text-lg text-gray-600">{user?.gender || "N/A"}</p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Account Information */}
+          <div className="border-t border-gray-200 pt-6 mb-6">
+            <h3 className="text-xl font-semibold text-gray-800 mb-4">Account Information</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                <p className="text-gray-600">{user?.role || "N/A"}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email Verified</label>
+                <p className={`font-medium ${user?.emailVerified ? "text-green-600" : "text-red-600"}`}>
+                  {user?.emailVerified ? "Yes" : "No"}
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Member Since</label>
+                <p className="text-gray-600">{user?.createdAt || "N/A"}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Last Login</label>
+                <p className="text-gray-600">{user?.lastLoginAt || "N/A"}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Logout Button */}
+          <div className="border-t border-gray-200 pt-6">
+            <button
+              onClick={handleLogout}
+              className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+            >
+              Sign Out
+            </button>
+          </div>
         </div>
       </div>
     </div>
