@@ -1,6 +1,9 @@
 // TokenType.java
 package com.mindigo.auth_service.entity;
 
+import lombok.Getter;
+
+@Getter
 public enum TokenType {
     PASSWORD_RESET("password_reset", 24), // 24 hours
     EMAIL_VERIFICATION("email_verification", 24), // 24 hours
@@ -13,14 +16,6 @@ public enum TokenType {
     TokenType(String type, int defaultExpiryHours) {
         this.type = type;
         this.defaultExpiryHours = defaultExpiryHours;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public int getDefaultExpiryHours() {
-        return defaultExpiryHours;
     }
 
     @Override

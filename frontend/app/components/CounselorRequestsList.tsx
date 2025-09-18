@@ -2,15 +2,32 @@ import React, { useState, useEffect } from 'react';
 import { meetingApi } from '../api/meetingService';
 import MeetingLauncher from './MeetingLauncher';
 
+type MeetingStatus = "PENDING" | "ACCEPTED" | "REJECTED" | "COMPLETED";
+type MeetingType = "VIDEO" | "AUDIO";
+
+interface MeetingRequest {
+  id: number;
+  userId: number;
+  counselorId?: number;
+  userUsername: string;
+  counselorUsername?: string;
+  meetingType: MeetingType;
+  status: MeetingStatus;
+  createdAt: string;
+  updatedAt: string;
+  rejectionReason?: string | null;
+  meetingRoomId?: string | null;
+}
+
 const CounselorRequestsList = () => {
-  const [requests, setRequests] = useState([]);
-  const [allRequests, setAllRequests] = useState([]);
+  const [requests, setRequests] = useState<MeetingRequest[]>([]);
+  const [allRequests, setAllRequests] = useState<MeetingRequest[]>([]);
   const [loading, setLoading] = useState(true);
-  const [processingRequest, setProcessingRequest] = useState(null);
+  const [processingRequest, setProcessingRequest] = useState<number|null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
   const [showRejectModal, setShowRejectModal] = useState(false);
-  const [requestToReject, setRequestToReject] = useState(null);
-  const [selectedMeeting, setSelectedMeeting] = useState(null);
+  const [requestToReject, setRequestToReject] = useState<MeetingRequest|null>(null);
+  const [selectedMeeting, setSelectedMeeting] = useState<MeetingRequest|null>(null);
   const [activeTab, setActiveTab] = useState('pending');
 
   useEffect(() => {
@@ -34,7 +51,7 @@ const CounselorRequestsList = () => {
     }
   };
 
-  const handleAcceptRequest = async (requestId) => {
+  const handleAcceptRequest = async (requestId: number) => {
     setProcessingRequest(requestId);
     try {
       await meetingApi.acceptMeetingRequest(requestId);
@@ -65,7 +82,7 @@ const CounselorRequestsList = () => {
     }
   };
 
-  const openRejectModal = (request) => {
+  const openRejectModal = (request: MeetingRequest) => {
     setRequestToReject(request);
     setShowRejectModal(true);
   };
@@ -76,7 +93,7 @@ const CounselorRequestsList = () => {
     setRequestToReject(null);
   };
 
-  const handleJoinMeeting = (request) => {
+  const handleJoinMeeting = (request:MeetingRequest) => {
     setSelectedMeeting(request);
   };
 
@@ -85,11 +102,11 @@ const CounselorRequestsList = () => {
     fetchRequests(); // Refresh the list after meeting ends
   };
 
-  const formatDateTime = (dateString) => {
+  const formatDateTime = (dateString:string) => {
     return new Date(dateString).toLocaleString();
   };
 
-  const getStatusBadge = (status) => {
+  const getStatusBadge = (status:MeetingStatus) => {
     const styles = {
       PENDING: 'bg-yellow-100 text-yellow-800',
       ACCEPTED: 'bg-green-100 text-green-800',
@@ -241,14 +258,15 @@ const CounselorRequestsList = () => {
               <div className="flex space-x-3 mt-4">
                 <button
                   onClick={handleRejectRequest}
-                  disabled={!rejectionReason.trim() || processingRequest}
+                  disabled={!rejectionReason.trim() || !!processingRequest}
                   className="flex-1 bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition duration-200"
                 >
                   {processingRequest ? 'Processing...' : 'Reject'}
                 </button>
+
                 <button
                   onClick={closeRejectModal}
-                  disabled={processingRequest}
+                  disabled={!!processingRequest}
                   className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-400 transition duration-200"
                 >
                   Cancel

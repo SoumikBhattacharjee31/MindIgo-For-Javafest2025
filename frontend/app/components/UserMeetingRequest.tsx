@@ -2,13 +2,25 @@
 import React, { useState, useEffect } from 'react';
 import { meetingApi } from '../api/meetingService';
 
-const UserMeetingRequest = ({ counselors = [] }) => {
+interface Counselor {
+  id: number;
+  username: string;
+  email: string;
+}
+
+interface UserMeetingRequestProps {
+  counselors: Counselor[];
+}
+
+type MeetingType = "VIDEO" | "AUDIO";
+
+const UserMeetingRequest: React.FC<UserMeetingRequestProps> = ({ counselors }) => {
   const [selectedCounselor, setSelectedCounselor] = useState('');
-  const [meetingType, setMeetingType] = useState('AUDIO');
+  const [meetingType, setMeetingType] = useState<MeetingType>('AUDIO');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
 
-  const handleSubmitRequest = async (e) => {
+  const handleSubmitRequest = async (e:React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
     if (!selectedCounselor) {
@@ -28,7 +40,7 @@ const UserMeetingRequest = ({ counselors = [] }) => {
       setTimeout(() => setMessage(''), 3000);
     } catch (error) {
       console.error('Error creating meeting request:', error);
-      const errorMessage = error.response?.data || 'Error sending meeting request';
+      const errorMessage = 'Error sending meeting request';
       setMessage(errorMessage);
     } finally {
       setLoading(false);
@@ -79,7 +91,7 @@ const UserMeetingRequest = ({ counselors = [] }) => {
                 type="radio"
                 value="AUDIO"
                 checked={meetingType === 'AUDIO'}
-                onChange={(e) => setMeetingType(e.target.value)}
+                onChange={(e) => setMeetingType(e.target.value === 'AUDIO' ? 'AUDIO' : 'VIDEO')}
                 className="mr-2 text-blue-600 focus:ring-blue-500"
               />
               <span className="text-gray-700">Audio Meeting</span>
@@ -89,7 +101,7 @@ const UserMeetingRequest = ({ counselors = [] }) => {
                 type="radio"
                 value="VIDEO"
                 checked={meetingType === 'VIDEO'}
-                onChange={(e) => setMeetingType(e.target.value)}
+                onChange={(e) => setMeetingType(e.target.value === 'AUDIO' ? 'AUDIO' : 'VIDEO')}
                 className="mr-2 text-blue-600 focus:ring-blue-500"
               />
               <span className="text-gray-700">Video Meeting</span>

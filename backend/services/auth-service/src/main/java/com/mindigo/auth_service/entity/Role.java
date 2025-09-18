@@ -1,7 +1,10 @@
 package com.mindigo.auth_service.entity;
 
+import lombok.Getter;
+
 import java.util.Set;
 
+@Getter
 public enum Role {
     USER("User", Set.of(
             Permission.READ_PROFILE,
@@ -55,14 +58,6 @@ public enum Role {
     Role(String displayName, Set<Permission> permissions) {
         this.displayName = displayName;
         this.permissions = permissions;
-    }
-
-    public String getDisplayName() {
-        return displayName;
-    }
-
-    public Set<Permission> getPermissions() {
-        return permissions;
     }
 
     public boolean hasPermission(Permission permission) {

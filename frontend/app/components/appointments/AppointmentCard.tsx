@@ -34,7 +34,7 @@ const AppointmentCard: React.FC<AppointmentCardProps> = ({
   onReschedule,
   showActions = true,
 }) => {
-  const getStatusConfig = (status: string) => {
+  const getStatusConfig = (status: Appointment['status']) => {
     const configs = {
       PENDING: {
         bg: "bg-amber-50",

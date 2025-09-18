@@ -10,29 +10,38 @@
         <module name="gateway-server" />
         <module name="config-server" />
         <module name="eureka-server" />
-        <module name="ai-service" />
       </profile>
-      <profile name="Annotation profile for appointment-service" enabled="true">
+      <profile name="Annotation profile for discussion-service" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="false">
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.38/lombok-1.18.38.jar" />
         </processorPath>
-        <module name="auth-service" />
         <module name="appointment-service" />
-        <module name="game-service" />
         <module name="discussion-service" />
+      </profile>
+      <profile name="Annotation profile for routine-service" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.38/lombok-1.18.38.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.38/lombok-1.18.38.jar" />
+        </processorPath>
+        <module name="auth-service" />
         <module name="content-service" />
         <module name="routine-service" />
         <module name="meeting-service" />
         <module name="file-server" />
-        <module name="assessment-service" />
         <module name="mail-service" />
         <module name="admin-service" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
+      <module name="ai-service" target="24" />
+      <module name="assessment-service" target="24" />
+      <module name="game-service" target="24" />
       <module name="mindigo" target="21" />
     </bytecodeTargetLevel>
   </component>
