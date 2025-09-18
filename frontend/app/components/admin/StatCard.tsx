@@ -1,25 +1,25 @@
 "use client";
 import React, { ReactNode } from "react";
 
-const colorClasses = {
-  blue: "bg-blue-500",
-  green: "bg-green-500",
-  yellow: "bg-yellow-500",
-  purple: "bg-purple-500",
-  red: "bg-red-500",
-};
-
-type StatCardProps = {
+interface StatCardProps {
   title: string;
-  value: string | number;
-  icon: ReactNode;
-  color?: keyof typeof colorClasses;
-};
+  value: number | string;
+  icon: React.ReactNode;
+  color?: "blue" | "green" | "yellow" | "red" | "purple";
+}
 
+const colorClasses = {
+    "blue": "bg-blue-500",
+    "green": "bg-green-500",
+    "yellow": "bg-yellow-500",
+    "purple": "bg-purple-500",
+    "red": "bg-red-500",
+};
 const StatCard = ({ title, value, icon, color = "blue" }: StatCardProps) => {
+  const colorClass = colorClasses[color];
   return (
     <div className="bg-white p-6 rounded-lg shadow flex items-center space-x-4">
-      <div className={`p-3 rounded-full ${colorClasses[color]} text-white`}>
+      <div className={`p-3 rounded-full ${colorClass} text-white`}>
         {icon}
       </div>
       <div>

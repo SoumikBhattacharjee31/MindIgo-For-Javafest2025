@@ -50,13 +50,13 @@ async def get_mood(user_id: int = 1, days: int = 7, isMock: bool = True) -> List
     today = datetime.now().date().isoformat()
     logger.info(f"Fetching mood data from service for user_id={user_id}, days={days}, today={today}")
 
-    # Discover assessment-service
-    base_url = await eureka_client.get_service_instance("ASSESSMENT-SERVICE")
+    # Discover content-service
+    base_url = await eureka_client.get_service_instance("CONTENT-SERVICE")
     if not base_url:
-        logger.error("No available instance of ASSESSMENT-SERVICE")
+        logger.error("No available instance of CONTENT-SERVICE")
         return []
 
-    url = f"{base_url}/api/v1/assessment/mood/get-mood?days={days}&today={today}"
+    url = f"{base_url}/api/v1/content/mood/get-mood?days={days}&today={today}"
 
     try:
         async with httpx.AsyncClient() as client:

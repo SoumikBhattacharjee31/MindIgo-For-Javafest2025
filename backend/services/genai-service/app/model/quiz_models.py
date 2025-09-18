@@ -26,7 +26,7 @@ class MentalHealthEvaluationRequest(BaseModel):
 
 class MentalHealthIndicator(BaseModel):
     dimension: str  # e.g., "Depression Risk", "Anxiety Level", "Stress Level"
-    level: Literal["low", "mild", "moderate", "high", "severe"]
+    level: Literal["very_low", "low", "mild", "moderate", "high", "very_high", "severe", "critical", "extreme"]
     confidence: float  # 0-1 scale
     description: str
     contributing_factors: List[str]
@@ -47,11 +47,10 @@ class MentalHealthEvaluationResult(BaseModel):
     mental_health_indicators: List[str]
     analysis: MentalHealthAnalysis
 
-# Keep original models for backward compatibility
 # Mood analysis models (define first)
 class MoodIndicator(BaseModel):
     dimension: str  # e.g., "Anxiety Level", "Depression Risk", "Stress Level", "Overall Wellbeing"
-    level: Literal["very_low", "low", "mild", "moderate", "high", "very_high"]
+    level: Literal["very_low", "low", "mild", "moderate", "high", "very_high", "severe", "critical", "extreme"]
     confidence: float  # 0-1 scale
     description: str
     contributing_factors: List[str]

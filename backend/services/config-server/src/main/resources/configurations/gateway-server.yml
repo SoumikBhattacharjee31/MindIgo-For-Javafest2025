@@ -34,6 +34,8 @@ spring:
               uri: lb://file-server
               predicates:
                 - Path=/api/v1/file/**
+              filters:
+                - name: JwtAuth
             - id: content-service
               uri: lb://content-service
               predicates:

@@ -2,15 +2,14 @@ package com.mindigo.content_service.controllers;
 
 import com.mindigo.content_service.dto.ApiResponseClass;
 import com.mindigo.content_service.dto.quiz.*;
-import com.mindigo.content_service.exceptions.InvalidRequestException;
+import com.mindigo.content_service.exceptions.*;
+import com.mindigo.content_service.exceptions.quiz.*;
 import com.mindigo.content_service.models.quiz.UserQuizAnswer;
 import com.mindigo.content_service.models.quiz.UserQuizSession;
 import com.mindigo.content_service.services.QuizService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,7 +21,6 @@ import java.util.List;
 @RequestMapping("/api/v1/content/quiz")
 @RequiredArgsConstructor
 public class QuizController {
-    private static final Logger logger = LoggerFactory.getLogger(QuizController.class);
 
     private final QuizService quizService;
 
@@ -158,9 +156,95 @@ public class QuizController {
         );
     }
 
+    @GetMapping("/completed/{quizCode}/analysis-link")
+    public ResponseEntity<ApiResponseClass<String>> getAnalysisLink(
+            @PathVariable String quizCode,
+            @RequestHeader("X-User-Id") String userId,
+            @RequestHeader("X-User-Role") String userRole) {
+
+        validateUserRole(userRole);
+        String link = quizService.getAnalysisLink(userId, quizCode);
+        return ResponseEntity.ok(ApiResponseClass.success(link, "Analysis link retrieved successfully"));
+    }
+
+    @PostMapping("/update-analysis-link")
+    public ResponseEntity<ApiResponseClass<Void>> updateAnalysisLink(
+            @Valid @RequestBody UpdateAnalysisLinkRequest request,
+            @RequestHeader("X-User-Id") String userId,
+            @RequestHeader("X-User-Role") String userRole) {
+
+        validateAdminRole(userRole);
+        quizService.updateAnalysisLink(request.getTargetUserId(), request.getQuizCode(), request.getAnalysisReportLink());
+        return ResponseEntity.ok(ApiResponseClass.success(null, "Analysis link updated successfully"));
+    }
+
+    @GetMapping("/quizzes-overview")
+    public ResponseEntity<ApiResponseClass<List<QuizOverviewDto>>> getQuizzesOverview(
+            @RequestHeader("X-User-Id") String userId,
+            @RequestHeader("X-User-Role") String userRole) {
+
+        validateAdminRole(userRole);
+        List<QuizOverviewDto> result = quizService.getAllQuizzesOverview();
+        return ResponseEntity.ok(ApiResponseClass.success(result, "Quizzes overview retrieved successfully"));
+    }
+
+    @GetMapping("/user/{userId}/quiz/{quizCode}/answers")
+    public ResponseEntity<ApiResponseClass<UserQuizReportDto>> getUserAnswersForQuiz(
+            @PathVariable String userId,
+            @PathVariable String quizCode,
+            @RequestHeader("X-User-Id") String callerId,
+            @RequestHeader("X-User-Role") String userRole) {
+
+        validateAdminRole(userRole);
+        UserQuizReportDto result = quizService.getUserAnswersForQuiz(userId, quizCode);
+        return ResponseEntity.ok(ApiResponseClass.success(result, "User answers retrieved successfully"));
+    }
+
     @ExceptionHandler(InvalidRequestException.class)
     public ResponseEntity<ApiResponseClass<Void>> handleInvalidRequest(InvalidRequestException e) {
         log.error("Invalid request: {}", e.getMessage());
+        return ResponseEntity.badRequest()
+                .body(ApiResponseClass.error(e.getMessage(), "400"));
+    }
+
+    @ExceptionHandler(QuizNotFoundException.class)
+    public ResponseEntity<ApiResponseClass<Void>> handleQuizNotFound(QuizNotFoundException e) {
+        log.error("Quiz not found: {}", e.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponseClass.error(e.getMessage(), "404"));
+    }
+
+    @ExceptionHandler(SessionNotFoundException.class)
+    public ResponseEntity<ApiResponseClass<Void>> handleSessionNotFound(SessionNotFoundException e) {
+        log.error("Session not found: {}", e.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponseClass.error(e.getMessage(), "404"));
+    }
+
+    @ExceptionHandler(QuizNotCompletedException.class)
+    public ResponseEntity<ApiResponseClass<Void>> handleQuizNotCompleted(QuizNotCompletedException e) {
+        log.error("Quiz not completed: {}", e.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponseClass.error(e.getMessage(), "404"));
+    }
+
+    @ExceptionHandler(IncompleteQuizException.class)
+    public ResponseEntity<ApiResponseClass<Void>> handleIncompleteQuiz(IncompleteQuizException e) {
+        log.error("Incomplete quiz: {}", e.getMessage());
+        return ResponseEntity.badRequest()
+                .body(ApiResponseClass.error(e.getMessage(), "400"));
+    }
+
+    @ExceptionHandler(SequenceMismatchException.class)
+    public ResponseEntity<ApiResponseClass<Void>> handleSequenceMismatch(SequenceMismatchException e) {
+        log.error("Sequence mismatch: {}", e.getMessage());
+        return ResponseEntity.badRequest()
+                .body(ApiResponseClass.error(e.getMessage(), "400"));
+    }
+
+    @ExceptionHandler(AlreadyCompletedException.class)
+    public ResponseEntity<ApiResponseClass<Void>> handleAlreadyCompleted(AlreadyCompletedException e) {
+        log.error("Already completed: {}", e.getMessage());
         return ResponseEntity.badRequest()
                 .body(ApiResponseClass.error(e.getMessage(), "400"));
     }
