@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import axios from 'axios';
-import { getCookie } from 'cookies-next';
 import { errorToast } from '../../../util/toastHelper';
 
 const ApplicationsList = () => {
@@ -12,7 +11,6 @@ const ApplicationsList = () => {
   useEffect(() => {
     const fetchApps = async () => {
       try {
-        const token = getCookie('authToken');
         const res = await axios.get('http://localhost:8080/api/v1/admin/applications', {
           withCredentials: true,
         });

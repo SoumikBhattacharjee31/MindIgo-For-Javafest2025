@@ -2,20 +2,10 @@
 import React from 'react';
 import AdminSidebar from '../components/admin/AdminSidebar';
 import AdminNavbar from '../components/admin/AdminNavbar';
-import { usePathname } from 'next/navigation';
-import { getCookie } from 'cookies-next';
 
 export default function AdminLayout({
   children,
 }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-  const token = getCookie('authToken');
-
-  if (!token && pathname !== '/admin/login') {
-    window.location.href = '/admin/login';
-    return null;
-  }
-
   return (
     <div className="flex h-screen bg-gray-100">
       <AdminSidebar />

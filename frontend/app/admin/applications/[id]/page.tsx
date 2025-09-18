@@ -1,15 +1,13 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { useRouter, useSearchParams, useParams } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import axios from 'axios';
-import { getCookie } from 'cookies-next';
-import { successToast, errorToast, warningToast } from '../../../../util/toastHelper';
+import { successToast, errorToast } from '../../../../util/toastHelper';
 import ReviewModal from '../../../components/admin/ReviewModal';
 
 const ApplicationDetail = () => {
   const router = useRouter();
-  const searchParams = useParams();
-  const id = searchParams.id;
+  const { id } = useParams();
   const [app, setApp] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -18,7 +16,6 @@ const ApplicationDetail = () => {
   useEffect(() => {
     const fetchApp = async () => {
       try {
-        const token = getCookie('authToken');
         const res = await axios.get(`http://localhost:8080/api/v1/admin/applications/${id}`, {
           withCredentials: true,
         });
@@ -31,11 +28,10 @@ const ApplicationDetail = () => {
       }
     };
     if (id) fetchApp();
-  }, [id]);
+  }, [id, router]);
 
   const handleReview = async (comments: string) => {
     try {
-      const token = getCookie('authToken');
       const res = await axios.post(
         'http://localhost:8080/api/v1/admin/applications/review',
         {
@@ -43,12 +39,12 @@ const ApplicationDetail = () => {
           status: action === 'APPROVE' ? 'APPROVED' : action === 'REJECT' ? 'REJECTED' : 'ADDITIONAL_INFO_REQUIRED',
           comments,
         },
-        { // The configuration object starts here
+        {
           withCredentials: true,
           headers: {
             "Content-Type": "application/json",
           },
-        } // The configuration object ends here
+        }
       );
 
       successToast(res.data.message);

@@ -3,7 +3,6 @@ import React, { useEffect, useState } from 'react';
 import StatCard from '../../components/admin/StatCard';
 import axios from 'axios';
 import { errorToast } from '../../../util/toastHelper';
-import { getCookie } from 'cookies-next';
 
 const Dashboard = () => {
   const [stats, setStats] = useState<any>(null);
@@ -11,7 +10,6 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const token = getCookie('authToken');
         const res = await axios.get('http://localhost:8080/api/v1/admin/dashboard', {
           withCredentials: true,
         });

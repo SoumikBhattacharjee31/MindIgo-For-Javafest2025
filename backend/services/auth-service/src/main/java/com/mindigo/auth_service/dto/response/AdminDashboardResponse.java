@@ -9,8 +9,13 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserStatsResponse {
+public class AdminDashboardResponse {
+    private long totalApplications;
+    private long pendingApplications;
+    private long approvedApplications;
+    private long rejectedApplications;
     private long totalUsers;
     private long totalCounselors;
-    private long totalActiveUsers;
+    private long activeUsers;
+    private long recentApplications; // Last 7 days
 }
