@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table( name = "user_specific_exercise")
+@Table( name = "user_specific_exercise",uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "exercise_id"}))
 public class UserSpecificExercise {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)

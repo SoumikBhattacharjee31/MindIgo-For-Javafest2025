@@ -1,18 +1,21 @@
+require('dotenv').config();
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
 const cors = require('cors');
 
 const app = express();
+const frontendDomain = `${process.env.FRONTEND_DOMAIN}`;
+console.log(`Allowed CORS origin: ${frontendDomain}`);
 app.use(cors({
-  origin: "http://localhost:3000",
+  origin: frontendDomain,
   credentials: true
 }));
 
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: frontendDomain,
     methods: ["GET", "POST"],
     credentials: true
   }

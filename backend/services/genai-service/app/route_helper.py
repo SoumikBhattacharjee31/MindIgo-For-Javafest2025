@@ -3,7 +3,6 @@ from fastapi.responses import JSONResponse
 from app.routes.gemini_routes import router as gemini_router
 from app.routes.quiz_routes import router as quiz_router
 from app.routes.test_routes import router as test_router
-from app.routes.story_routes import router as story_router
 
 from app.config.logger_config import get_logger
 
@@ -24,9 +23,4 @@ def include_routers(app: FastAPI):
     app.include_router(quiz_router, 
                        prefix=f"{BASE_API_PATH}/quiz",
                        tags=["Quiz Endpoints"],
-                       default_response_class=JSONResponse)
-
-    app.include_router(story_router, 
-                       prefix=f"{BASE_API_PATH}/story",
-                       tags=["Story Endpoints"],
                        default_response_class=JSONResponse)

@@ -2,6 +2,7 @@ from pymongo import MongoClient
 from typing import List, Dict, Optional
 from datetime import datetime
 from app.config.logger_config import get_logger
+from app.config.settings import settings
 
 logger = get_logger(__name__)
 
@@ -11,17 +12,21 @@ class MindIgoDatabase:
     def __init__(self, mongo_uri: str = "mongodb://mindigo:1234@localhost:27017/"):
         """Initialize MongoDB connection."""
         try:
+            logger.info(f"Connecting to MongoDB at: {mongo_uri}")
             self.client = MongoClient(mongo_uri)
             self.db = self.client.mindigo_chat
             
             self.messages = self.db.messages
             self.sessions = self.db.sessions
             
+            # Test the connection
+            self.client.server_info()
+            
             self._create_indexes()
             logger.info("MongoDB database initialized successfully")
             
         except Exception as e:
-            logger.error(f"Failed to initialize MongoDB: {str(e)}")
+            logger.error(f"Failed to initialize MongoDB with URI {mongo_uri}: {str(e)}")
             raise
     
     def _create_indexes(self):
@@ -31,7 +36,9 @@ class MindIgoDatabase:
             self.sessions.create_index([("user_id", 1)])
             logger.info("Database indexes created successfully")
         except Exception as e:
-            logger.warning(f"Failed to create indexes: {str(e)}")
+            logger.error(f"Failed to create indexes: {str(e)}")
+            # Don't raise here as indexes are not critical for basic functionality
+            # The application can still work without indexes
     
     def store_message(self, session_id: str, user_id: int, user_name: str, 
                      user_message: str, ai_response: str, 
@@ -199,11 +206,13 @@ class MindIgoDatabase:
 
 _db_instance = None
 
-def get_database(mongo_uri: str = "mongodb://mindigo:1234@localhost:27017/") -> MindIgoDatabase:
+def get_database(mongo_uri: str = None) -> MindIgoDatabase:
     """Get database instance (singleton pattern)."""
     global _db_instance
     if _db_instance is None:
-        _db_instance = MindIgoDatabase(mongo_uri)
+        # Use provided URI or fall back to settings
+        uri = mongo_uri or settings.MONGO_URI
+        _db_instance = MindIgoDatabase(uri)
     return _db_instance
 
 def close_database():

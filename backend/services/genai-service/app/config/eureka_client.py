@@ -11,8 +11,8 @@ logger = get_logger(__name__)
 class EurekaClient:
     def __init__(self, settings: Settings):
         self.settings = settings
-        self.instance_id = f"{settings.APP_NAME}:{os.urandom(8).hex()}"#settings.instance_id or f"{settings.APP_NAME}:{self._get_local_ip()}:{settings.SERVER_PORT}"
-        self.app_url = f"http://{self._get_local_ip()}:{settings.SERVER_PORT}"
+        self.instance_id = f"{settings.APP_NAME}:{os.urandom(8).hex()}"#settings.instance_id or f"{settings.APP_NAME}:{self._get_local_ip()}:{settings.GENAI_SERVICE_PORT}"
+        self.app_url = f"http://{self._get_local_ip()}:{settings.GENAI_SERVICE_PORT}"
         self.eureka_url = settings.EUREKA_SERVER_URL
         self.heartbeat_task: Optional[asyncio.Task] = None
         logger.info(f"Eureka Client initialized with Instance ID: {self.instance_id} and App URL: {self.app_url}")
@@ -41,7 +41,7 @@ class EurekaClient:
                 "hostName": local_ip,
                 "ipAddr": local_ip,
                 "port": {
-                    "$": self.settings.SERVER_PORT,
+                    "$": self.settings.GENAI_SERVICE_PORT,
                     "@enabled": "true"
                 },
                 "securePort": {

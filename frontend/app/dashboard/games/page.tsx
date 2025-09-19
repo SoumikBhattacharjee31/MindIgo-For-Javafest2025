@@ -2,7 +2,6 @@
 import Link from "next/link";
 import { useState } from "react";
 import { FaArrowLeft, FaArrowRight, FaGamepad, FaMusic, FaBrain } from "react-icons/fa";
-import Navbar from "../../components/Navbar";
 
 const games = [
   {
@@ -45,9 +44,7 @@ const Home = () => {
   const currentGameData = games[currentGame];
 
   return (
-    <>
-      <Navbar />
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex flex-col items-center justify-center py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex flex-col items-center justify-center py-8 px-4">
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-6xl font-bold mb-4 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
@@ -150,7 +147,6 @@ const Home = () => {
           </div>
         </div>
       </div>
-    </>
   );
 };
 

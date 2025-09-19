@@ -71,7 +71,7 @@ public class AuthenticationService {
         String clientIp = getClientIpFromRequest();
 
         // Rate limiting
-        rateLimitService.checkRateLimit("register", request.getEmail(), 3, 3600); // 3 attempts per hour
+//        rateLimitService.checkRateLimit("register", request.getEmail(), 3, 3600); // 3 attempts per hour
 
         log.info("Registration attempt for email: {}", request.getEmail());
 
@@ -151,7 +151,7 @@ public class AuthenticationService {
         String email = request.getEmail().toLowerCase().trim();
 
         // Rate limiting
-        rateLimitService.checkRateLimit("login", email, 5, 900); // 5 attempts per 15 minutes
+//        rateLimitService.checkRateLimit("login", email, 5, 900); // 5 attempts per 15 minutes
 
         log.info("Login attempt for email: {}", email);
 
@@ -269,7 +269,7 @@ public class AuthenticationService {
         }
 
         // Rate limiting
-        rateLimitService.checkRateLimit("otp_request", email, 3, 3600); // 3 OTP requests per hour
+//        rateLimitService.checkRateLimit("otp_request", email, 3, 3600); // 3 OTP requests per hour
 
         log.info("OTP request for email: {}", email);
 
@@ -332,7 +332,7 @@ public class AuthenticationService {
         }
 
         // Rate limiting
-        rateLimitService.checkRateLimit("otp_verify", email, 5, 3600); // 5 attempts per hour
+//        rateLimitService.checkRateLimit("otp_verify", email, 5, 3600); // 5 attempts per hour
 
         log.info("OTP verification attempt for email: {}", email);
 
@@ -405,7 +405,7 @@ public class AuthenticationService {
         String email = request.getEmail().toLowerCase().trim();
 
         // Rate limiting
-        rateLimitService.checkRateLimit("password_reset", email, 3, 3600); // 3 requests per hour
+//        rateLimitService.checkRateLimit("password_reset", email, 3, 3600); // 3 requests per hour
 
         log.info("Password reset requested for email: {}", email);
 
@@ -690,7 +690,7 @@ public class AuthenticationService {
         String clientIp = getClientIpFromRequest();
 
         // Rate limiting
-        rateLimitService.checkRateLimit("counselor_register", request.getEmail(), 3, 3600);
+//        rateLimitService.checkRateLimit("counselor_register", request.getEmail(), 3, 3600);
 
         log.info("Counselor registration attempt for email: {}", request.getEmail());
 

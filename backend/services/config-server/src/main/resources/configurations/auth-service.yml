@@ -14,12 +14,12 @@ spring:
         default_schema: auth_service
     database: postgresql
     database-platform: org.hibernate.dialect.PostgreSQLDialect
-  redis:
-    host: ${REDIS_HOST:localhost}
-    port: ${REDIS_PORT:6379}
-    password: ${REDIS_PASSWORD}
-    database: 0
-    timeout: 60000
+#  redis:
+#    host: ${REDIS_HOST:localhost}
+#    port: ${REDIS_PORT:6379}
+#    password: ${REDIS_PASSWORD}
+#    database: 0
+#    timeout: 60000
   mail:
     host: smtp.gmail.com
     port: 587

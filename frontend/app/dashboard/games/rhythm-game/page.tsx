@@ -5,7 +5,7 @@ const Game = dynamic(() => import("./Game"), { ssr: false });
 
 export default function Page() {
   return (
-    <div className="min-h-screen w-full bg-gradient-to-b from-[#eff6ff] via-[#eef2ff] to-[#fdf2f8] flex flex-col items-center justify-center p-4">
+    <div className="fixed inset-0 w-screen h-screen bg-gradient-to-b from-[#eff6ff] via-[#eef2ff] to-[#fdf2f8] flex flex-col items-center justify-center p-4 overflow-hidden">
       <div className="max-w-5xl w-full">
         <h1 className="text-4xl md:text-5xl font-light text-center mb-4 bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-sky-500">
           Calm Rhythm

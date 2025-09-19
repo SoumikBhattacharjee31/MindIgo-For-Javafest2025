@@ -15,7 +15,7 @@ const MindfulnessLoading = () => (
 const MindfulnessPage = () => {
   return (
     <Suspense fallback={<MindfulnessLoading />}>
-      <MindfulnessContent />
+      <MindfulnessContent key={1}/>
     </Suspense>
   );
 };

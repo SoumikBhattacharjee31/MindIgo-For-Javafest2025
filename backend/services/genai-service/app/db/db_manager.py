@@ -5,6 +5,7 @@ This module handles the initialization and cleanup of all database connections
 for the MindIgo GenAI service.
 """
 from app.config.logger_config import get_logger
+from app.config.settings import settings
 from app.db.postgres import init_postgres_tables, close_postgres_connection
 from app.db.mongo import get_database, close_database
 from app.db.chroma import initialize_chroma, close_chroma
@@ -24,7 +25,7 @@ async def initialize_all_databases():
         
         # Initialize MongoDB
         logger.info("Initializing MongoDB...")
-        get_database()  # This will create the connection and indexes
+        get_database(mongo_uri=settings.MONGO_URI)  # Use settings for MongoDB URI
         logger.info("MongoDB initialized successfully")
         
         # Initialize Chroma vector store

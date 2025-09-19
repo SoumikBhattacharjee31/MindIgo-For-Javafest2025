@@ -34,7 +34,7 @@ const Home = () => {
     }
   };
   return (
-    <div className="flex items-center justify-center min-h-screen">
+    <div className="fixed inset-0 w-screen h-screen flex items-center justify-center overflow-hidden">
       <BackgroundVideo />
       <div className="z-10">
         <MusicButton isPlaying={sound} setIsPlaying={setSound} />

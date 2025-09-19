@@ -69,6 +69,10 @@ eureka:
     hostname: ${EUREKA_HOSTNAME:localhost}
     instance-id: ${spring.application.name}:${random.uuid}
 
+app:
+  frontend:
+    domain: ${FRONTEND_DOMAIN:http://localhost:3000}
+
 management:
   endpoints:
     web:

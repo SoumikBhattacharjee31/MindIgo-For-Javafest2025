@@ -12,6 +12,7 @@ import com.mindigo.content_service.utils.MappingUtil;
 import com.mindigo.content_service.utils.ValidatorUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -109,6 +110,13 @@ public class BreathingService {
     // ============ Private Helper Methods ============
 
     private List<UserSpecificExercise> initializeDefaultExercisesForUser(Long userId) {
+        // Double-check pattern to prevent race conditions
+        List<UserSpecificExercise> existingExercises = userSpecificExerciseRepository.findAllByUserId(userId);
+        if (!existingExercises.isEmpty()) {
+            log.info("Default exercises already exist for user: {} (race condition avoided)", userId);
+            return existingExercises;
+        }
+
         List<BreathingExercise> defaultExercises = breathingExerciseRepository.findAllByIsCustomFalse();
 
         List<UserSpecificExercise> userExercises = defaultExercises.stream()
@@ -118,7 +126,12 @@ public class BreathingService {
                         .build())
                 .toList();
 
-        return userSpecificExerciseRepository.saveAll(userExercises);
+        try {
+            return userSpecificExerciseRepository.saveAll(userExercises);
+        } catch (DataIntegrityViolationException e) {
+            log.warn("Concurrent initialization detected for user: {}, fetching existing records", userId);
+            return userSpecificExerciseRepository.findAllByUserId(userId);
+        }
     }
 
     private BreathingExercise createCustomizedExercise(BreathingExercise originalExercise,
