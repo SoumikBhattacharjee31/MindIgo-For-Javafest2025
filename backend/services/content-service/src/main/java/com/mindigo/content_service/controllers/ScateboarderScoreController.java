@@ -20,7 +20,7 @@ import java.util.Optional;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/content/snowboarder")
+@RequestMapping("/api/v1/game/snowboarder")
 @RequiredArgsConstructor
 public class ScateboarderScoreController {
     private static final Logger logger = LoggerFactory.getLogger(ScateboarderScoreController.class);

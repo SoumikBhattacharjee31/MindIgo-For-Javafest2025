@@ -24,12 +24,6 @@ spring:
               uri: lb://mail-service
               predicates:
                 - Path=/api/v1/mail/**
-            - id: game-service
-              uri: lb://game-service
-              predicates:
-                - Path=/api/v1/game/**
-              filters:
-                - name: JwtAuth
             - id: file-server
               uri: lb://file-server
               predicates:
@@ -39,7 +33,7 @@ spring:
             - id: content-service
               uri: lb://content-service
               predicates:
-                - Path=/api/v1/content/**
+                - Path=/api/v1/content/**,/api/v1/game/**
               filters:
                 - name: JwtAuth
             - id: routine-service
