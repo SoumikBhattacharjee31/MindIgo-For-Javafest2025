@@ -1,6 +1,6 @@
 "use client";
 
-import { POST_CATEGORIES, USER_ROLES } from "../../api/discussionService";
+import { POST_CATEGORIES, USER_ROLES } from "@/app/api/discussionService";
 
 interface FilterSidebarProps {
   filters: {

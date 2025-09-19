@@ -10,10 +10,10 @@ import {
   ApiResponse,
   Page,
   COMMENT_SORT_TYPES,
-} from "../../../../api/discussionService";
-import PostCard from "../../../../components/discussion/PostCard";
-import CommentSection from "../../../../components/discussion/CommentSection";
-import CommentForm from "../../../../components/discussion/CommentForm";
+} from "@/app/api/discussionService";
+import PostCard from "@/app/dashboard/discussion/components/PostCard";
+import CommentSection from "@/app/dashboard/discussion/components/CommentSection";
+import CommentForm from "@/app/dashboard/discussion/components/CommentForm";
 
 const PostDetailPage = () => {
   const router = useRouter();

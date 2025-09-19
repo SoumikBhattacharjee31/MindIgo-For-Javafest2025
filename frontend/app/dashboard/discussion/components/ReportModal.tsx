@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { REPORT_REASONS } from "../../api/discussionService";
+import { REPORT_REASONS } from "@/app/api/discussionService";
 
 interface ReportModalProps {
   isOpen: boolean;

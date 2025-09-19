@@ -10,11 +10,11 @@ import {
   Page,
   ModerationRequest,
   RestrictUserRequest,
-} from "../../../api/discussionService";
-import StatsCard from "../../../components/discussion/StatsCard";
-import ReportsTable from "../../../components/discussion/ReportsTable";
-import ModerationModal from "../../../components/discussion/ModerationModal";
-import UserRestrictionModal from "../../../components/discussion/UserRestrictionModal";
+} from "@/app/api/discussionService";
+import StatsCard from "@/app/dashboard/discussion/components/StatsCard";
+import ReportsTable from "@/app/dashboard/discussion/components/ReportsTable";
+import ModerationModal from "@/app/dashboard/discussion/components/ModerationModal";
+import UserRestrictionModal from "@/app/dashboard/discussion/components/UserRestrictionModal";
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState<DiscussionStatsResponse | null>(null);

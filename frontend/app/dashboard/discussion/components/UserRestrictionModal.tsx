@@ -4,7 +4,7 @@ import { useState } from "react";
 import {
   RestrictUserRequest,
   RESTRICTION_TYPES,
-} from "../../api/discussionService";
+} from "@/app/api/discussionService";
 
 interface UserRestrictionModalProps {
   isOpen: boolean;

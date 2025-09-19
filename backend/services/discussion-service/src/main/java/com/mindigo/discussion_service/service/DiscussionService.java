@@ -37,6 +37,7 @@ public class DiscussionService {
     private final CommentReportRepository commentReportRepository;
     private final UserRestrictionRepository userRestrictionRepository;
     private final RestTemplate restTemplate;
+    private final FileUploadService fileUploadService;
 
     @Value("${services.file-server.url:http://FILE-SERVER}")
     private String fileServerUrl;
@@ -540,24 +541,7 @@ public class DiscussionService {
     }
 
     private List<String> uploadImages(List<MultipartFile> images) {
-        List<String> imageUrls = new ArrayList<>();
-
-        for (MultipartFile image : images) {
-            try {
-                String uploadUrl = fileServerUrl + "/api/v1/file/upload/images";
-                // This is a simplified approach - you might need to create a proper multipart request
-                ResponseEntity<ApiResponseClass> response = restTemplate.postForEntity(uploadUrl, image, ApiResponseClass.class);
-
-                if (response.getBody() != null && response.getBody().isSuccess()) {
-                    imageUrls.add((String) response.getBody().getData());
-                }
-            } catch (Exception e) {
-                log.error("Failed to upload image", e);
-                throw new DiscussionServiceException("Failed to upload image");
-            }
-        }
-
-        return imageUrls;
+        return fileUploadService.uploadImages(images);
     }
 
     private Sort createSort(String sortBy) {
