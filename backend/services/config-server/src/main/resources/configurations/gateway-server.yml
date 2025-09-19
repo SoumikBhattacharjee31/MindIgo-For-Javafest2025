@@ -14,22 +14,6 @@ spring:
                 - Path=/api/v1/auth/**,/api/v1/admin/**
               filters:
                 - name: JwtAuth
-            - id: assessment-service
-              uri: lb://assessment-service
-              predicates:
-                - Path=/api/v1/assessment/**
-              filters:
-                - name: JwtAuth
-            - id: mail-service
-              uri: lb://mail-service
-              predicates:
-                - Path=/api/v1/mail/**
-            - id: game-service
-              uri: lb://game-service
-              predicates:
-                - Path=/api/v1/game/**
-              filters:
-                - name: JwtAuth
             - id: file-server
               uri: lb://file-server
               predicates:
@@ -48,10 +32,6 @@ spring:
                 - Path=/api/v1/routines/**
               filters:
                 - name: JwtAuth
-            - id: ai-service
-              uri: lb://ai-service
-              predicates:
-                - Path=/api/v1/ai/**
             - id: meeting-service
               uri: lb://meeting-service
               predicates:

@@ -11,7 +11,7 @@ logger = get_logger(__name__)
 class EurekaClient:
     def __init__(self, settings: Settings):
         self.settings = settings
-        self.instance_id = f"{settings.APP_NAME}:{os.urandom(4).hex()}"#settings.instance_id or f"{settings.APP_NAME}:{self._get_local_ip()}:{settings.SERVER_PORT}"
+        self.instance_id = f"{settings.APP_NAME}:{os.urandom(8).hex()}"#settings.instance_id or f"{settings.APP_NAME}:{self._get_local_ip()}:{settings.SERVER_PORT}"
         self.app_url = f"http://{self._get_local_ip()}:{settings.SERVER_PORT}"
         self.eureka_url = settings.EUREKA_SERVER_URL
         self.heartbeat_task: Optional[asyncio.Task] = None

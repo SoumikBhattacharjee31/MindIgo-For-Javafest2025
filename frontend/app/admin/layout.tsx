@@ -13,11 +13,15 @@ export default function AdminLayout({
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
   // Skip authentication check for login page
-  if (pathname === '/admin/login') {
-    return <>{children}</>;
-  }
+  const isLoginPage = pathname === '/admin/login';
 
   useEffect(() => {
+    // Skip authentication check for login page
+    if (isLoginPage) {
+      setIsAuthenticated(true); // Set to true to avoid loading state on login page
+      return;
+    }
+
     const checkAuth = async () => {
       try {
         // Try to make an authenticated request to verify access
@@ -38,7 +42,12 @@ export default function AdminLayout({
     };
 
     checkAuth();
-  }, [pathname, router]);
+  }, [pathname, router, isLoginPage]);
+
+  // For login page, render children directly
+  if (isLoginPage) {
+    return <>{children}</>;
+  }
 
   // Show loading while checking authentication
   if (isAuthenticated === null) {

@@ -14,7 +14,7 @@ from app.model.paragraph_preprocessor import ParagraphPreprocessor
 from app.config.logger_config import get_logger
 from app.model.model_gen import get_gemini_model
 from app.tools.chat_agent_tools import get_mood_history, get_recommended_doctors, get_recommended_songs, get_breathing_exercise_data
-# from app.util.conversation_logger import ConversationLogger
+
 
 logger = get_logger(__name__)
 
@@ -27,14 +27,12 @@ class State(MessagesState):
 class MindigoAIAgent:
     def __init__(self, mongo_client: Optional[MongoClient] = None):
         self.preprocessor = ParagraphPreprocessor()
-        # self.conversation_logger = ConversationLogger()
         
         if mongo_client:
             self.checkpointer = MongoDBSaver(mongo_client, "simple_agent_checkpoints")
         else:
             self.checkpointer = MemorySaver()
         
-        # Available tools
         self.tools = [get_mood_history, get_recommended_doctors, get_recommended_songs, get_breathing_exercise_data]
         self.tool_node = ToolNode(self.tools)
         

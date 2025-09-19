@@ -62,6 +62,6 @@ if __name__ == "__main__":
     
     uvicorn.run(app="main:app", 
                 host="0.0.0.0", 
-                port=settings.SERVER_PORT, 
+                port=settings.GENAI_SERVICE_PORT, 
                 reload=False,
                 log_level="info")  

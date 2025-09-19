@@ -16,6 +16,9 @@ const FileList: React.FC<FileListProps> = ({
   onRefresh,
   loading = false
 }) => {
+  // Filter out .emptyFolderPlaceholder files
+  const filteredFiles = files.filter(file => !file.includes('.emptyFolderPlaceholder'));
+
   const getFileName = (url: string) => {
     const parts = url.split('/');
     const filename = parts[parts.length - 1];
@@ -34,7 +37,7 @@ const FileList: React.FC<FileListProps> = ({
     return new Date().toLocaleDateString();
   };
 
-  if (files.length === 0) {
+  if (filteredFiles.length === 0) {
     return (
       <div className="text-center py-8">
         <div className="mx-auto w-16 h-16 flex items-center justify-center bg-gray-100 rounded-full mb-4">
@@ -65,10 +68,10 @@ const FileList: React.FC<FileListProps> = ({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 text-gray-900">
       <div className="flex items-center justify-between">
         <p className="text-sm text-gray-600">
-          {files.length} file{files.length !== 1 ? 's' : ''} available
+          {filteredFiles.length} file{filteredFiles.length !== 1 ? 's' : ''} available
         </p>
         <button
           onClick={onRefresh}
@@ -97,7 +100,7 @@ const FileList: React.FC<FileListProps> = ({
       </div>
 
       <div className="grid gap-3">
-        {files.map((fileUrl, index) => (
+        {filteredFiles.map((fileUrl, index) => (
           <div
             key={index}
             className={`border rounded-lg p-4 transition-all ${

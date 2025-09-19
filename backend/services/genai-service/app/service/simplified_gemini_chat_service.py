@@ -5,7 +5,7 @@ from typing import Optional, Dict, List, Any
 from app.config.settings import settings
 from app.config.logger_config import get_logger
 from app.db.mongo import get_database
-from app.model.oversimplifier_ai_agent import MindigoAIAgent
+from app.model.oversimplified_ai_agent import MindigoAIAgent
 from app.dto.response_models import Response, Recommendation
 
 logger = get_logger(__name__)

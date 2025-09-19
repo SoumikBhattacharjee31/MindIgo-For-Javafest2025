@@ -1,22 +1,15 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { successToast, errorToast } from '../../../util/toastHelper';
 import FileUpload from '../../components/admin/FileUpload';
 import FileList from '../../components/admin/FileList';
 import QuizGenerator from '../../components/admin/QuizGenerator';
 import QuizPreview from '../../components/admin/QuizPreview';
+import { quizApi, getQuizApiErrorMessage, type GeneratedQuizData, type QuizQuestion } from '../../api/quizApi';
 
 interface QuizData {
   file_id: number;
-  quizzes: Array<{
-    question: string;
-    type: 'mcq' | 'scale' | 'descriptive';
-    options?: string[] | null;
-    scale_min?: number | null;
-    scale_max?: number | null;
-    scale_labels?: Record<string, string> | null;
-  }>;
+  quizzes: QuizQuestion[];
 }
 
 const QuizManagement = () => {
@@ -37,70 +30,24 @@ const QuizManagement = () => {
 
   const fetchFiles = async () => {
     try {
-      const response = await axios.get('http://localhost:8080/api/v1/file/list/papers', {
-        withCredentials: true,
-      });
-      
-      if (response.data.success) {
-        setFiles(response.data.data);
-      } else {
-        errorToast(response.data.message || 'Failed to fetch files');
-      }
+      const filesData = await quizApi.getFilesList();
+      setFiles(filesData);
     } catch (error) {
       console.error('Error fetching files:', error);
-      if (axios.isAxiosError(error)) {
-        if (error.response?.status === 401) {
-          errorToast('Unauthorized access');
-        } else if (error.response?.status === 403) {
-          errorToast('Access denied');
-        } else {
-          errorToast(error.response?.data?.message || 'Failed to fetch files');
-        }
-      } else {
-        errorToast('Network error occurred');
-      }
+      errorToast(getQuizApiErrorMessage(error));
     }
   };
 
   const handleFileUpload = async (file: File) => {
-    const formData = new FormData();
-    formData.append('file', file);
-
     setLoading(true);
     try {
-      const response = await axios.post(
-        'http://localhost:8080/api/v1/file/upload/papers',
-        formData,
-        {
-          withCredentials: true,
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        }
-      );
-
-      if (response.data.success) {
-        successToast('File uploaded successfully!');
-        setSelectedFile(response.data.data); // Set the uploaded file URL as selected
-        await fetchFiles(); // Refresh the file list
-      } else {
-        errorToast(response.data.message || 'File upload failed');
-      }
+      const uploadedFileUrl = await quizApi.uploadFile(file);
+      successToast('File uploaded successfully!');
+      setSelectedFile(uploadedFileUrl); // Set the uploaded file URL as selected
+      await fetchFiles(); // Refresh the file list
     } catch (error) {
       console.error('Error uploading file:', error);
-      if (axios.isAxiosError(error)) {
-        if (error.response?.status === 413) {
-          errorToast('File too large');
-        } else if (error.response?.status === 415) {
-          errorToast('Unsupported file type');
-        } else if (error.response?.status === 401) {
-          errorToast('Unauthorized access');
-        } else {
-          errorToast(error.response?.data?.message || 'File upload failed');
-        }
-      } else {
-        errorToast('Network error occurred');
-      }
+      errorToast(getQuizApiErrorMessage(error));
     } finally {
       setLoading(false);
     }
@@ -115,95 +62,36 @@ const QuizManagement = () => {
   }) => {
     setLoading(true);
     try {
-      const response = await axios.post(
-        'http://localhost:8080/api/v1/genai/quiz/generate',
-        params,
-        {
-          withCredentials: true,
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      if (response.data.success) {
-        setGeneratedQuiz(response.data.data);
-        successToast('Quiz generated successfully!');
-      } else {
-        errorToast(response.data.message || 'Quiz generation failed');
-      }
+      const generatedData = await quizApi.generateQuiz(params);
+      setGeneratedQuiz(generatedData);
+      successToast('Quiz generated successfully!');
     } catch (error) {
       console.error('Error generating quiz:', error);
-      if (axios.isAxiosError(error)) {
-        if (error.response?.status === 400) {
-          errorToast('Invalid request parameters');
-        } else if (error.response?.status === 401) {
-          errorToast('Unauthorized access');
-        } else if (error.response?.status === 500) {
-          errorToast('Server error during quiz generation');
-        } else {
-          errorToast(error.response?.data?.message || 'Quiz generation failed');
-        }
-      } else {
-        errorToast('Network error occurred');
-      }
+      errorToast(getQuizApiErrorMessage(error));
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSaveQuiz = async (selectedQuestions: Array<{
-    question: string;
-    type: 'mcq' | 'scale' | 'descriptive';
-    options?: string[] | null;
-    scale_min?: number | null;
-    scale_max?: number | null;
-    scale_labels?: Record<string, string> | null;
-  }>, fileId: number) => {
+  const handleSaveQuiz = async (selectedQuestions: QuizQuestion[], fileId: number) => {
     setLoading(true);
     try {
-      const response = await axios.post(
-        'http://localhost:8080/api/v1/content/quiz/generate',
-        {
-          file_id: fileId,
-          quizzes: selectedQuestions
-        },
-        {
-          withCredentials: true,
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      if (response.data.success) {
-        setSavedQuiz(response.data.data);
-        successToast(`Quiz saved successfully! Quiz Code: ${response.data.data.quizCode}`);
-      } else {
-        errorToast(response.data.message || 'Failed to save quiz');
-      }
+      const saveQuizData = await quizApi.saveQuiz({
+        file_id: fileId,
+        quizzes: selectedQuestions
+      });
+      setSavedQuiz(saveQuizData);
+      successToast(`Quiz saved successfully! Quiz Code: ${saveQuizData.quizCode}`);
     } catch (error) {
       console.error('Error saving quiz:', error);
-      if (axios.isAxiosError(error)) {
-        if (error.response?.status === 400) {
-          errorToast('Invalid quiz data');
-        } else if (error.response?.status === 401) {
-          errorToast('Unauthorized access');
-        } else if (error.response?.status === 500) {
-          errorToast('Server error while saving quiz');
-        } else {
-          errorToast(error.response?.data?.message || 'Failed to save quiz');
-        }
-      } else {
-        errorToast('Network error occurred');
-      }
+      errorToast(getQuizApiErrorMessage(error));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-gray-900">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold text-gray-800">Quiz Management</h1>
         <div className="text-sm text-gray-500">

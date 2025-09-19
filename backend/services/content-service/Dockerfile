@@ -11,7 +11,7 @@ WORKDIR /app
 COPY target/*.jar app.jar
 
 # Expose the app port (set properly per service in compose)
-EXPOSE 8092
+EXPOSE 8086
 
 # Run the Spring Boot app
 ENTRYPOINT ["java", "-jar", "app.jar"]

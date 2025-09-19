@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
-from app.model.mindigo_ai_agent import Recommendation
+from app.dto.response_models import Recommendation
 
 class ChatRequest(BaseModel):
     prompt: str

@@ -11,6 +11,7 @@ interface QuizListProps {
 const QuizList: React.FC<QuizListProps> = ({ onQuizStart, onSessionContinue }) => {
   const [availableQuizzes, setAvailableQuizzes] = useState<string[]>([]);
   const [userSessions, setUserSessions] = useState<UserQuizSession[]>([]);
+  const [analysisAvailability, setAnalysisAvailability] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean;
@@ -40,6 +41,22 @@ const QuizList: React.FC<QuizListProps> = ({ onQuizStart, onSessionContinue }) =
       ]);
       setAvailableQuizzes(quizzes);
       setUserSessions(sessions);
+      
+      // Check analysis availability for completed sessions
+      const analysisChecks: Record<string, boolean> = {};
+      const completedSessions = sessions.filter(session => session.status === 'COMPLETED');
+      
+      for (const session of completedSessions) {
+        try {
+          const isAvailable = await quizApi.checkAnalysisAvailability(session.quizCode);
+          analysisChecks[session.quizCode] = isAvailable;
+        } catch (error) {
+          console.warn(`Failed to check analysis availability for ${session.quizCode}:`, error);
+          analysisChecks[session.quizCode] = false;
+        }
+      }
+      
+      setAnalysisAvailability(analysisChecks);
     } catch (error) {
       console.error('Failed to load quiz data:', error);
       errorToast(error instanceof Error ? error.message : 'Failed to load quiz data');
@@ -89,14 +106,21 @@ const QuizList: React.FC<QuizListProps> = ({ onQuizStart, onSessionContinue }) =
     }
   };
 
-  const handleSessionClick = (session: UserQuizSession) => {
+  const handleSessionClick = async (session: UserQuizSession) => {
     if (session.status === 'COMPLETED') {
-      // Show analysis modal for completed quizzes
-      setAnalysisModal({
-        isOpen: true,
-        quizCode: session.quizCode,
-        quizName: `Quiz #${userSessions.findIndex(s => s.id === session.id) + 1}`
-      });
+      const isAnalysisAvailable = analysisAvailability[session.quizCode];
+      
+      if (isAnalysisAvailable) {
+        // Show analysis modal for completed quizzes
+        setAnalysisModal({
+          isOpen: true,
+          quizCode: session.quizCode,
+          quizName: `Quiz #${userSessions.findIndex(s => s.id === session.id) + 1}`
+        });
+      } else {
+        // Show message that analysis is being prepared
+        infoToast('Your quiz analysis is being prepared. You will be notified when your report is ready!');
+      }
       return;
     }
     if (session.status === 'ABANDONED') {
@@ -166,7 +190,7 @@ const QuizList: React.FC<QuizListProps> = ({ onQuizStart, onSessionContinue }) =
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4 text-gray-900">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
@@ -263,7 +287,7 @@ const QuizList: React.FC<QuizListProps> = ({ onQuizStart, onSessionContinue }) =
                   <tbody className="bg-white divide-y divide-gray-200">
                     {userSessions.map((session) => {
                       const statusInfo = getSessionStatus(session.status);
-                      const progressPercent = Math.round((session.currentQuestionSequence / session.totalQuestions) * 100);
+                      const progressPercent = Math.round(((session.currentQuestionSequence - 1) / session.totalQuestions) * 100);
                       
                       return (
                         <tr 
@@ -292,12 +316,21 @@ const QuizList: React.FC<QuizListProps> = ({ onQuizStart, onSessionContinue }) =
                               )}
                               {session.status === 'COMPLETED' && (
                                 <div className="ml-2">
-                                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                    <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                                    </svg>
-                                    View Analysis
-                                  </span>
+                                  {analysisAvailability[session.quizCode] ? (
+                                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                      <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                      </svg>
+                                      View Analysis
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                                      <svg className="w-3 h-3 mr-1 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                      </svg>
+                                      Report Preparing
+                                    </span>
+                                  )}
                                 </div>
                               )}
                             </div>
@@ -313,7 +346,7 @@ const QuizList: React.FC<QuizListProps> = ({ onQuizStart, onSessionContinue }) =
                                 ></div>
                               </div>
                               <span className="text-sm text-gray-600">
-                                {session.currentQuestionSequence}/{session.totalQuestions}
+                                {session.currentQuestionSequence - 1}/{session.totalQuestions}
                               </span>
                             </div>
                           </td>
@@ -409,14 +442,14 @@ const QuizList: React.FC<QuizListProps> = ({ onQuizStart, onSessionContinue }) =
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium text-blue-900">Current Progress</span>
                     <span className="text-sm text-blue-700">
-                      {continueDialog.session.currentQuestionSequence}/{continueDialog.session.totalQuestions}
+                      {continueDialog.session.currentQuestionSequence - 1}/{continueDialog.session.totalQuestions}
                     </span>
                   </div>
                   <div className="w-full bg-blue-200 rounded-full h-2">
                     <div 
                       className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
                       style={{ 
-                        width: `${Math.round((continueDialog.session.currentQuestionSequence / continueDialog.session.totalQuestions) * 100)}%` 
+                        width: `${Math.round(((continueDialog.session.currentQuestionSequence - 1) / continueDialog.session.totalQuestions) * 100)}%` 
                       }}
                     ></div>
                   </div>

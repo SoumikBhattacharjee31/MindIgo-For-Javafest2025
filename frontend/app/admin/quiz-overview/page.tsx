@@ -173,7 +173,7 @@ const QuizOverview = () => {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-gray-900">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

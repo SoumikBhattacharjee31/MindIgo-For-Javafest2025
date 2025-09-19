@@ -1,0 +1,9 @@
+.gitignore
+.venv/
+.env
+.vscode/
+__pycache__/
+*.pyc
+
+**/chroma_langchain_db/
+downloads/

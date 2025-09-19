@@ -274,6 +274,24 @@ export const quizApi = {
   },
 
   /**
+   * Check if analysis is available for a completed quiz
+   */
+  checkAnalysisAvailability: async (quizCode: string): Promise<boolean> => {
+    if (!quizCode?.trim()) {
+      throw new Error('Quiz code is required');
+    }
+
+    try {
+      const analysisUrl = await quizApi.getAnalysisLink(quizCode);
+      return !!(analysisUrl && analysisUrl.trim());
+    } catch (error) {
+      // If getting the analysis link fails, assume analysis is not available
+      console.warn(`Analysis not available for quiz ${quizCode}:`, error);
+      return false;
+    }
+  },
+
+  /**
    * Fetch analysis report from URL
    */
   getAnalysisReport: async (analysisUrl: string): Promise<any> => {

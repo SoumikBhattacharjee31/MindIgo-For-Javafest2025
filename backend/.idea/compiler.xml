@@ -12,7 +12,7 @@
         <module name="eureka-server" />
         <module name="ai-service" />
       </profile>
-      <profile name="Annotation profile for auth-service" enabled="true">
+      <profile name="Annotation profile for routine-service" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
@@ -28,11 +28,11 @@
         <module name="meeting-service" />
         <module name="file-server" />
         <module name="assessment-service" />
-        <module name="mail-service" />
-        <module name="admin-service" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
+      <module name="admin-service" target="24" />
+      <module name="mail-service" target="24" />
       <module name="mindigo" target="21" />
     </bytecodeTargetLevel>
   </component>

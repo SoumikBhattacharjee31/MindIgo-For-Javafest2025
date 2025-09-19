@@ -7,8 +7,7 @@ logger = get_logger(__name__)
 class Settings(BaseSettings):
     OPENAI_API_KEY: str = ""
     GOOGLE_API_KEY: str = ""
-    SERVER_PORT: int = 8100
-    CONFIG_SERVER_URL: str = "http://localhost:8888"
+    GENAI_SERVICE_PORT: int = 8100
     APP_NAME: str = "genai-service"
     EUREKA_SERVER_URL: str = "http://localhost:8761/eureka"
     EUREKA_HOSTNAME: str = "localhost"

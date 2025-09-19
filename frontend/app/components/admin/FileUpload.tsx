@@ -60,7 +60,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload, loading }) => {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 text-gray-900">
       {/* Drag and Drop Area */}
       <div
         className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-all duration-200 ${

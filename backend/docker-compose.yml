@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   postgres:
     container_name: mindigo_db
@@ -14,10 +16,16 @@ services:
     networks:
       - microservices-net
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mindigo -d Mindigo"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
   mongo:
     image: mongo:latest
     container_name: mindigo-mongodb
-    restart: always
     ports:
       - "27017:27017"
     environment:
@@ -25,11 +33,17 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: 1234
     volumes:
       - mongo_data:/data/db
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "echo 'db.runCommand(\"ping\").ok' | mongosh localhost:27017/test --quiet"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
 
   mongo-express:
     image: mongo-express:latest
     container_name: local-mongo-express
-    restart: always
     ports:
       - "9090:8081"
     environment:
@@ -41,7 +55,9 @@ services:
       ME_CONFIG_BASICAUTH_USERNAME: mindigo
       ME_CONFIG_BASICAUTH_PASSWORD: 1234
     depends_on:
-      - mongo
+      mongo:
+        condition: service_healthy
+    restart: unless-stopped
 
   config-server:
     build: ./services/config-server
@@ -51,7 +67,10 @@ services:
     networks:
       - microservices-net
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+    environment:
+      - CONFIG_SERVER_PORT=8888
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8888/actuator/health"]
       interval: 10s
@@ -72,8 +91,36 @@ services:
     environment:
       - CONFIG_SERVER_URL=http://config-server:8888
       - EUREKA_HOSTNAME=eureka-server
+      - EUREKA_SERVER_PORT=8761
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  routine-service:
+    build: ./services/routine-service
+    container_name: routine-service
+    ports:
+      - "8087:8087"
+    networks:
+      - microservices-net
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+    environment:
+      - CONFIG_SERVER_URL=http://config-server:8888
+      - EUREKA_SERVER_URL=http://eureka-server:8761/eureka/
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=Mindigo
+      - EUREKA_HOSTNAME=routine-service
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - ROUTINE_SERVICE_PORT=8087
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8087/actuator/health"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -94,7 +141,18 @@ services:
       - EUREKA_SERVER_URL=http://eureka-server:8761/eureka/
       - DB_HOST=postgres
       - DB_PORT=5432
+      - DB_NAME=Mindigo
       - EUREKA_HOSTNAME=auth-service
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - AUTH_SERVICE_PORT=8081
+      - JWT_SECRET=${JWT_SECRET}
+      - FRONTEND_DOMAIN=${FRONTEND_DOMAIN}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
       interval: 10s
@@ -102,11 +160,11 @@ services:
       retries: 10
     restart: unless-stopped
 
-  mail-service:
-    build: ./services/mail-service
-    container_name: mail-service
+  appointment-service:
+    build: ./services/appointment-service
+    container_name: appointment-service
     ports:
-      - "8083:8083"
+      - "8092:8092"
     networks:
       - microservices-net
     depends_on:
@@ -115,11 +173,44 @@ services:
     environment:
       - CONFIG_SERVER_URL=http://config-server:8888
       - EUREKA_SERVER_URL=http://eureka-server:8761/eureka/
-      - EUREKA_HOSTNAME=mail-service
-    env_file:
-      - ./services/mail-service/.env
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=Mindigo
+      - EUREKA_HOSTNAME=appointment-service
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - APPOINTMENT_SERVICE_PORT=8092
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8083/actuator/health" ]
+      test: ["CMD", "curl", "-f", "http://localhost:8092/actuator/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+    restart: unless-stopped
+
+  content-service:
+    build: ./services/content-service
+    container_name: content-service
+    ports:
+      - "8086:8086"
+    networks:
+      - microservices-net
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+    environment:
+      - CONFIG_SERVER_URL=http://config-server:8888
+      - EUREKA_SERVER_URL=http://eureka-server:8761/eureka/
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=Mindigo
+      - EUREKA_HOSTNAME=content-service
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - CONTENT_SERVICE_PORT=8086
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8086/actuator/health"]
       interval: 10s
       timeout: 10s
       retries: 10
@@ -139,10 +230,66 @@ services:
       - CONFIG_SERVER_URL=http://config-server:8888
       - EUREKA_SERVER_URL=http://eureka-server:8761/eureka/
       - EUREKA_HOSTNAME=file-server
-    env_file:
-      - ./services/file-server/.env
+      - FILE_SERVER_PORT=8085
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_KEY=${SUPABASE_KEY}
+      - SUPABASE_BUCKET=${SUPABASE_BUCKET}
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8085/actuator/health" ]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+    restart: unless-stopped
+
+  meeting-service:
+    build: ./services/meeting-service
+    container_name: meeting-service
+    ports:
+      - "8091:8091"
+    networks:
+      - microservices-net
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+    environment:
+      - CONFIG_SERVER_URL=http://config-server:8888
+      - EUREKA_SERVER_URL=http://eureka-server:8761/eureka/
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=Mindigo
+      - EUREKA_HOSTNAME=meeting-service
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - MEETING_SERVICE_PORT=8091
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8091/actuator/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+    restart: unless-stopped
+
+  discussion-service:
+    build: ./services/discussion-service
+    container_name: discussion-service
+    ports:
+      - "8093:8093"
+    networks:
+      - microservices-net
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+    environment:
+      - CONFIG_SERVER_URL=http://config-server:8888
+      - EUREKA_SERVER_URL=http://eureka-server:8761/eureka/
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=Mindigo
+      - EUREKA_HOSTNAME=discussion-service
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DISCUSSION_SERVICE_PORT=8093
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8093/actuator/health"]
       interval: 10s
       timeout: 10s
       retries: 10
@@ -156,19 +303,29 @@ services:
     networks:
       - microservices-net
     depends_on:
-      auth-service:
-        condition: service_healthy
-      mail-service:
-        condition: service_healthy
-      file-server:
+      config-server:
         condition: service_healthy
       eureka-server:
         condition: service_healthy
-
+      auth-service:
+        condition: service_healthy
+      routine-service:
+        condition: service_healthy
+      file-server:
+        condition: service_healthy
+      content-service:
+        condition: service_healthy
+      appointment-service:
+        condition: service_healthy
+      meeting-service:
+        condition: service_healthy
+      discussion-service:
+        condition: service_healthy
     environment:
       - CONFIG_SERVER_URL=http://config-server:8888
       - EUREKA_SERVER_URL=http://eureka-server:8761/eureka/
       - EUREKA_HOSTNAME=gateway-server
+      - GATEWAY_SERVER_PORT=8080
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 10s

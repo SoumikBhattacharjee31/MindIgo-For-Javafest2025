@@ -1,26 +1,34 @@
-google-genai
-dotenv
+# Web framework and server
 fastapi
-uvicorn
-spring-config-client
+uvicorn[standard]
+
+# Settings and configuration
 pydantic-settings
-py_eureka_client
+
+# LangChain and AI models
+langchain
 langchain-google-genai
-langgraph
-langsmith
-langchain[google-genai]
-uuid
-IPython
-langgraph-checkpoint-mongodb
-pymongo
-langgraph-store-mongodb
-pip 
-setuptools 
-wheel
-spacy
-nltk
-scikit-learn
-joblib
-PyPDF2
+langchain-core
 langchain-chroma
-psycopg2
+langchain-text-splitters
+
+# LangGraph and checkpoints
+langgraph
+langgraph-checkpoint-mongodb
+
+# Google AI
+google-generativeai
+
+# Database drivers
+pymongo
+psycopg2-binary
+
+# HTTP clients
+httpx
+requests
+
+# PDF processing
+PyPDF2
+
+# NLP
+nltk
