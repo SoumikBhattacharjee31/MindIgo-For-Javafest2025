@@ -1,6 +1,6 @@
 "use client";
 
-import { ReportResponse } from "../../api/discussionService";
+import { ReportResponse } from "@/app/api/discussionService";
 
 interface ReportsTableProps {
   reports: ReportResponse[];

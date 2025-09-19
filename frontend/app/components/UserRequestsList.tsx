@@ -3,10 +3,27 @@ import React, { useState, useEffect } from 'react';
 import { meetingApi } from '../api/meetingService';
 import MeetingLauncher from './MeetingLauncher';
 
+type MeetingStatus = "PENDING" | "ACCEPTED" | "REJECTED" | "COMPLETED";
+type MeetingType = "VIDEO" | "AUDIO";
+
+interface MeetingRequest {
+  id: number;
+  userId: number;
+  counselorId?: number;
+  userUsername: string;
+  counselorUsername?: string;
+  meetingType: MeetingType;
+  status: MeetingStatus;
+  createdAt: string;
+  updatedAt: string;
+  rejectionReason?: string | null;
+  meetingRoomId?: string | null;
+}
+
 const UserRequestsList = () => {
-  const [requests, setRequests] = useState([]);
+  const [requests, setRequests] = useState<MeetingRequest[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedMeeting, setSelectedMeeting] = useState(null);
+  const [selectedMeeting, setSelectedMeeting] = useState<MeetingRequest|null>(null);
 
   useEffect(() => {
     fetchUserRequests();
@@ -25,7 +42,7 @@ const UserRequestsList = () => {
     }
   };
 
-  const getStatusBadge = (status) => {
+  const getStatusBadge = (status: MeetingStatus) => {
     const styles = {
       PENDING: 'bg-yellow-100 text-yellow-800',
       ACCEPTED: 'bg-green-100 text-green-800',
@@ -40,11 +57,11 @@ const UserRequestsList = () => {
     );
   };
 
-  const formatDateTime = (dateString) => {
+  const formatDateTime = (dateString: string) => {
     return new Date(dateString).toLocaleString();
   };
 
-  const handleJoinMeeting = (request) => {
+  const handleJoinMeeting = (request: MeetingRequest) => {
     setSelectedMeeting(request);
   };
 

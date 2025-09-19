@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/content/infinity-loop")
+@RequestMapping("/api/v1/game/infinity-loop")
 @RequiredArgsConstructor
 public class GameController {
     private static final Logger logger = LoggerFactory.getLogger(GameController.class);

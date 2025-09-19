@@ -1,5 +1,6 @@
 import {  Mood, Description, Reason } from "../dataTypes";
-import { Entry } from "./MoodCheckinCard";
+// import { Entry } from "./MoodCheckinCard";
+import { Entry } from '../dataTypes';
 
 interface Props {
   entry: Entry;

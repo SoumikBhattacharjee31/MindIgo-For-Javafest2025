@@ -10,7 +10,6 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        // const token = getCookie('authToken');
         const res = await axios.get('http://localhost:8080/api/v1/admin/dashboard', {
           withCredentials: true,
         });

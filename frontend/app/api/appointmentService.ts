@@ -142,11 +142,12 @@ export const appointmentServiceApi = {
   updateDateSpecificAvailability: (
     availabilityId: number,
     dateSpecificData: {
-      date?: string;
+      specificDate?: string;
       startTime?: string;
       endTime?: string;
       slotDurationMinutes?: number;
-      isAvailable?: boolean;
+      type?: string;
+      reason?: string | null;
     }
   ) =>
     axios.put(
@@ -287,16 +288,27 @@ export interface Availability {
   updatedAt: string;
 }
 
+//  '{ specificDate: string; startTime: string; endTime: string; slotDurationMinutes: number; type: string; reason: string | null; }' 
+
 export interface DateSpecificAvailability {
   id: number;
-  counselorId: number;
-  date: string;
+  specificDate: string;
   startTime: string;
   endTime: string;
+  type: "AVAILABLE" | "UNAVAILABLE";
   slotDurationMinutes: number;
-  isAvailable: boolean;
+  reason: string | null;
+  isActive: boolean;
   createdAt: string;
-  updatedAt: string;
+}
+
+export interface UpdateDateSpecificAvailability {
+  specificDate: string;
+  startTime: string;
+  endTime: string;
+  type: "AVAILABLE" | "UNAVAILABLE";
+  slotDurationMinutes: number;
+  reason: string | null;
 }
 
 export interface CounselorSettings {

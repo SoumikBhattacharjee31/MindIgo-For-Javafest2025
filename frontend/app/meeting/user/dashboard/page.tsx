@@ -20,13 +20,7 @@ const UserMeetingDashboard = () => {
       setCounselors(response.data.data || []);
     } catch (error) {
       console.error("Error fetching counselors:", error);
-      // Use dummy data if API fails - replace this with proper error handling
-      const dummyCounselors = [
-        { id: 31, username: "Dr. Smith", email: "dr.smith@example.com" },
-        { id: 32, username: "Dr. Johnson", email: "dr.johnson@example.com" },
-        { id: 33, username: "Dr. Brown", email: "dr.brown@example.com" },
-      ];
-      setCounselors(dummyCounselors);
+      setCounselors([]);
     } finally {
       setLoading(false);
     }

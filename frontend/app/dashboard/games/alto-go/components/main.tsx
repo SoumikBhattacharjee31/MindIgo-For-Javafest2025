@@ -120,13 +120,35 @@ const StartGame = (parent: string) => {
     
     // Add visibility change handler
     const handleVisibilityChange = () => {
-      if (!game || !game.scene) return;
-      
-      if (document.hidden) {
-        game.scene.pause();
-      } else {
-        game.scene.resume();
-      }
+        if (!game || !game.scene) return;
+
+        if (document.hidden) {
+            // When the tab becomes hidden, get all currently active scenes.
+            const activeScenes = game.scene.getScenes(true);
+
+            // Loop through the active scenes and pause each one.
+            activeScenes.forEach(scene => {
+                // We can check if the scene has a physics world before trying to pause it
+                if (scene.physics?.world) {
+                    scene.physics.world.pause();
+                }
+                game.scene.pause(scene.scene.key);
+                console.log(`Paused scene: ${scene.scene.key}`);
+            });
+        } else {
+            // When the tab becomes visible again, get all scenes that are paused.
+            const pausedScenes = game.scene.getScenes(false).filter(scene => scene.sys.isPaused());
+
+            // Loop through the paused scenes and resume each one.
+            pausedScenes.forEach(scene => {
+                game.scene.resume(scene.scene.key);
+                // Also resume the physics world if it exists
+                if (scene.physics?.world) {
+                    scene.physics.world.resume();
+                }
+                console.log(`Resumed scene: ${scene.scene.key}`);
+            });
+        }
     };
     
     document.addEventListener('visibilitychange', handleVisibilityChange);

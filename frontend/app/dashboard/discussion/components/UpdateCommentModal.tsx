@@ -6,7 +6,7 @@ import {
   discussionApi,
   CommentResponse,
   UpdateCommentRequest,
-} from "../../api/discussionService";
+} from "@/app/api/discussionService";
 
 interface UpdateCommentModalProps {
   isOpen: boolean;

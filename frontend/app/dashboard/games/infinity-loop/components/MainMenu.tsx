@@ -20,7 +20,7 @@ const MainMenu: React.FC<MainMenuProps> = ({ setCurPage, sound, setArr }) => {
         }
       );
       if (response.status === 200) {
-        setArr(response.data.grid);
+        setArr(response.data.data.grid);
         console.log(response.data);
       } else {
         console.error("Failed to fetch data");

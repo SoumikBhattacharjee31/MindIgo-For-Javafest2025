@@ -7,7 +7,7 @@ import {
   discussionApi,
   REACTION_TYPES,
   POST_CATEGORIES,
-} from "../../api/discussionService";
+} from "@/app/api/discussionService";
 import UpdatePostModal from "./UpdatePostModal";
 import ReportModal from "./ReportModal";
 import ImageGallery from "./ImageGallery";

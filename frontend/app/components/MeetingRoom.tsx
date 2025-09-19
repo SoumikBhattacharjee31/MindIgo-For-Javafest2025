@@ -1,11 +1,37 @@
 import React, { useState, useEffect, useRef } from 'react';
-import io from 'socket.io-client';
+import io, { Socket } from 'socket.io-client';
 
-const MeetingRoom = ({ meetingRoomId, meetingType, userRole, onEndMeeting }) => {
-  const [localStream, setLocalStream] = useState(null);
-  const [remoteStream, setRemoteStream] = useState(null);
-  const [peerConnection, setPeerConnection] = useState(null);
-  const [socket, setSocket] = useState(null);
+type MeetingStatus = "PENDING" | "ACCEPTED" | "REJECTED" | "COMPLETED";
+type MeetingType = "VIDEO" | "AUDIO";
+
+interface MeetingRequest {
+  id: number;
+  userId: number;
+  counselorId?: number;
+  userUsername: string;
+  counselorUsername?: string;
+  meetingType: MeetingType;
+  status: MeetingStatus;
+  createdAt: string;
+  updatedAt: string;
+  rejectionReason?: string | null;
+  meetingRoomId?: string | null;
+}
+
+interface MeetingRoomProps {
+  meetingRoomId: string | null | undefined;
+  meetingType: MeetingType;
+  userRole: 'COUNSELOR' | 'USER';
+  onEndMeeting: () => void;
+}
+
+const MeetingRoom: React.FC<MeetingRoomProps> = ({ 
+  meetingRoomId, meetingType, userRole, onEndMeeting
+}) => {
+  const [localStream, setLocalStream] = useState<MediaStream|null>(null);
+  const [remoteStream, setRemoteStream] = useState<MediaStream|null>(null);
+  const [peerConnection, setPeerConnection] = useState<RTCPeerConnection|null>(null);
+  const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
@@ -13,11 +39,11 @@ const MeetingRoom = ({ meetingRoomId, meetingType, userRole, onEndMeeting }) => 
   const [isInitiator, setIsInitiator] = useState(false);
   const [mediaReady, setMediaReady] = useState(false);
 
-  const localVideoRef = useRef();
-  const remoteVideoRef = useRef();
-  const socketRef = useRef();
-  const peerConnectionRef = useRef();
-  const localStreamRef = useRef();
+  const localVideoRef = useRef<HTMLVideoElement | null>(null);
+  const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
+  const socketRef = useRef<Socket | null>(null);
+  const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
+  const localStreamRef = useRef<MediaStream | null>(null);
 
   const iceServers = {
     iceServers: [
@@ -244,7 +270,7 @@ const MeetingRoom = ({ meetingRoomId, meetingType, userRole, onEndMeeting }) => 
     });
   };
 
-  const createPeerConnection = async (initiator) => {
+  const createPeerConnection = async (initiator:boolean) => {
     const currentStream = localStreamRef.current;
     
     if (!currentStream) {
@@ -347,7 +373,7 @@ const MeetingRoom = ({ meetingRoomId, meetingType, userRole, onEndMeeting }) => 
         });
         await pc.setLocalDescription(offer);
         console.log('Sending offer');
-        socketRef.current.emit('offer', offer, meetingRoomId);
+        if (socketRef.current) socketRef.current.emit('offer', offer, meetingRoomId);
       } catch (err) {
         console.error('Error creating offer:', err);
         setError('Failed to create connection offer');

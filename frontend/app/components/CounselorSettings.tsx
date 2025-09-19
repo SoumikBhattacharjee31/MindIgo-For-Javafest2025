@@ -44,7 +44,7 @@ const CounselorSettings = () => {
     }
   };
 
-  const handleToggle = (field) => {
+  const handleToggle = (field: keyof typeof settings) => {
     setSettings(prev => ({
       ...prev,
       [field]: !prev[field],

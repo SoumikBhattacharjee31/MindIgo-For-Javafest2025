@@ -23,7 +23,7 @@ spring:
             - id: content-service
               uri: lb://content-service
               predicates:
-                - Path=/api/v1/content/**
+                - Path=/api/v1/content/**,/api/v1/game/**
               filters:
                 - name: JwtAuth
             - id: routine-service

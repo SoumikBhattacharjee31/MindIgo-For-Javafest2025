@@ -23,9 +23,19 @@ public class MeetingService {
     @Autowired
     private AuthService authService;
 
+    /**
+     * Helper method to get or create counselor settings
+     */
+    private CounselorSettings getOrCreateCounselorSettings(Long counselorId) {
+        return counselorSettingsRepository.findByCounselorId(counselorId)
+                .orElseGet(() -> {
+                    CounselorSettings newSettings = new CounselorSettings(counselorId, true, true);
+                    return counselorSettingsRepository.save(newSettings);
+                });
+    }
+
     public CounselorSettings updateCounselorSettings(Long counselorId, CounselorSettingsDto dto) {
-        CounselorSettings settings = counselorSettingsRepository.findByCounselorId(counselorId)
-                .orElse(new CounselorSettings(counselorId, false, false));
+        CounselorSettings settings = getOrCreateCounselorSettings(counselorId);
 
         settings.setAudioMeetingsEnabled(dto.getAudioMeetingsEnabled());
         settings.setVideoMeetingsEnabled(dto.getVideoMeetingsEnabled());
@@ -34,14 +44,12 @@ public class MeetingService {
     }
 
     public CounselorSettings getCounselorSettings(Long counselorId) {
-        return counselorSettingsRepository.findByCounselorId(counselorId)
-                .orElse(new CounselorSettings(counselorId, false, false));
+        return getOrCreateCounselorSettings(counselorId);
     }
 
     public MeetingRequest createMeetingRequest(Long userId, MeetingRequestDto dto) throws Exception {
-        // Get counselor settings
-        CounselorSettings settings = counselorSettingsRepository.findByCounselorId(dto.getCounselorId())
-                .orElse(new CounselorSettings(dto.getCounselorId(), false, false));
+        // Get or create counselor settings
+        CounselorSettings settings = getOrCreateCounselorSettings(dto.getCounselorId());
 
         // Check if counselor has enabled the requested meeting type
         if (dto.getMeetingType() == MeetingType.AUDIO && !settings.getAudioMeetingsEnabled()) {

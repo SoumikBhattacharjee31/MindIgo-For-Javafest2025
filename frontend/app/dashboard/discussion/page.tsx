@@ -10,10 +10,10 @@ import {
   Page,
   POST_CATEGORIES,
   USER_ROLES,
-} from "../../api/discussionService";
-import PostCard from "../../components/discussion/PostCard";
-import CreatePostModal from "../../components/discussion/CreatePostModal";
-import FilterSidebar from "../../components/discussion/FilterSidebar";
+} from "@/app/api/discussionService";
+import PostCard from "@/app/dashboard/discussion/components/PostCard";
+import CreatePostModal from "@/app/dashboard/discussion/components/CreatePostModal";
+import FilterSidebar from "@/app/dashboard/discussion/components/FilterSidebar";
 
 const DiscussionPage = () => {
   const router = useRouter();
