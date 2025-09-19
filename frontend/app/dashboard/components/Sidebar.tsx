@@ -2,10 +2,10 @@
 import { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { User, House, Gamepad2, BotIcon } from "lucide-react";
+import { User, House, Gamepad2, BotIcon, Users2, FileQuestion } from "lucide-react";
 import { FaUserDoctor } from "react-icons/fa6";
 import { GiMeditation } from "react-icons/gi";
-import { FaQuestionCircle } from "react-icons/fa";
+import { FaForumbee, FaQuestionCircle } from "react-icons/fa";
 
 // ========================
 // TYPES & INTERFACES
@@ -28,22 +28,28 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
     link: "/dashboard",
   },
   {
-    id: "games",
-    label: "Game",
-    icon: <Gamepad2 className="w-5 h-5" />,
-    link: "/dashboard/games",
-  },
-  {
     id: "counselor",
     label: "Counselor",
     icon: <FaUserDoctor className="w-5 h-5" />,
     link: "/dashboard/counselor",
   },
   {
+    id: "discussion",
+    label: "Discussion",
+    icon: <Users2 className="w-5 h-5" />,
+    link: "/dashboard/discussion",
+  },
+  {
     id: "mindfulness",
     label: "Mindfulness",
     icon: <GiMeditation className="w-5 h-5" />,
     link: "/dashboard/mindfulness",
+  },
+  {
+    id: "games",
+    label: "Game",
+    icon: <Gamepad2 className="w-5 h-5" />,
+    link: "/dashboard/games",
   },
   {
     id: "chat",
@@ -54,7 +60,7 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
   {
     id: "quiz",
     label: "Quiz",
-    icon: <FaQuestionCircle className="w-5 h-5" />,
+    icon: <FileQuestion className="w-5 h-5" />,
     link: "/dashboard/quiz",
   },
   {

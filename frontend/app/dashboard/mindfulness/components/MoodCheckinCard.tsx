@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import MoodLog from "./MoodLog";
 import ProgressIndicator from "./ProgressIndicator";
 import TodayEntryCard from "./TodayEntryCard";
@@ -41,6 +41,10 @@ const MoodCheckinCard = () => {
   const [isAnimating, setIsAnimating] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [initialized, setInitialized] = useState<boolean>(false);
+  
+  // Use ref to track if data is being loaded to prevent race conditions
+  const isLoadingRef = useRef<boolean>(false);
 
   // Memoized today's date to prevent unnecessary re-calculations
   const today = useMemo(() => formatDateForApi(new Date()), []);
@@ -83,7 +87,10 @@ const MoodCheckinCard = () => {
 
   // Optimized mood data loading with better error handling
   const loadMoodData = useCallback(async () => {
+    if (initialized || isLoadingRef.current) return; // Prevent duplicate calls
+    
     try {
+      isLoadingRef.current = true;
       setLoading(true);
       setError(null);
 
@@ -99,6 +106,7 @@ const MoodCheckinCard = () => {
         restoreSelectionState(todayEntryData);
       }
 
+      setInitialized(true);
       successToast("Mood data loaded successfully.");
     } catch (err: any) {
       const errMsg = err?.message || String(err);
@@ -110,12 +118,25 @@ const MoodCheckinCard = () => {
       setMoodData([]); // Fallback to empty array
     } finally {
       setLoading(false);
+      isLoadingRef.current = false;
     }
-  }, [today, findTodayEntry, restoreSelectionState]);
+  }, [initialized, today, findTodayEntry, restoreSelectionState]);
 
-  // Initialize data on mount
+  // Initialize data on mount with cleanup for React StrictMode
   useEffect(() => {
-    loadMoodData();
+    let isMounted = true;
+
+    const initializeData = async () => {
+      if (isMounted) {
+        await loadMoodData();
+      }
+    };
+
+    initializeData();
+
+    return () => {
+      isMounted = false;
+    };
   }, [loadMoodData]);
 
   // Optimized edit handler with consistent animation timing

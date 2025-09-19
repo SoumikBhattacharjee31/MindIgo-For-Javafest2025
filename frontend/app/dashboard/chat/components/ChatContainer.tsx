@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useQueryState } from "nuqs";
 import {
   Message,
@@ -29,6 +29,9 @@ const ChatContainer = () => {
   const [hasMoreMessages, setHasMoreMessages] = useState(false);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [currentMessagePage, setCurrentMessagePage] = useState(1);
+  
+  // Add ref to track if initialization has occurred
+  const initializationRef = useRef(false);
 
   const transformApiMessagesToUI = useCallback(
     (apiMessages: ApiMessage[]): Message[] => {
@@ -126,27 +129,10 @@ const ChatContainer = () => {
     [transformApiMessagesToUI, createNewSession]
   );
 
-  const initializeSession = useCallback(async () => {
-    try {
-      setIsSessionLoading(true);
-      setError(null);
-
-      if (sessionId) {
-        await loadSessionHistory(sessionId);
-      } else {
-        await createNewSession();
-      }
-    } catch (err) {
-      setError("Failed to initialize session");
-      console.error("Session error:", err);
-    } finally {
-      setIsSessionLoading(false);
-    }
-  }, [sessionId, loadSessionHistory, createNewSession]);
-
   const handleNewSession = useCallback(async () => {
     try {
       setIsSessionLoading(true);
+      initializationRef.current = false; // Reset initialization flag for new session
       await createNewSession();
       setRefreshTrigger((prev) => prev + 1);
     } catch (err) {
@@ -163,6 +149,7 @@ const ChatContainer = () => {
       try {
         setIsSessionLoading(true);
         setError(null);
+        initializationRef.current = false; // Reset initialization flag for new session
         setSessionId(selectedSessionId);
         await loadSessionHistory(selectedSessionId);
       } catch (err) {
@@ -251,8 +238,102 @@ const ChatContainer = () => {
   );
 
   useEffect(() => {
-    initializeSession();
-  }, [initializeSession]);
+    // Prevent multiple initializations
+    if (initializationRef.current) return;
+    
+    const initialize = async () => {
+      try {
+        setIsSessionLoading(true);
+        setError(null);
+        initializationRef.current = true;
+
+        if (sessionId) {
+          // Load session history directly instead of calling loadSessionHistory
+          const response = await fetch(
+            `${API_BASE_URL}/session/${sessionId}?page=1&per_page=20`,
+            {
+              credentials: "include",
+              headers: { "Content-Type": "application/json" },
+            }
+          );
+
+          if (!response.ok) {
+            if (response.status === 404) {
+              // Create new session if not found
+              const newResponse = await fetch(`${API_BASE_URL}/session/new`, {
+                method: "POST",
+                credentials: "include",
+                headers: { "Content-Type": "application/json" },
+              });
+
+              if (!newResponse.ok) throw new Error(`HTTP ${newResponse.status}`);
+              const newData = await newResponse.json();
+
+              if (newData.success && newData.data?.session_id) {
+                setSessionId(newData.data.session_id);
+                setMessages([]);
+                setCurrentRecommendations([]);
+                setHasMoreMessages(false);
+                setCurrentMessagePage(1);
+                setError(null);
+              }
+              return;
+            }
+            throw new Error(`HTTP ${response.status}`);
+          }
+
+          const data = await response.json();
+          if (data.success && data.data?.messages) {
+            const historyData: MessageHistoryResponse = data.data;
+            const formattedMessages = transformApiMessagesToUI(
+              historyData.messages
+            );
+
+            setMessages(formattedMessages);
+            setCurrentMessagePage(1);
+            setHasMoreMessages(historyData.has_more || false);
+
+            if (historyData.messages.length > 0) {
+              const lastApiMessage =
+                historyData.messages[historyData.messages.length - 1];
+              if (lastApiMessage.metadata.recommendations) {
+                setCurrentRecommendations(lastApiMessage.metadata.recommendations);
+              }
+            } else {
+              setCurrentRecommendations([]);
+            }
+          }
+        } else {
+          // Create new session directly
+          const response = await fetch(`${API_BASE_URL}/session/new`, {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+          });
+
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          const data = await response.json();
+
+          if (data.success && data.data?.session_id) {
+            setSessionId(data.data.session_id);
+            setMessages([]);
+            setCurrentRecommendations([]);
+            setHasMoreMessages(false);
+            setCurrentMessagePage(1);
+            setError(null);
+          }
+        }
+      } catch (err) {
+        setError("Failed to initialize session");
+        console.error("Session error:", err);
+        initializationRef.current = false; // Reset on error to allow retry
+      } finally {
+        setIsSessionLoading(false);
+      }
+    };
+
+    initialize();
+  }, [sessionId, setSessionId, transformApiMessagesToUI]); // Include necessary dependencies
 
   if (isSessionLoading) return <ChatContainerLoader />;
 

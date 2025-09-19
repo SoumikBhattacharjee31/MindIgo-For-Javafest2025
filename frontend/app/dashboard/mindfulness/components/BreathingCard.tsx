@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import {
   BreathingExercise,
   LastSession,
@@ -33,6 +33,11 @@ interface ErrorState {
   lastSession: string | null;
 }
 
+interface InitializedState {
+  exercises: boolean;
+  lastSession: boolean;
+}
+
 const BreathingCard = () => {
   // State management
   const [exercises, setExercises] = useState<BreathingExercise[]>([]);
@@ -57,6 +62,16 @@ const BreathingCard = () => {
     lastSession: null,
   });
 
+  // Add initialization tracking to prevent duplicate API calls
+  const [initialized, setInitialized] = useState<InitializedState>({
+    exercises: false,
+    lastSession: false,
+  });
+
+  // Use refs to track loading state and prevent race conditions
+  const isLoadingExercisesRef = useRef<boolean>(false);
+  const isLoadingLastSessionRef = useRef<boolean>(false);
+
   // Memoized current date to avoid recalculation
   const currentDate = useMemo(() => {
     return formatDateForApi(new Date()); // Use consistent date formatting
@@ -80,13 +95,17 @@ const BreathingCard = () => {
 
   // Fetch exercises with optimized error handling
   const fetchExercises = useCallback(async () => {
+    if (initialized.exercises || isLoadingExercisesRef.current) return; // Prevent duplicate calls
+    
     updateLoading("exercises", true);
     updateError("exercises", null);
+    isLoadingExercisesRef.current = true;
 
     try {
       const exercisesResponse = await breathingApi.getBreathingExercises();
       const mappedExercises = exercisesResponse.map(toBreathingExercise);
       setExercises(mappedExercises);
+      setInitialized(prev => ({ ...prev, exercises: true }));
       successToast("Breathing exercises loaded successfully.");
     } catch (err) {
       const errorMessage =
@@ -96,13 +115,17 @@ const BreathingCard = () => {
       errorToast(errorMessage);
     } finally {
       updateLoading("exercises", false);
+      isLoadingExercisesRef.current = false;
     }
-  }, [updateLoading, updateError]);
+  }, [initialized.exercises, updateLoading, updateError]);
 
   // Fetch last session with optimized error handling
   const fetchLastSession = useCallback(async () => {
+    if (initialized.lastSession || isLoadingLastSessionRef.current) return; // Prevent duplicate calls
+    
     updateLoading("lastSession", true);
     updateError("lastSession", null);
+    isLoadingLastSessionRef.current = true;
 
     try {
       const sessionResponse = await breathingApi.getLatestSession(currentDate);
@@ -111,6 +134,7 @@ const BreathingCard = () => {
         setLastSession(mappedSession);
         successToast("Last session loaded successfully.");
       }
+      setInitialized(prev => ({ ...prev, lastSession: true }));
     } catch (err) {
       const errorMessage = "Failed to load last session. Please try again.";
       console.error("Error fetching last session:", err);
@@ -118,13 +142,28 @@ const BreathingCard = () => {
       errorToast(errorMessage);
     } finally {
       updateLoading("lastSession", false);
+      isLoadingLastSessionRef.current = false;
     }
-  }, [currentDate, updateLoading, updateError]);
+  }, [currentDate, initialized.lastSession, updateLoading, updateError]);
 
-  // Initial data fetch
+  // Initial data fetch with cleanup for React StrictMode
   useEffect(() => {
-    fetchExercises();
-    fetchLastSession();
+    let isMounted = true;
+
+    const initializeData = async () => {
+      if (isMounted) {
+        await fetchExercises();
+      }
+      if (isMounted) {
+        await fetchLastSession();
+      }
+    };
+
+    initializeData();
+
+    return () => {
+      isMounted = false;
+    };
   }, [fetchExercises, fetchLastSession]);
 
   // Handle exercise card click
