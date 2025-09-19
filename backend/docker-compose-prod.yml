@@ -16,7 +16,7 @@ services:
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U mindigo -d Mindigo"]
-      interval: 10s
+      interval: 20s
       timeout: 5s
       retries: 5
       start_period: 5s
@@ -31,10 +31,12 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: 1234
     volumes:
       - mongo_data:/data/db
+    networks:
+      - microservices-net
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "echo 'db.runCommand(\"ping\").ok' | mongosh localhost:27017/test --quiet"]
-      interval: 10s
+      interval: 20s
       timeout: 10s
       retries: 5
       start_period: 20s
@@ -44,6 +46,8 @@ services:
     container_name: local-mongo-express
     ports:
       - "9090:8081"
+    networks:
+      - microservices-net
     environment:
       ME_CONFIG_MONGODB_ADMINUSERNAME: mindigo
       ME_CONFIG_MONGODB_ADMINPASSWORD: 1234
@@ -58,31 +62,40 @@ services:
     restart: unless-stopped
 
   config-server:
-    image: config-server
+    image: config-server:latest
     container_name: config-server
     ports:
       - "8888:8888"
     networks:
       - microservices-net
-    depends_on:
-      postgres:
-        condition: service_healthy
     environment:
       - CONFIG_SERVER_PORT=8888
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_NAME=Mindigo
-      - DB_USERNAME=${DB_USERNAME}
-      - DB_PASSWORD=${DB_PASSWORD}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8888/actuator/health"]
-      interval: 10s
+      interval: 20s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  signaling-server:
+    image: signaling-server:latest
+    container_name: signaling-server
+    ports:
+      - "3001:3001"
+    networks:
+      - microservices-net
+    environment:
+      - FRONTEND_DOMAIN=http://localhost:3000
+      - SIGNALING_SERVER_PORT=3001
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:3001/health" ]
+      interval: 20s
       timeout: 5s
       retries: 5
     restart: unless-stopped
 
   eureka-server:
-    image: eureka-server
+    image: eureka-server:latest
     container_name: eureka-server
     ports:
       - "8761:8761"
@@ -97,40 +110,13 @@ services:
       - EUREKA_SERVER_PORT=8761
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
-
-  routine-service:
-    image: routine-service
-    container_name: routine-service
-    ports:
-      - "8087:8087"
-    networks:
-      - microservices-net
-    depends_on:
-      eureka-server:
-        condition: service_healthy
-    environment:
-      - CONFIG_SERVER_URL=http://config-server:8888
-      - EUREKA_SERVER_URL=http://eureka-server:8761/eureka/
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_NAME=Mindigo
-      - EUREKA_HOSTNAME=routine-service
-      - DB_USERNAME=${DB_USERNAME}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - ROUTINE_SERVICE_PORT=8087
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8087/actuator/health"]
-      interval: 10s
+      interval: 20s
       timeout: 5s
       retries: 5
     restart: unless-stopped
 
   auth-service:
-    image: auth-service
+    image: auth-service:latest
     container_name: auth-service
     ports:
       - "8081:8081"
@@ -151,20 +137,17 @@ services:
       - AUTH_SERVICE_PORT=8081
       - JWT_SECRET=${JWT_SECRET}
       - FRONTEND_DOMAIN=${FRONTEND_DOMAIN}
-      - REDIS_HOST=${REDIS_HOST}
-      - REDIS_PORT=${REDIS_PORT}
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
       - SMTP_USER=${SMTP_USER}
       - SMTP_PASSWORD=${SMTP_PASSWORD}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
-      interval: 10s
+      interval: 20s
       timeout: 10s
       retries: 10
     restart: unless-stopped
 
   appointment-service:
-    image: appointment-service
+    image: appointment-service:latest
     container_name: appointment-service
     ports:
       - "8092:8092"
@@ -187,13 +170,13 @@ services:
       - SMTP_PASSWORD=${SMTP_PASSWORD}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8092/actuator/health"]
-      interval: 10s
+      interval: 20s
       timeout: 10s
       retries: 10
     restart: unless-stopped
 
   content-service:
-    image: content-service
+    image: content-service:latest
     container_name: content-service
     ports:
       - "8086:8086"
@@ -214,13 +197,13 @@ services:
       - CONTENT_SERVICE_PORT=8086
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8086/actuator/health"]
-      interval: 10s
+      interval: 20s
       timeout: 10s
       retries: 10
     restart: unless-stopped
 
   file-server:
-    image: file-server
+    image: file-server:latest
     container_name: file-server
     ports:
       - "8085:8085"
@@ -239,13 +222,13 @@ services:
       - SUPABASE_BUCKET=${SUPABASE_BUCKET}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8085/actuator/health"]
-      interval: 10s
+      interval: 20s
       timeout: 10s
       retries: 10
     restart: unless-stopped
 
   meeting-service:
-    image: meeting-service
+    image: meeting-service:latest
     container_name: meeting-service
     ports:
       - "8091:8091"
@@ -266,13 +249,13 @@ services:
       - MEETING_SERVICE_PORT=8091
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8091/actuator/health"]
-      interval: 10s
+      interval: 20s
       timeout: 10s
       retries: 10
     restart: unless-stopped
 
   discussion-service:
-    image: discussion-service
+    image: discussion-service:latest
     container_name: discussion-service
     ports:
       - "8093:8093"
@@ -293,13 +276,81 @@ services:
       - DISCUSSION_SERVICE_PORT=8093
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8093/actuator/health"]
-      interval: 10s
+      interval: 20s
+      timeout: 10s
+      retries: 10
+    restart: unless-stopped
+
+  routine-service:
+    image: routine-service:latest
+    container_name: routine-service
+    ports:
+      - "8087:8087"
+    networks:
+      - microservices-net
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+    environment:
+      - CONFIG_SERVER_URL=http://config-server:8888
+      - EUREKA_SERVER_URL=http://eureka-server:8761/eureka/
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=Mindigo
+      - EUREKA_HOSTNAME=routine-service
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - ROUTINE_SERVICE_PORT=8087
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8087/actuator/health" ]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  genai-service:
+    image: genai-service:latest
+    container_name: genai-service
+    ports:
+      - "8100:8100"
+    networks:
+      - microservices-net
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - GENAI_SERVICE_PORT=8100
+      - APP_NAME=genai-service
+      - EUREKA_SERVER_URL=http://eureka-server:8761/eureka
+      - EUREKA_HOSTNAME=genai-service
+      - EUREKA_SERVER_PORT=8761
+      - LANGSMITH_API_KEY=${LANGSMITH_API_KEY}
+      - MONGO_URI=mongodb://mindigo:1234@mongo:27017/
+      - HEALTH_CHECK_INTERVAL=30
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=Mindigo
+      - DB_USERNAME=mindigo
+      - DB_PASSWORD=1234
+      - ELEVENLABS_API_KEY=${ELEVENLABS_API_KEY}
+      - ELEVENLABS_BASE_URL=https://api.elevenlabs.io
+      - ELEVENLABS_MODEL_ID=eleven_multilingual_v2
+      - ELEVENLABS_VOICE_FILENAME=voices.json
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8100/api/v1/genai/test" ]
+      interval: 20s
       timeout: 10s
       retries: 10
     restart: unless-stopped
 
   gateway-server:
-    image: gateway-server
+    image: gateway-server:latest
     container_name: gateway-server
     ports:
       - "8080:8080"
@@ -324,14 +375,17 @@ services:
         condition: service_healthy
       discussion-service:
         condition: service_healthy
+      genai-service:
+        condition: service_healthy
     environment:
       - CONFIG_SERVER_URL=http://config-server:8888
       - EUREKA_SERVER_URL=http://eureka-server:8761/eureka/
       - EUREKA_HOSTNAME=gateway-server
       - GATEWAY_SERVER_PORT=8080
+      - FRONTEND_DOMAIN=${FRONTEND_DOMAIN}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
-      interval: 10s
+      interval: 20s
       timeout: 10s
       retries: 10
     restart: unless-stopped

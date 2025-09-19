@@ -1,0 +1,196 @@
+name: CD - Deploy to Azure VM
+
+on:
+  workflow_run:
+    workflows: ["CI - Build and Test"]
+    types:
+      - completed
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    environment:
+      name: production
+
+    steps:
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.VM_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Stop and remove existing containers
+        run: |
+          ssh -i ~/.ssh/id_rsa ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} << 'EOF'
+          echo " Checking for existing containers..."
+          
+          # Stop docker-compose services if compose file exists
+          if [ -f docker-compose.yml ]; then
+            echo " Stopping docker-compose services..."
+            docker-compose down --remove-orphans || true
+          fi
+          
+          # Stop and remove any arebbus-related containers
+          for container in $(docker ps -aq --filter "name=arebbus"); do
+            echo " Stopping and removing container: $(docker ps --filter id=$container --format '{{.Names}}')"
+            docker stop $container || true
+            docker rm $container || true
+          done
+          
+          echo " Container cleanup completed"
+          EOF
+
+      - name: Pull latest image and cleanup old images
+        run: |
+          ssh -i ~/.ssh/id_rsa ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} << 'EOF'
+          echo " Pulling latest backend image..."
+          docker pull ${{ secrets.DOCKER_USERNAME }}/arebbus-backend:latest
+          
+          echo " Cleaning up old images..."
+          docker image prune -f || true
+          
+          echo " Image update completed"
+          EOF
+
+      - name: Create docker-compose configuration
+        run: |
+          ssh -i ~/.ssh/id_rsa ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} << 'EOF'
+          echo " Creating docker-compose.yml..."
+          cat > docker-compose.yml << 'COMPOSE_EOF'
+          version: '3.8'
+          
+          services:
+            postgres:
+              image: postgres:17-alpine
+              container_name: arebbus_postgres
+              environment:
+                POSTGRES_USER: ${POSTGRES_USER}
+                POSTGRES_PASSWORD: ${POSTGRES_PASS}
+                POSTGRES_DB: Arebbus
+              volumes:
+                - postgres_data:/var/lib/postgresql/data
+                - ./init-sql:/docker-entrypoint-initdb.d
+              ports:
+                - "5433:5432"
+              healthcheck:
+                test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+                interval: 10s
+                timeout: 5s
+                retries: 5
+                start_period: 30s
+              restart: unless-stopped
+              networks:
+                - arebbus-network
+          
+            arebbus-backend:
+              image: ${DOCKER_USERNAME}/arebbus-backend:latest
+              container_name: arebbus-backend
+              depends_on:
+                postgres:
+                  condition: service_healthy
+              environment:
+                POSTGRES_URL: ${POSTGRES_URL}
+                POSTGRES_USER: ${POSTGRES_USER}
+                POSTGRES_PASS: ${POSTGRES_PASS}
+                SECRET_KEY: ${SECRET_KEY}
+                FRONTEND_URL: ${FRONTEND_URL}
+                JAVA_OPTS: "-Xmx1g -Djava.security.egd=file:/dev/./urandom"
+              ports:
+                - "8080:6996"
+              volumes:
+                - arebbus_data:/app/data
+              healthcheck:
+                test: ["CMD", "curl", "-f", "http://localhost:6996/health"]
+                interval: 30s
+                timeout: 10s
+                retries: 3
+                start_period: 60s
+              restart: unless-stopped
+              networks:
+                - arebbus-network
+          
+          volumes:
+            postgres_data:
+              driver: local
+            arebbus_data:
+              driver: local
+          
+          networks:
+            arebbus-network:
+              driver: bridge
+          COMPOSE_EOF
+          
+          echo " docker-compose.yml created"
+          EOF
+
+      - name: Create environment file
+        run: |
+          ssh -i ~/.ssh/id_rsa ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} << 'EOF'
+          echo "🔧 Creating .env file..."
+          cat > .env << ENV_EOF
+          DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
+          POSTGRES_URL=${{ secrets.POSTGRES_URL }}
+          POSTGRES_USER=${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASS=${{ secrets.POSTGRES_PASS }}
+          SECRET_KEY=${{ secrets.SECRET_KEY }}
+          FRONTEND_URL=${{ secrets.FRONTEND_URL }}
+          ENV_EOF
+          
+          echo " Environment file created"
+          EOF
+
+      - name: Start services
+        run: |
+          ssh -i ~/.ssh/id_rsa ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} << 'EOF'
+          echo "🚀 Starting services with docker-compose..."
+          docker-compose up -d
+          
+          echo " Service status:"
+          docker-compose ps
+          
+          echo " Services started"
+          EOF
+
+      - name: Wait for backend to be ready
+        run: |
+          ssh -i ~/.ssh/id_rsa ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} << 'EOF'
+          echo "⏳ Waiting for backend to be ready..."
+          
+          for i in {1..20}; do
+            echo " Health check attempt $i/20..."
+          
+            if curl -f http://localhost:8080/health 2>/dev/null; then
+              echo " Backend is ready!"
+              exit 0
+            fi
+          
+            echo "  Waiting 15 seconds..."
+            sleep 15
+          done
+          
+          echo " Backend failed to become ready"
+          exit 1
+          EOF
+
+      - name: Show deployment status
+        run: |
+          ssh -i ~/.ssh/id_rsa ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} << 'EOF'
+          echo "🎉 Deployment completed successfully!"
+          echo ""
+          echo "📊 Final status:"
+          docker-compose ps
+          echo ""
+          echo "🌐 Application accessible at: http://${{ secrets.VM_HOST }}:8080"
+          echo ""
+          echo "📋 Recent backend logs:"
+          docker logs --tail 10 arebbus-backend
+          EOF
+
+      - name: Cleanup
+        if: always()
+        run: |
+          rm -f ~/.ssh/id_rsa

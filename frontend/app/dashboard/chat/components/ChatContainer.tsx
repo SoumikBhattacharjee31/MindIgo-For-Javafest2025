@@ -12,6 +12,8 @@ import ChatSidebar from "./ChatSidebar";
 import MainBody from "./MainBody";
 import RecommendationsPanel from "./RecommendationsPanel";
 import ChatContainerLoader from "./ChatContainerLoader";
+import { useSessionValidation } from "@/hooks/useSessionValidation";
+import { sessionCache } from "@/util/sessionCache";
 
 const API_BASE_URL = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/genai/gemini`;
 
@@ -32,6 +34,9 @@ const ChatContainer = () => {
   
   // Add ref to track if initialization has occurred
   const initializationRef = useRef(false);
+  
+  // Use the session validation hook
+  const { getValidSession, forceRefreshSession } = useSessionValidation();
 
   const transformApiMessagesToUI = useCallback(
     (apiMessages: ApiMessage[]): Message[] => {
@@ -71,12 +76,16 @@ const ChatContainer = () => {
     const data = await response.json();
 
     if (data.success && data.data?.session_id) {
-      setSessionId(data.data.session_id);
+      const newSessionId = data.data.session_id;
+      setSessionId(newSessionId);
       setMessages([]);
       setCurrentRecommendations([]);
       setHasMoreMessages(false);
       setCurrentMessagePage(1);
       setError(null);
+      
+      // Cache the new session
+      sessionCache.cacheSession(newSessionId);
     }
   }, [setSessionId]);
 
@@ -133,14 +142,27 @@ const ChatContainer = () => {
     try {
       setIsSessionLoading(true);
       initializationRef.current = false; // Reset initialization flag for new session
-      await createNewSession();
-      setRefreshTrigger((prev) => prev + 1);
+      
+      // Use forceRefreshSession to clear cache and create new session
+      const result = await forceRefreshSession();
+      
+      if (result.isValidSession && result.sessionId) {
+        setSessionId(result.sessionId);
+        setMessages([]);
+        setCurrentRecommendations([]);
+        setHasMoreMessages(false);
+        setCurrentMessagePage(1);
+        setError(null);
+        setRefreshTrigger((prev) => prev + 1);
+      } else {
+        throw new Error(result.error || "Failed to create session");
+      }
     } catch (err) {
-      setError("Failed to create session");
+      setError(err instanceof Error ? err.message : "Failed to create session");
     } finally {
       setIsSessionLoading(false);
     }
-  }, [createNewSession]);
+  }, [forceRefreshSession, setSessionId]);
 
   const handleSessionSelect = useCallback(
     async (selectedSessionId: string) => {
@@ -151,6 +173,10 @@ const ChatContainer = () => {
         setError(null);
         initializationRef.current = false; // Reset initialization flag for new session
         setSessionId(selectedSessionId);
+        
+        // Cache the selected session
+        sessionCache.cacheSession(selectedSessionId);
+        
         await loadSessionHistory(selectedSessionId);
       } catch (err) {
         setError("Failed to load session");
@@ -226,6 +252,9 @@ const ChatContainer = () => {
 
           setMessages((prev) => [...prev, assistantMessage]);
           setCurrentRecommendations(chatResponse.recommendations);
+          
+          // Update the session cache since we had a successful interaction
+          sessionCache.cacheSession(sessionId);
         }
       } catch (err) {
         setError("Failed to send message");
@@ -247,85 +276,121 @@ const ChatContainer = () => {
         setError(null);
         initializationRef.current = true;
 
-        if (sessionId) {
-          // Load session history directly instead of calling loadSessionHistory
-          const response = await fetch(
-            `${API_BASE_URL}/session/${sessionId}?page=1&per_page=20`,
-            {
-              credentials: "include",
-              headers: { "Content-Type": "application/json" },
-            }
-          );
+        let targetSessionId: string | null = null;
 
-          if (!response.ok) {
-            if (response.status === 404) {
-              // Create new session if not found
-              const newResponse = await fetch(`${API_BASE_URL}/session/new`, {
-                method: "POST",
+        if (sessionId) {
+          // If there's a sessionId in the URL, try to use it
+          try {
+            const response = await fetch(
+              `${API_BASE_URL}/session/${sessionId}?page=1&per_page=20`,
+              {
                 credentials: "include",
                 headers: { "Content-Type": "application/json" },
-              });
+              }
+            );
 
-              if (!newResponse.ok) throw new Error(`HTTP ${newResponse.status}`);
-              const newData = await newResponse.json();
+            if (response.ok) {
+              const data = await response.json();
+              if (data.success && data.data?.messages) {
+                // URL session is valid, use it and cache it
+                targetSessionId = sessionId;
+                sessionCache.cacheSession(sessionId);
+                
+                const historyData: MessageHistoryResponse = data.data;
+                const formattedMessages = transformApiMessagesToUI(
+                  historyData.messages
+                );
 
-              if (newData.success && newData.data?.session_id) {
-                setSessionId(newData.data.session_id);
+                setMessages(formattedMessages);
+                setCurrentMessagePage(1);
+                setHasMoreMessages(historyData.has_more || false);
+
+                if (historyData.messages.length > 0) {
+                  const lastApiMessage =
+                    historyData.messages[historyData.messages.length - 1];
+                  if (lastApiMessage.metadata.recommendations) {
+                    setCurrentRecommendations(lastApiMessage.metadata.recommendations);
+                  }
+                } else {
+                  setCurrentRecommendations([]);
+                }
+              }
+            } else if (response.status === 404) {
+              // URL session doesn't exist, continue to get/create a valid session
+              targetSessionId = null;
+            } else {
+              throw new Error(`HTTP ${response.status}`);
+            }
+          } catch (err) {
+            console.warn("Failed to load session from URL, will get/create new session");
+            targetSessionId = null;
+          }
+        }
+
+        // If we don't have a valid session from URL, get one from cache or create new
+        if (!targetSessionId) {
+          const result = await getValidSession();
+          
+          if (result.isValidSession && result.sessionId) {
+            targetSessionId = result.sessionId;
+            setSessionId(result.sessionId);
+            
+            // If it's a cached session, load its history
+            if (!result.needsNewSession) {
+              try {
+                const response = await fetch(
+                  `${API_BASE_URL}/session/${result.sessionId}?page=1&per_page=20`,
+                  {
+                    credentials: "include",
+                    headers: { "Content-Type": "application/json" },
+                  }
+                );
+
+                if (response.ok) {
+                  const data = await response.json();
+                  if (data.success && data.data?.messages) {
+                    const historyData: MessageHistoryResponse = data.data;
+                    const formattedMessages = transformApiMessagesToUI(
+                      historyData.messages
+                    );
+
+                    setMessages(formattedMessages);
+                    setCurrentMessagePage(1);
+                    setHasMoreMessages(historyData.has_more || false);
+
+                    if (historyData.messages.length > 0) {
+                      const lastApiMessage =
+                        historyData.messages[historyData.messages.length - 1];
+                      if (lastApiMessage.metadata.recommendations) {
+                        setCurrentRecommendations(lastApiMessage.metadata.recommendations);
+                      }
+                    } else {
+                      setCurrentRecommendations([]);
+                    }
+                  }
+                }
+              } catch (err) {
+                console.warn("Failed to load cached session history:", err);
+                // Continue with empty session
                 setMessages([]);
                 setCurrentRecommendations([]);
                 setHasMoreMessages(false);
                 setCurrentMessagePage(1);
-                setError(null);
-              }
-              return;
-            }
-            throw new Error(`HTTP ${response.status}`);
-          }
-
-          const data = await response.json();
-          if (data.success && data.data?.messages) {
-            const historyData: MessageHistoryResponse = data.data;
-            const formattedMessages = transformApiMessagesToUI(
-              historyData.messages
-            );
-
-            setMessages(formattedMessages);
-            setCurrentMessagePage(1);
-            setHasMoreMessages(historyData.has_more || false);
-
-            if (historyData.messages.length > 0) {
-              const lastApiMessage =
-                historyData.messages[historyData.messages.length - 1];
-              if (lastApiMessage.metadata.recommendations) {
-                setCurrentRecommendations(lastApiMessage.metadata.recommendations);
               }
             } else {
+              // New session, start with empty state
+              setMessages([]);
               setCurrentRecommendations([]);
+              setHasMoreMessages(false);
+              setCurrentMessagePage(1);
             }
-          }
-        } else {
-          // Create new session directly
-          const response = await fetch(`${API_BASE_URL}/session/new`, {
-            method: "POST",
-            credentials: "include",
-            headers: { "Content-Type": "application/json" },
-          });
-
-          if (!response.ok) throw new Error(`HTTP ${response.status}`);
-          const data = await response.json();
-
-          if (data.success && data.data?.session_id) {
-            setSessionId(data.data.session_id);
-            setMessages([]);
-            setCurrentRecommendations([]);
-            setHasMoreMessages(false);
-            setCurrentMessagePage(1);
-            setError(null);
+          } else {
+            throw new Error(result.error || "Failed to get valid session");
           }
         }
       } catch (err) {
         setError("Failed to initialize session");
-        console.error("Session error:", err);
+        console.error("Session initialization error:", err);
         initializationRef.current = false; // Reset on error to allow retry
       } finally {
         setIsSessionLoading(false);
@@ -333,7 +398,7 @@ const ChatContainer = () => {
     };
 
     initialize();
-  }, [sessionId, setSessionId, transformApiMessagesToUI]); // Include necessary dependencies
+  }, [sessionId, setSessionId, transformApiMessagesToUI, getValidSession]);
 
   if (isSessionLoading) return <ChatContainerLoader />;
 

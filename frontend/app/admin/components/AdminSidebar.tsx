@@ -11,6 +11,7 @@ const AdminSidebar = () => {
     { name: "Applications", href: "/admin/applications", icon: "📋" },
     { name: "Quiz Management", href: "/admin/quiz-management", icon: "🧠" },
     { name: "Quiz Overview", href: "/admin/quiz-overview", icon: "📈" },
+    { name: "Discussion", href: "/admin/discussion", icon: "💬" },
   ];
 
   return (

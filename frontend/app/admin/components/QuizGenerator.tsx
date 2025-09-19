@@ -145,7 +145,7 @@ const QuizGenerator: React.FC<QuizGeneratorProps> = ({
           <input
             type="range"
             min="5"
-            max="25"
+            max="15"
             value={numQuestions}
             onChange={(e) => setNumQuestions(parseInt(e.target.value))}
             disabled={loading}
@@ -168,7 +168,7 @@ const QuizGenerator: React.FC<QuizGeneratorProps> = ({
             loading ? "text-gray-400" : "text-gray-500"
           }`}
         >
-          Choose between 5-25 questions for your quiz
+          Choose between 5-15 questions for your quiz
         </p>
       </div>
 
