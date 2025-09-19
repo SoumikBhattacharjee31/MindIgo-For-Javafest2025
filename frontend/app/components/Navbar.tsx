@@ -44,7 +44,7 @@ const Navbar = () => {
                 if (user) {
                   router.push("/dashboard");
                 } else {
-                  router.push("/sign-in");
+                  router.push("/auth/sign-in");
                 }
               }}
               className="bg-indigo-600 text-white px-6 py-2 rounded-full hover:bg-indigo-700 transition-colors"

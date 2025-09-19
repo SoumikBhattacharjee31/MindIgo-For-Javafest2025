@@ -209,12 +209,12 @@ const SignUp = () => {
             "Counselor registration submitted! Your account will be activated after admin approval."
           );
           // Redirect to a counselor-specific status page
-          router.push("/counselor-status");
+          router.push("/auth/counselor-status");
         } else {
           successToast(
             "Sign Up Request Sent Successfully. Now Verify with OTP"
           );
-          router.push("/sign-up-verification");
+          router.push("/auth/sign-up-verification");
         }
       } else {
         errorToast(response.data.message || "Registration failed");

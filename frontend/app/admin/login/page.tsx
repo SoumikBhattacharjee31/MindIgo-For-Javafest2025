@@ -59,13 +59,13 @@ const AdminLogin = () => {
             message.includes("pending admin approval")
           ) {
             errorToast("Your counselor account is pending admin approval");
-            router.push("/counselor-status");
+            router.push("/auth/counselor-status");
           } else if (
             errorCode === "EMAIL_NOT_VERIFIED" ||
             message.includes("Email not verified")
           ) {
             errorToast("Please verify your email before logging in");
-            router.push("/sign-up-verification");
+            router.push("/auth/sign-up-verification");
           } else if (
             errorCode === "COUNSELOR_REJECTED" ||
             message.includes("rejected")
