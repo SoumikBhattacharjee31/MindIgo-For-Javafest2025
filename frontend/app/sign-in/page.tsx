@@ -18,6 +18,8 @@ import axios from "axios";
 import { successToast, errorToast, warningToast } from "@/util/toastHelper";
 import useStore from "@/app/store/store";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
 const Login = () => {
   const [emailId, setEmailId] = React.useState("");
   const [password, setPassword] = React.useState("");
@@ -38,7 +40,7 @@ const Login = () => {
     setLoading(true);
     try {
       const response = await axios.post(
-        "http://localhost:8080/api/v1/auth/login",
+        `${API_BASE_URL}/api/v1/auth/login`,
         {
           email: emailId,
           password: password,

@@ -3,6 +3,8 @@ import React, { useState } from "react";
 import axios from "axios";
 import { successToast, errorToast } from "@/util/toastHelper";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
 interface UserQuizReport {
   file_id: string;
   quizzes: Array<{
@@ -202,7 +204,7 @@ const UserAnswersModal: React.FC<UserAnswersModalProps> = ({
       };
 
       const response = await axios.post<MoodAnalysisResponse>(
-        "http://localhost:8080/api/v1/genai/quiz/evaluate",
+        `${API_BASE_URL}/api/v1/genai/quiz/evaluate`,
         evaluationRequest,
         { withCredentials: true }
       );
@@ -248,7 +250,7 @@ const UserAnswersModal: React.FC<UserAnswersModalProps> = ({
       );
 
       const response = await axios.post(
-        "http://localhost:8080/api/v1/file/upload/reports",
+        `${API_BASE_URL}/api/v1/file/upload/reports`,
         formData,
         {
           headers: {

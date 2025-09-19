@@ -6,6 +6,8 @@ import QuizCard from "@/app/admin/components/QuizCard";
 import QuizDetailsModal from "@/app/admin/components/QuizDetailsModal";
 import UserAnswersModal from "@/app/admin/components/UserAnswersModal";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
 interface Quiz {
   id: number;
   quizCode: string;
@@ -63,7 +65,7 @@ const QuizOverview = () => {
     setLoading(true);
     try {
       const response = await axios.get(
-        "http://localhost:8080/api/v1/content/quiz/quizzes-overview",
+        `${API_BASE_URL}/api/v1/content/quiz/quizzes-overview`,
         {
           withCredentials: true,
         }
@@ -98,7 +100,7 @@ const QuizOverview = () => {
     setLoading(true);
     try {
       const response = await axios.get(
-        `http://localhost:8080/api/v1/content/quiz/user/${userId}/quiz/${quizCode}/answers`,
+        `${API_BASE_URL}/api/v1/content/quiz/user/${userId}/quiz/${quizCode}/answers`,
         { withCredentials: true }
       );
 
@@ -140,7 +142,7 @@ const QuizOverview = () => {
     // infoToast(`Updating analysis link for ${userId} - ${quizCode} - ${analysisReportLink}`);
     try {
       const response = await axios.post(
-        "http://localhost:8080/api/v1/content/quiz/update-analysis-link",
+        `${API_BASE_URL}/api/v1/content/quiz/update-analysis-link`,
         {
           targetUserId: userId,
           quizCode,

@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // ============ BASE CONFIG ============
-const BASE_URL = "http://localhost:8080";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 // ============ TYPE DEFINITIONS ============
 export interface QuizStartRequest {
@@ -72,7 +72,7 @@ export interface ApiResponseClass<T> {
 
 // ============ AXIOS CONFIG ============
 const apiClient = axios.create({
-  baseURL: BASE_URL,
+  baseURL: API_BASE_URL,
   withCredentials: true,
   timeout: 30000, // 30 second timeout for quiz operations
 });

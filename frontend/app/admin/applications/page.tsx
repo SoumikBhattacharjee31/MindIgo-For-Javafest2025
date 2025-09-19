@@ -4,6 +4,8 @@ import Link from "next/link";
 import axios from "axios";
 import { errorToast } from "@/util/toastHelper";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
 const ApplicationsList = () => {
   const [apps, setApps] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -12,7 +14,7 @@ const ApplicationsList = () => {
     const fetchApps = async () => {
       try {
         const res = await axios.get(
-          "http://localhost:8080/api/v1/admin/applications",
+          `${API_BASE_URL}/api/v1/admin/applications`,
           {
             withCredentials: true,
           }

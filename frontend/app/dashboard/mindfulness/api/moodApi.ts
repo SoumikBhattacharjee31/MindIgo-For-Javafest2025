@@ -1,7 +1,7 @@
 // moodApi.ts
 import axios from "axios";
 
-const BASE_URL = "http://localhost:8080";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 // Types matching your backend DTOs
 export interface MoodRequest {
@@ -27,7 +27,7 @@ export interface ApiResponseClass<T> {
 
 // Configure axios instance
 const apiClient = axios.create({
-  baseURL: BASE_URL,
+  baseURL: API_BASE_URL,
   withCredentials: true,
 });
 

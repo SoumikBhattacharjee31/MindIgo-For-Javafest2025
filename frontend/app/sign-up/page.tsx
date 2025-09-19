@@ -36,6 +36,8 @@ import UserTypeSelector from "@/app/components/UserTypeSelector";
 import CounselorSpecificFields from "@/app/components/CounselorSpecificFields";
 import ButtonTypeDivider from "./components/ButtonTypeDivider";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
 const SignUp = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [direction, setDirection] = useState("forward");
@@ -151,7 +153,7 @@ const SignUp = () => {
       let requestData = {};
 
       if (userType === "COUNSELOR") {
-        endpoint = "http://localhost:8080/api/v1/auth/register-counselor";
+        endpoint = `${API_BASE_URL}/api/v1/auth/register-counselor`;
 
         // Add verification document (required for counselors)
         if (verificationDocument) {
@@ -175,7 +177,7 @@ const SignUp = () => {
         );
       } else {
         // CLIENT registration
-        endpoint = "http://localhost:8080/api/v1/auth/register";
+        endpoint = `${API_BASE_URL}/api/v1/auth/register`;
 
         requestData = {
           name,

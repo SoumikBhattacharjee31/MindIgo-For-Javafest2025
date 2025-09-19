@@ -13,6 +13,8 @@ import {
   infoToast,
 } from "@/util/toastHelper";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
 const length = 6;
 const RESEND_OTP_TIMEOUT = 30; // 30 seconds (in seconds, not milliseconds)
 
@@ -64,7 +66,7 @@ const SignUpVerification = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:8080/api/v1/auth/verify-otp",
+        `${API_BASE_URL}/api/v1/auth/verify-otp`,
         { otp: otpValue },
         {
           withCredentials: true,
@@ -96,7 +98,7 @@ const SignUpVerification = () => {
   const requestOtp = async () => {
     try {
       const response = await axios.post(
-        "http://localhost:8080/api/v1/auth/request-otp",
+        `${API_BASE_URL}/api/v1/auth/request-otp`,
         {}, // Empty body as per backend
         {
           withCredentials: true,

@@ -2,11 +2,13 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 import { successToast, errorToast, warningToast } from "@/util/toastHelper";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
 const register = async (formData: FormData) => {
   const router = useRouter();
   try {
     const response = await axios.post(
-      "http://localhost:8080/api/v1/auth/register",
+      `${API_BASE_URL}/api/v1/auth/register`,
       formData,
       {
         headers: {

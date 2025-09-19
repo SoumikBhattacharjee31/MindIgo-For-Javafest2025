@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import axios from "axios";
 import { successToast, errorToast, warningToast } from "@/util/toastHelper";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
 const AdminLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -22,7 +24,7 @@ const AdminLogin = () => {
     setLoading(true);
     try {
       const response = await axios.post(
-        "http://localhost:8080/api/v1/auth/login",
+        `${API_BASE_URL}/api/v1/auth/login`,
         {
           email,
           password,

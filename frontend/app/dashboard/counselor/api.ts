@@ -1,8 +1,10 @@
 import axios from "axios";
 import { PaginatedCounselorsResponse, Counselor } from "./types";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
 const apiClient = axios.create({
-  baseURL: "http://localhost:8080/api/v1/auth",
+  baseURL: `${API_BASE_URL}/api/v1/auth`,
   withCredentials: true,
 });
 

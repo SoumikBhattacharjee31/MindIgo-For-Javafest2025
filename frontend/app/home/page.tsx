@@ -16,6 +16,8 @@ import GameService from "./components/GameService";
 import { scroller } from "react-scroll";
 import { useWheel } from "react-use-gesture";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
 const debounce = (func: (...args: any[]) => void, wait: number) => {
   let timeout: NodeJS.Timeout | null = null;
 
@@ -100,7 +102,7 @@ export default function Home() {
       console.log("yo");
       try {
         const response = await axios.get(
-          "http://localhost:8080/api/v1/auth/hello",
+          `${API_BASE_URL}/api/v1/auth/hello`,
           {
             withCredentials: true,
           }

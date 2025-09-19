@@ -7,6 +7,8 @@ import FileList from "@/app/admin/components/FileList";
 import QuizGenerator from "@/app/admin/components/QuizGenerator";
 import QuizPreview from "@/app/admin/components/QuizPreview";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
 interface QuizData {
   file_id: number;
   quizzes: Array<{
@@ -38,7 +40,7 @@ const QuizManagement = () => {
   const fetchFiles = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:8080/api/v1/file/list/papers",
+        `${API_BASE_URL}/api/v1/file/list/papers`,
         {
           withCredentials: true,
         }
@@ -72,7 +74,7 @@ const QuizManagement = () => {
     setLoading(true);
     try {
       const response = await axios.post(
-        "http://localhost:8080/api/v1/file/upload/papers",
+        `${API_BASE_URL}/api/v1/file/upload/papers`,
         formData,
         {
           withCredentials: true,
@@ -119,7 +121,7 @@ const QuizManagement = () => {
     setLoading(true);
     try {
       const response = await axios.post(
-        "http://localhost:8080/api/v1/genai/quiz/generate",
+        `${API_BASE_URL}/api/v1/genai/quiz/generate`,
         params,
         {
           withCredentials: true,
@@ -169,7 +171,7 @@ const QuizManagement = () => {
     setLoading(true);
     try {
       const response = await axios.post(
-        "http://localhost:8080/api/v1/content/quiz/generate",
+        `${API_BASE_URL}/api/v1/content/quiz/generate`,
         {
           file_id: fileId,
           quizzes: selectedQuestions,

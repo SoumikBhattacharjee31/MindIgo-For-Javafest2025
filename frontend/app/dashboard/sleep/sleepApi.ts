@@ -1,7 +1,7 @@
 // sleepApi.ts
 import axios from "axios";
 
-const BASE_URL = "http://localhost:8080";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 // Types matching the backend DTOs
 export interface SleepRequest {
@@ -25,7 +25,7 @@ export interface ApiResponseClass<T> {
 
 // Configure axios instance
 const apiClient = axios.create({
-  baseURL: BASE_URL,
+  baseURL: API_BASE_URL,
   withCredentials: true,
 });
 

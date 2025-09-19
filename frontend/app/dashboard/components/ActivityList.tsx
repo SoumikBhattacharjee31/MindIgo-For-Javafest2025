@@ -13,6 +13,8 @@ import {
   formatDateForApi as breathingFormatDate,
 } from "@/app/dashboard/mindfulness/api/breathingApi";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
 interface Activity {
   id: string;
   activity: string;
@@ -35,7 +37,7 @@ const ActivityList = () => {
       console.log("Checking breathing status with direct API call for:", today);
 
       const response = await fetch(
-        `http://localhost:8080/api/v1/content/breathing/session?date=${today}`,
+        `${API_BASE_URL}/api/v1/content/breathing/session?date=${today}`,
         {
           method: "GET",
           credentials: "include",

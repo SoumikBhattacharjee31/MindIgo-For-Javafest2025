@@ -8,7 +8,7 @@ import {
 } from "@/app/dashboard/mindfulness/dataTypes";
 
 // ============ BASE CONFIG ============
-const BASE_URL = "http://localhost:8080";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 // Types matching your backend DTOs
 export interface BreathingRequest {
@@ -74,7 +74,7 @@ export interface ApiResponseClass<T> {
 
 // ============ AXIOS CONFIG ============
 const apiClient = axios.create({
-  baseURL: BASE_URL,
+  baseURL: API_BASE_URL,
   withCredentials: true,
   timeout: 10000, // 10 second timeout
 });

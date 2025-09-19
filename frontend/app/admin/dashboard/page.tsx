@@ -4,6 +4,8 @@ import StatCard from "@/app/admin/components/StatCard";
 import axios from "axios";
 import { errorToast } from "@/util/toastHelper";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
 const Dashboard = () => {
   const [stats, setStats] = useState<any>(null);
 
@@ -11,7 +13,7 @@ const Dashboard = () => {
     const fetchStats = async () => {
       try {
         const res = await axios.get(
-          "http://localhost:8080/api/v1/admin/dashboard",
+          `${API_BASE_URL}/api/v1/admin/dashboard`,
           {
             withCredentials: true,
           }

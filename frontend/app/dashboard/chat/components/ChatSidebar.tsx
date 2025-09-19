@@ -17,7 +17,7 @@ interface ChatSidebarProps {
   refreshTrigger?: number;
 }
 
-const API_BASE_URL = "http://localhost:8080/api/v1/genai/gemini";
+const API_BASE_URL = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/genai/gemini`;
 
 const ChatSidebar = ({
   sessionId,

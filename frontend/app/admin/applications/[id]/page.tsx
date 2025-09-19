@@ -5,6 +5,8 @@ import axios from "axios";
 import { successToast, errorToast } from "@/util/toastHelper";
 import ReviewModal from "@/app/admin/components/ReviewModal";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
 const ApplicationDetail = () => {
   const router = useRouter();
   const { id } = useParams();
@@ -19,7 +21,7 @@ const ApplicationDetail = () => {
     const fetchApp = async () => {
       try {
         const res = await axios.get(
-          `http://localhost:8080/api/v1/admin/applications/${id}`,
+          `${API_BASE_URL}/api/v1/admin/applications/${id}`,
           {
             withCredentials: true,
           }
@@ -38,7 +40,7 @@ const ApplicationDetail = () => {
   const handleReview = async (comments: string) => {
     try {
       const res = await axios.post(
-        "http://localhost:8080/api/v1/admin/applications/review",
+        `${API_BASE_URL}/api/v1/admin/applications/review`,
         {
           applicationId: id,
           status:

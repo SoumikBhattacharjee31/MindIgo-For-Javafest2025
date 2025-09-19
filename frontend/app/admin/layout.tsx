@@ -5,6 +5,8 @@ import AdminNavbar from "@/app/admin/components/AdminNavbar";
 import { usePathname, useRouter } from "next/navigation";
 import axios from "axios";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
 export default function AdminLayout({
   children,
 }: {
@@ -24,7 +26,7 @@ export default function AdminLayout({
       try {
         // Try to make an authenticated request to verify access
         const response = await axios.get(
-          "http://localhost:8080/api/v1/admin/dashboard",
+          `${API_BASE_URL}/api/v1/admin/dashboard`,
           {
             withCredentials: true,
           }

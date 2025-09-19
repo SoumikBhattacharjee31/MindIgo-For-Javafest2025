@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { ToastContainer } from "react-toastify";
 import { successToast, errorToast } from "@/util/toastHelper";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
 interface CounselorStatus {
   status: string;
   verificationNotes?: string;
@@ -24,7 +26,7 @@ const CounselorStatusPage = () => {
   const fetchCounselorStatus = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:8080/api/v1/auth/counselor-status",
+        `${API_BASE_URL}/api/v1/auth/counselor-status`,
         {
           withCredentials: true,
         }
