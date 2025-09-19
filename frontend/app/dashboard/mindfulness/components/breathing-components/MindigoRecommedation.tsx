@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Star } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { Star } from "lucide-react";
 
 const MindigoRecommendation = () => {
   const recommendations = [
@@ -8,29 +8,29 @@ const MindigoRecommendation = () => {
       exercise: "Box Breathing",
       reason: "Perfect for starting your day with focus",
       icon: "🌅",
-      gradient: "bg-gradient-to-br from-orange-500 to-yellow-500"
+      gradient: "bg-gradient-to-br from-orange-500 to-yellow-500",
     },
     {
       title: "Stress Relief",
       exercise: "Long Exhale",
       reason: "Based on your recent activity patterns",
       icon: "🧘‍♀️",
-      gradient: "bg-gradient-to-br from-purple-500 to-pink-500"
+      gradient: "bg-gradient-to-br from-purple-500 to-pink-500",
     },
     {
       title: "Better Sleep",
       exercise: "4-7-8 Breathing",
       reason: "Recommended for evening relaxation",
       icon: "🌙",
-      gradient: "bg-gradient-to-br from-indigo-500 to-blue-500"
-    }
+      gradient: "bg-gradient-to-br from-indigo-500 to-blue-500",
+    },
   ];
 
   const [currentRec, setCurrentRec] = useState(0);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentRec(prev => (prev + 1) % recommendations.length);
+      setCurrentRec((prev) => (prev + 1) % recommendations.length);
     }, 4000);
     return () => clearInterval(interval);
   }, []);
@@ -43,7 +43,7 @@ const MindigoRecommendation = () => {
         <Star className="w-5 h-5 text-yellow-400 mr-2" />
         <h3 className="text-lg font-semibold text-white">Mindigo Recommends</h3>
       </div>
-      
+
       <div className={`${current.gradient} rounded-xl p-4 mb-4`}>
         <div className="text-2xl mb-2">{current.icon}</div>
         <h4 className="text-white font-medium mb-1">{current.title}</h4>
@@ -57,7 +57,7 @@ const MindigoRecommendation = () => {
           <div
             key={index}
             className={`w-2 h-2 rounded-full transition-all duration-300 ${
-              index === currentRec ? 'bg-white' : 'bg-white/30'
+              index === currentRec ? "bg-white" : "bg-white/30"
             }`}
           />
         ))}

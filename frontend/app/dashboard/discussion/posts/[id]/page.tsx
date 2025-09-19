@@ -10,7 +10,7 @@ import {
   ApiResponse,
   Page,
   COMMENT_SORT_TYPES,
-} from "@/app/api/discussionService";
+} from "@/app/dashboard/discussion/api";
 import PostCard from "@/app/dashboard/discussion/components/PostCard";
 import CommentSection from "@/app/dashboard/discussion/components/CommentSection";
 import CommentForm from "@/app/dashboard/discussion/components/CommentForm";

@@ -1,6 +1,9 @@
 // components/AuthModal.tsx
-import React, { useState } from 'react';
-import { userService, User } from '../services/userService';
+import React, { useState } from "react";
+import {
+  userService,
+  User,
+} from "@/app/dashboard/games/alto-go/services/userService";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -8,49 +11,57 @@ interface AuthModalProps {
   onSuccess: (user: User) => void;
 }
 
-const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) => {
-  const [mode, setMode] = useState<'login' | 'register' | 'guest'>('guest');
+const AuthModal: React.FC<AuthModalProps> = ({
+  isOpen,
+  onClose,
+  onSuccess,
+}) => {
+  const [mode, setMode] = useState<"login" | "register" | "guest">("guest");
   const [formData, setFormData] = useState({
-    email: '',
-    name: '',
-    password: '',
-    confirmPassword: ''
+    email: "",
+    name: "",
+    password: "",
+    confirmPassword: "",
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   if (!isOpen) return null;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     }));
-    setError('');
+    setError("");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setError('');
+    setError("");
 
     try {
       let user: User;
 
-      if (mode === 'guest') {
+      if (mode === "guest") {
         user = userService.initializeUser();
         onSuccess(user);
         onClose();
         return;
       }
 
-      if (mode === 'register') {
+      if (mode === "register") {
         if (formData.password !== formData.confirmPassword) {
-          setError('Passwords do not match');
+          setError("Passwords do not match");
           setIsLoading(false);
           return;
         }
-        user = await userService.register(formData.email, formData.name, formData.password);
+        user = await userService.register(
+          formData.email,
+          formData.name,
+          formData.password
+        );
       } else {
         user = await userService.login(formData.email, formData.password);
       }
@@ -58,7 +69,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) => 
       onSuccess(user);
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setIsLoading(false);
     }
@@ -71,51 +82,68 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) => 
   };
 
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      background: 'rgba(0, 0, 0, 0.8)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 1000
-    }}>
-      <div style={{
-        background: 'linear-gradient(135deg, #001122, #003366)',
-        border: '2px solid #00ccff',
-        borderRadius: '10px',
-        padding: '30px',
-        minWidth: '400px',
-        maxWidth: '90vw',
-        color: 'white',
-        fontFamily: 'Arial, sans-serif'
-      }}>
-        <h2 style={{ textAlign: 'center', marginBottom: '20px', color: '#00ccff' }}>
-          {mode === 'guest' ? 'Welcome to Snowboarder!' : 
-           mode === 'login' ? 'Login' : 'Create Account'}
+    <div
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: "rgba(0, 0, 0, 0.8)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 1000,
+      }}
+    >
+      <div
+        style={{
+          background: "linear-gradient(135deg, #001122, #003366)",
+          border: "2px solid #00ccff",
+          borderRadius: "10px",
+          padding: "30px",
+          minWidth: "400px",
+          maxWidth: "90vw",
+          color: "white",
+          fontFamily: "Arial, sans-serif",
+        }}
+      >
+        <h2
+          style={{
+            textAlign: "center",
+            marginBottom: "20px",
+            color: "#00ccff",
+          }}
+        >
+          {mode === "guest"
+            ? "Welcome to Snowboarder!"
+            : mode === "login"
+            ? "Login"
+            : "Create Account"}
         </h2>
 
         {error && (
-          <div style={{
-            background: '#ff4444',
-            color: 'white',
-            padding: '10px',
-            borderRadius: '5px',
-            marginBottom: '15px',
-            textAlign: 'center'
-          }}>
+          <div
+            style={{
+              background: "#ff4444",
+              color: "white",
+              padding: "10px",
+              borderRadius: "5px",
+              marginBottom: "15px",
+              textAlign: "center",
+            }}
+          >
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit}>
-          {mode !== 'guest' && (
+          {mode !== "guest" && (
             <>
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px' }}>Email:</label>
+              <div style={{ marginBottom: "15px" }}>
+                <label style={{ display: "block", marginBottom: "5px" }}>
+                  Email:
+                </label>
                 <input
                   type="email"
                   name="email"
@@ -123,20 +151,22 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) => 
                   onChange={handleInputChange}
                   required
                   style={{
-                    width: '100%',
-                    padding: '10px',
-                    borderRadius: '5px',
-                    border: '1px solid #ccc',
-                    fontSize: '16px',
-                    background: 'white',
-                    color: 'black'
+                    width: "100%",
+                    padding: "10px",
+                    borderRadius: "5px",
+                    border: "1px solid #ccc",
+                    fontSize: "16px",
+                    background: "white",
+                    color: "black",
                   }}
                 />
               </div>
 
-              {mode === 'register' && (
-                <div style={{ marginBottom: '15px' }}>
-                  <label style={{ display: 'block', marginBottom: '5px' }}>Name:</label>
+              {mode === "register" && (
+                <div style={{ marginBottom: "15px" }}>
+                  <label style={{ display: "block", marginBottom: "5px" }}>
+                    Name:
+                  </label>
                   <input
                     type="text"
                     name="name"
@@ -144,20 +174,22 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) => 
                     onChange={handleInputChange}
                     required
                     style={{
-                      width: '100%',
-                      padding: '10px',
-                      borderRadius: '5px',
-                      border: '1px solid #ccc',
-                      fontSize: '16px',
-                      background: 'white',
-                      color: 'black'
+                      width: "100%",
+                      padding: "10px",
+                      borderRadius: "5px",
+                      border: "1px solid #ccc",
+                      fontSize: "16px",
+                      background: "white",
+                      color: "black",
                     }}
                   />
                 </div>
               )}
 
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px' }}>Password:</label>
+              <div style={{ marginBottom: "15px" }}>
+                <label style={{ display: "block", marginBottom: "5px" }}>
+                  Password:
+                </label>
                 <input
                   type="password"
                   name="password"
@@ -165,20 +197,22 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) => 
                   onChange={handleInputChange}
                   required
                   style={{
-                    width: '100%',
-                    padding: '10px',
-                    borderRadius: '5px',
-                    border: '1px solid #ccc',
-                    fontSize: '16px',
-                    background: 'white',
-                    color: 'black'
+                    width: "100%",
+                    padding: "10px",
+                    borderRadius: "5px",
+                    border: "1px solid #ccc",
+                    fontSize: "16px",
+                    background: "white",
+                    color: "black",
                   }}
                 />
               </div>
 
-              {mode === 'register' && (
-                <div style={{ marginBottom: '15px' }}>
-                  <label style={{ display: 'block', marginBottom: '5px' }}>Confirm Password:</label>
+              {mode === "register" && (
+                <div style={{ marginBottom: "15px" }}>
+                  <label style={{ display: "block", marginBottom: "5px" }}>
+                    Confirm Password:
+                  </label>
                   <input
                     type="password"
                     name="confirmPassword"
@@ -186,13 +220,13 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) => 
                     onChange={handleInputChange}
                     required
                     style={{
-                      width: '100%',
-                      padding: '10px',
-                      borderRadius: '5px',
-                      border: '1px solid #ccc',
-                      fontSize: '16px',
-                      background: 'white',
-                      color: 'black'
+                      width: "100%",
+                      padding: "10px",
+                      borderRadius: "5px",
+                      border: "1px solid #ccc",
+                      fontSize: "16px",
+                      background: "white",
+                      color: "black",
                     }}
                   />
                 </div>
@@ -200,24 +234,24 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) => 
             </>
           )}
 
-          <div style={{ marginBottom: '20px', textAlign: 'center' }}>
-            {mode === 'guest' ? (
+          <div style={{ marginBottom: "20px", textAlign: "center" }}>
+            {mode === "guest" ? (
               <>
                 <button
                   type="button"
                   onClick={handleGuestPlay}
                   disabled={isLoading}
                   style={{
-                    background: '#4CAF50',
-                    color: 'white',
-                    border: 'none',
-                    padding: '12px 30px',
-                    borderRadius: '5px',
-                    fontSize: '16px',
-                    fontWeight: 'bold',
-                    cursor: 'pointer',
-                    marginBottom: '15px',
-                    width: '100%'
+                    background: "#4CAF50",
+                    color: "white",
+                    border: "none",
+                    padding: "12px 30px",
+                    borderRadius: "5px",
+                    fontSize: "16px",
+                    fontWeight: "bold",
+                    cursor: "pointer",
+                    marginBottom: "15px",
+                    width: "100%",
                   }}
                 >
                   Play as Guest
@@ -225,31 +259,31 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) => 
                 <div>
                   <button
                     type="button"
-                    onClick={() => setMode('login')}
+                    onClick={() => setMode("login")}
                     style={{
-                      background: 'transparent',
-                      color: '#00ccff',
-                      border: '1px solid #00ccff',
-                      padding: '8px 20px',
-                      borderRadius: '5px',
-                      fontSize: '14px',
-                      cursor: 'pointer',
-                      marginRight: '10px'
+                      background: "transparent",
+                      color: "#00ccff",
+                      border: "1px solid #00ccff",
+                      padding: "8px 20px",
+                      borderRadius: "5px",
+                      fontSize: "14px",
+                      cursor: "pointer",
+                      marginRight: "10px",
                     }}
                   >
                     Login
                   </button>
                   <button
                     type="button"
-                    onClick={() => setMode('register')}
+                    onClick={() => setMode("register")}
                     style={{
-                      background: 'transparent',
-                      color: '#00ccff',
-                      border: '1px solid #00ccff',
-                      padding: '8px 20px',
-                      borderRadius: '5px',
-                      fontSize: '14px',
-                      cursor: 'pointer'
+                      background: "transparent",
+                      color: "#00ccff",
+                      border: "1px solid #00ccff",
+                      padding: "8px 20px",
+                      borderRadius: "5px",
+                      fontSize: "14px",
+                      cursor: "pointer",
                     }}
                   >
                     Register
@@ -261,38 +295,42 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) => 
                 type="submit"
                 disabled={isLoading}
                 style={{
-                  background: '#4CAF50',
-                  color: 'white',
-                  border: 'none',
-                  padding: '12px 30px',
-                  borderRadius: '5px',
-                  fontSize: '16px',
-                  fontWeight: 'bold',
-                  cursor: 'pointer',
+                  background: "#4CAF50",
+                  color: "white",
+                  border: "none",
+                  padding: "12px 30px",
+                  borderRadius: "5px",
+                  fontSize: "16px",
+                  fontWeight: "bold",
+                  cursor: "pointer",
                   opacity: isLoading ? 0.7 : 1,
-                  width: '100%'
+                  width: "100%",
                 }}
               >
-                {isLoading ? 'Please wait...' : (mode === 'login' ? 'Login' : 'Create Account')}
+                {isLoading
+                  ? "Please wait..."
+                  : mode === "login"
+                  ? "Login"
+                  : "Create Account"}
               </button>
             )}
           </div>
         </form>
 
-        {mode !== 'guest' && (
-          <div style={{ textAlign: 'center' }}>
+        {mode !== "guest" && (
+          <div style={{ textAlign: "center" }}>
             <button
               type="button"
-              onClick={() => setMode('guest')}
+              onClick={() => setMode("guest")}
               style={{
-                background: 'transparent',
-                color: '#cccccc',
-                border: 'none',
-                padding: '8px 20px',
-                borderRadius: '5px',
-                fontSize: '14px',
-                cursor: 'pointer',
-                textDecoration: 'underline'
+                background: "transparent",
+                color: "#cccccc",
+                border: "none",
+                padding: "8px 20px",
+                borderRadius: "5px",
+                fontSize: "14px",
+                cursor: "pointer",
+                textDecoration: "underline",
               }}
             >
               Continue as Guest
@@ -300,20 +338,22 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) => 
             <br />
             <button
               type="button"
-              onClick={() => setMode(mode === 'login' ? 'register' : 'login')}
+              onClick={() => setMode(mode === "login" ? "register" : "login")}
               style={{
-                background: 'transparent',
-                color: '#00ccff',
-                border: 'none',
-                padding: '8px 20px',
-                borderRadius: '5px',
-                fontSize: '14px',
-                cursor: 'pointer',
-                textDecoration: 'underline',
-                marginTop: '10px'
+                background: "transparent",
+                color: "#00ccff",
+                border: "none",
+                padding: "8px 20px",
+                borderRadius: "5px",
+                fontSize: "14px",
+                cursor: "pointer",
+                textDecoration: "underline",
+                marginTop: "10px",
               }}
             >
-              {mode === 'login' ? "Don't have an account? Register" : "Already have an account? Login"}
+              {mode === "login"
+                ? "Don't have an account? Register"
+                : "Already have an account? Login"}
             </button>
           </div>
         )}
@@ -322,15 +362,15 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) => 
           type="button"
           onClick={onClose}
           style={{
-            position: 'absolute',
-            top: '10px',
-            right: '10px',
-            background: 'transparent',
-            color: '#cccccc',
-            border: 'none',
-            fontSize: '20px',
-            cursor: 'pointer',
-            padding: '5px'
+            position: "absolute",
+            top: "10px",
+            right: "10px",
+            background: "transparent",
+            color: "#cccccc",
+            border: "none",
+            fontSize: "20px",
+            cursor: "pointer",
+            padding: "5px",
           }}
         >
           ×

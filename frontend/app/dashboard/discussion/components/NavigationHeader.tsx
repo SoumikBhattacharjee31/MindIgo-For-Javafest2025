@@ -26,7 +26,11 @@ const NavigationHeader = ({
 
   const navItems: NavItem[] = [
     { label: "Discussion", href: "/dashboard/discussion" },
-    { label: "Admin Dashboard", href: "/dashboard/discussion/admin", adminOnly: true },
+    {
+      label: "Admin Dashboard",
+      href: "/dashboard/discussion/admin",
+      adminOnly: true,
+    },
   ];
 
   const isAdmin = userRole === "ADMIN";

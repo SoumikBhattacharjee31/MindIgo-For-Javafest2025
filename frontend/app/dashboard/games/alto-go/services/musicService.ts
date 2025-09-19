@@ -1,4 +1,4 @@
-import { Scene } from 'phaser';
+import { Scene } from "phaser";
 
 class MusicService {
   private backgroundMusic: Phaser.Sound.BaseSound | null = null;
@@ -11,10 +11,12 @@ class MusicService {
 
   constructor() {
     // Load settings from localStorage
-    this.isMusicEnabled = localStorage.getItem('music_enabled') !== 'false';
-    this.isSFXEnabled = localStorage.getItem('sfx_enabled') !== 'false';
-    this.musicVolume = parseFloat(localStorage.getItem('music_volume') || '0.3');
-    this.sfxVolume = parseFloat(localStorage.getItem('sfx_volume') || '0.7');
+    this.isMusicEnabled = localStorage.getItem("music_enabled") !== "false";
+    this.isSFXEnabled = localStorage.getItem("sfx_enabled") !== "false";
+    this.musicVolume = parseFloat(
+      localStorage.getItem("music_volume") || "0.3"
+    );
+    this.sfxVolume = parseFloat(localStorage.getItem("sfx_volume") || "0.7");
   }
 
   setScene(scene: Phaser.Scene) {
@@ -22,7 +24,7 @@ class MusicService {
   }
 
   // Background Music Methods
-  playBackgroundMusic(key: string = 'backgroundMusic') {
+  playBackgroundMusic(key: string = "backgroundMusic") {
     if (!this.scene || !this.isMusicEnabled) return;
 
     // Stop current music if playing
@@ -31,12 +33,12 @@ class MusicService {
     try {
       this.backgroundMusic = this.scene.sound.add(key, {
         loop: true,
-        volume: this.musicVolume
+        volume: this.musicVolume,
       });
-      
+
       this.backgroundMusic.play();
     } catch (error) {
-      console.warn('Failed to play background music:', error);
+      console.warn("Failed to play background music:", error);
     }
   }
 
@@ -67,26 +69,26 @@ class MusicService {
     try {
       const sound = this.scene.sound.add(key, {
         volume: this.sfxVolume,
-        ...config
+        ...config,
       });
       sound.play();
-      
+
       // Clean up after playing
-      sound.once('complete', () => {
+      sound.once("complete", () => {
         sound.destroy();
       });
-      
+
       return sound;
     } catch (error) {
-      console.warn('Failed to play sound effect:', key, error);
+      console.warn("Failed to play sound effect:", key, error);
     }
   }
 
   // Settings Methods
   setMusicEnabled(enabled: boolean) {
     this.isMusicEnabled = enabled;
-    localStorage.setItem('music_enabled', enabled.toString());
-    
+    localStorage.setItem("music_enabled", enabled.toString());
+
     if (!enabled) {
       this.stopBackgroundMusic();
     } else if (this.backgroundMusic && !this.backgroundMusic.isPlaying) {
@@ -96,13 +98,13 @@ class MusicService {
 
   setSFXEnabled(enabled: boolean) {
     this.isSFXEnabled = enabled;
-    localStorage.setItem('sfx_enabled', enabled.toString());
+    localStorage.setItem("sfx_enabled", enabled.toString());
   }
 
   setMusicVolume(volume: number) {
     this.musicVolume = Math.max(0, Math.min(1, volume));
-    localStorage.setItem('music_volume', this.musicVolume.toString());
-    
+    localStorage.setItem("music_volume", this.musicVolume.toString());
+
     if (this.backgroundMusic) {
       // Corrected: Cast to 'any' to bypass the strict TypeScript type and set the volume.
       (this.backgroundMusic as any).volume = this.musicVolume;
@@ -111,7 +113,7 @@ class MusicService {
 
   setSFXVolume(volume: number) {
     this.sfxVolume = Math.max(0, Math.min(1, volume));
-    localStorage.setItem('sfx_volume', this.sfxVolume.toString());
+    localStorage.setItem("sfx_volume", this.sfxVolume.toString());
   }
 
   // Getters
@@ -137,4 +139,3 @@ class MusicService {
 }
 
 export const musicService = new MusicService();
-

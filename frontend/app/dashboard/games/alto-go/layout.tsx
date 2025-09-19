@@ -6,7 +6,8 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Snowboarder Game - Extreme Mountain Adventure",
-  description: "An exciting snowboarding game with tricks, combos, and power-ups",
+  description:
+    "An exciting snowboarding game with tricks, combos, and power-ups",
 };
 
 export default function RootLayout({
@@ -14,9 +15,5 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return (
-    <section>
-      {children}
-    </section>
-  );
+  return <section>{children}</section>;
 }

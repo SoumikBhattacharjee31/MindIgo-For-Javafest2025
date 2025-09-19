@@ -1,34 +1,34 @@
 [
-    {
-            "id": "sleep",
-            "title": "Sleep Quality",
-            "value": "7.5h",
-            "change": "+12%",
-            "trend": "up",
-            "encouragement": "Sweet dreams lead to sweet insights! 😴✨"
-    },
-    {
-            "id": "mood",
-            "title": "Today's Mood",
-            "value": "Good",
-            "change": "↗ Improving",
-            "trend": "up",
-            "encouragement": "Your mood data helps us brighten your days! 🌈"
-    },
-    {
-            "id": "breathing",
-            "title": "Breathing Sessions",
-            "value": "2 completed",
-            "change": "Today",
-            "trend": "up",
-            "encouragement": "Each breath brings you closer to inner peace! 🌸✨"
-    },
-    {
-            "id": "mindfulness",
-            "title": "Mindfulness Minutes",
-            "value": "15 min",
-            "change": "+5 min",
-            "trend": "up",
-            "encouragement": "Mindful moments create a mindful life! 🧘‍♀️�"
-    }
+  {
+    "id": "sleep",
+    "title": "Sleep Quality",
+    "value": "7.5h",
+    "change": "+12%",
+    "trend": "up",
+    "encouragement": "Sweet dreams lead to sweet insights! 😴✨"
+  },
+  {
+    "id": "mood",
+    "title": "Today's Mood",
+    "value": "Good",
+    "change": "↗ Improving",
+    "trend": "up",
+    "encouragement": "Your mood data helps us brighten your days! 🌈"
+  },
+  {
+    "id": "breathing",
+    "title": "Breathing Sessions",
+    "value": "2 completed",
+    "change": "Today",
+    "trend": "up",
+    "encouragement": "Each breath brings you closer to inner peace! 🌸✨"
+  },
+  {
+    "id": "mindfulness",
+    "title": "Mindfulness Minutes",
+    "value": "15 min",
+    "change": "+5 min",
+    "trend": "up",
+    "encouragement": "Mindful moments create a mindful life! 🧘‍♀️�"
+  }
 ]

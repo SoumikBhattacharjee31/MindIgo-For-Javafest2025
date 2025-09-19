@@ -1,17 +1,17 @@
-'use client';
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { successToast, errorToast } from '../../../util/toastHelper';
-import FileUpload from '../../components/admin/FileUpload';
-import FileList from '../../components/admin/FileList';
-import QuizGenerator from '../../components/admin/QuizGenerator';
-import QuizPreview from '../../components/admin/QuizPreview';
+"use client";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { successToast, errorToast } from "@/util/toastHelper";
+import FileUpload from "@/app/admin/components/FileUpload";
+import FileList from "@/app/admin/components/FileList";
+import QuizGenerator from "@/app/admin/components/QuizGenerator";
+import QuizPreview from "@/app/admin/components/QuizPreview";
 
 interface QuizData {
   file_id: number;
   quizzes: Array<{
     question: string;
-    type: 'mcq' | 'scale' | 'descriptive';
+    type: "mcq" | "scale" | "descriptive";
     options?: string[] | null;
     scale_min?: number | null;
     scale_max?: number | null;
@@ -23,7 +23,7 @@ const QuizManagement = () => {
   const [files, setFiles] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [generatedQuiz, setGeneratedQuiz] = useState<QuizData | null>(null);
-  const [selectedFile, setSelectedFile] = useState<string>('');
+  const [selectedFile, setSelectedFile] = useState<string>("");
   const [savedQuiz, setSavedQuiz] = useState<{
     file_id: string;
     quizCode: string;
@@ -37,69 +37,72 @@ const QuizManagement = () => {
 
   const fetchFiles = async () => {
     try {
-      const response = await axios.get('http://localhost:8080/api/v1/file/list/papers', {
-        withCredentials: true,
-      });
-      
+      const response = await axios.get(
+        "http://localhost:8080/api/v1/file/list/papers",
+        {
+          withCredentials: true,
+        }
+      );
+
       if (response.data.success) {
         setFiles(response.data.data);
       } else {
-        errorToast(response.data.message || 'Failed to fetch files');
+        errorToast(response.data.message || "Failed to fetch files");
       }
     } catch (error) {
-      console.error('Error fetching files:', error);
+      console.error("Error fetching files:", error);
       if (axios.isAxiosError(error)) {
         if (error.response?.status === 401) {
-          errorToast('Unauthorized access');
+          errorToast("Unauthorized access");
         } else if (error.response?.status === 403) {
-          errorToast('Access denied');
+          errorToast("Access denied");
         } else {
-          errorToast(error.response?.data?.message || 'Failed to fetch files');
+          errorToast(error.response?.data?.message || "Failed to fetch files");
         }
       } else {
-        errorToast('Network error occurred');
+        errorToast("Network error occurred");
       }
     }
   };
 
   const handleFileUpload = async (file: File) => {
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append("file", file);
 
     setLoading(true);
     try {
       const response = await axios.post(
-        'http://localhost:8080/api/v1/file/upload/papers',
+        "http://localhost:8080/api/v1/file/upload/papers",
         formData,
         {
           withCredentials: true,
           headers: {
-            'Content-Type': 'multipart/form-data',
+            "Content-Type": "multipart/form-data",
           },
         }
       );
 
       if (response.data.success) {
-        successToast('File uploaded successfully!');
+        successToast("File uploaded successfully!");
         setSelectedFile(response.data.data); // Set the uploaded file URL as selected
         await fetchFiles(); // Refresh the file list
       } else {
-        errorToast(response.data.message || 'File upload failed');
+        errorToast(response.data.message || "File upload failed");
       }
     } catch (error) {
-      console.error('Error uploading file:', error);
+      console.error("Error uploading file:", error);
       if (axios.isAxiosError(error)) {
         if (error.response?.status === 413) {
-          errorToast('File too large');
+          errorToast("File too large");
         } else if (error.response?.status === 415) {
-          errorToast('Unsupported file type');
+          errorToast("Unsupported file type");
         } else if (error.response?.status === 401) {
-          errorToast('Unauthorized access');
+          errorToast("Unauthorized access");
         } else {
-          errorToast(error.response?.data?.message || 'File upload failed');
+          errorToast(error.response?.data?.message || "File upload failed");
         }
       } else {
-        errorToast('Network error occurred');
+        errorToast("Network error occurred");
       }
     } finally {
       setLoading(false);
@@ -116,86 +119,91 @@ const QuizManagement = () => {
     setLoading(true);
     try {
       const response = await axios.post(
-        'http://localhost:8080/api/v1/genai/quiz/generate',
+        "http://localhost:8080/api/v1/genai/quiz/generate",
         params,
         {
           withCredentials: true,
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
         }
       );
 
       if (response.data.success) {
         setGeneratedQuiz(response.data.data);
-        successToast('Quiz generated successfully!');
+        successToast("Quiz generated successfully!");
       } else {
-        errorToast(response.data.message || 'Quiz generation failed');
+        errorToast(response.data.message || "Quiz generation failed");
       }
     } catch (error) {
-      console.error('Error generating quiz:', error);
+      console.error("Error generating quiz:", error);
       if (axios.isAxiosError(error)) {
         if (error.response?.status === 400) {
-          errorToast('Invalid request parameters');
+          errorToast("Invalid request parameters");
         } else if (error.response?.status === 401) {
-          errorToast('Unauthorized access');
+          errorToast("Unauthorized access");
         } else if (error.response?.status === 500) {
-          errorToast('Server error during quiz generation');
+          errorToast("Server error during quiz generation");
         } else {
-          errorToast(error.response?.data?.message || 'Quiz generation failed');
+          errorToast(error.response?.data?.message || "Quiz generation failed");
         }
       } else {
-        errorToast('Network error occurred');
+        errorToast("Network error occurred");
       }
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSaveQuiz = async (selectedQuestions: Array<{
-    question: string;
-    type: 'mcq' | 'scale' | 'descriptive';
-    options?: string[] | null;
-    scale_min?: number | null;
-    scale_max?: number | null;
-    scale_labels?: Record<string, string> | null;
-  }>, fileId: number) => {
+  const handleSaveQuiz = async (
+    selectedQuestions: Array<{
+      question: string;
+      type: "mcq" | "scale" | "descriptive";
+      options?: string[] | null;
+      scale_min?: number | null;
+      scale_max?: number | null;
+      scale_labels?: Record<string, string> | null;
+    }>,
+    fileId: number
+  ) => {
     setLoading(true);
     try {
       const response = await axios.post(
-        'http://localhost:8080/api/v1/content/quiz/generate',
+        "http://localhost:8080/api/v1/content/quiz/generate",
         {
           file_id: fileId,
-          quizzes: selectedQuestions
+          quizzes: selectedQuestions,
         },
         {
           withCredentials: true,
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
         }
       );
 
       if (response.data.success) {
         setSavedQuiz(response.data.data);
-        successToast(`Quiz saved successfully! Quiz Code: ${response.data.data.quizCode}`);
+        successToast(
+          `Quiz saved successfully! Quiz Code: ${response.data.data.quizCode}`
+        );
       } else {
-        errorToast(response.data.message || 'Failed to save quiz');
+        errorToast(response.data.message || "Failed to save quiz");
       }
     } catch (error) {
-      console.error('Error saving quiz:', error);
+      console.error("Error saving quiz:", error);
       if (axios.isAxiosError(error)) {
         if (error.response?.status === 400) {
-          errorToast('Invalid quiz data');
+          errorToast("Invalid quiz data");
         } else if (error.response?.status === 401) {
-          errorToast('Unauthorized access');
+          errorToast("Unauthorized access");
         } else if (error.response?.status === 500) {
-          errorToast('Server error while saving quiz');
+          errorToast("Server error while saving quiz");
         } else {
-          errorToast(error.response?.data?.message || 'Failed to save quiz');
+          errorToast(error.response?.data?.message || "Failed to save quiz");
         }
       } else {
-        errorToast('Network error occurred');
+        errorToast("Network error occurred");
       }
     } finally {
       setLoading(false);
@@ -212,20 +220,28 @@ const QuizManagement = () => {
       </div>
 
       {/* File Upload Section */}
-      <div className={`bg-white p-6 rounded-lg shadow-md transition-opacity ${
-        loading ? 'opacity-50 pointer-events-none' : ''
-      }`}>
-        <h2 className="text-xl font-semibold text-gray-700 mb-4">Upload Papers</h2>
+      <div
+        className={`bg-white p-6 rounded-lg shadow-md transition-opacity ${
+          loading ? "opacity-50 pointer-events-none" : ""
+        }`}
+      >
+        <h2 className="text-xl font-semibold text-gray-700 mb-4">
+          Upload Papers
+        </h2>
         <FileUpload onFileUpload={handleFileUpload} loading={loading} />
       </div>
 
       {/* File List Section */}
-      <div className={`bg-white p-6 rounded-lg shadow-md transition-opacity ${
-        loading ? 'opacity-50 pointer-events-none' : ''
-      }`}>
-        <h2 className="text-xl font-semibold text-gray-700 mb-4">Available Papers</h2>
-        <FileList 
-          files={files} 
+      <div
+        className={`bg-white p-6 rounded-lg shadow-md transition-opacity ${
+          loading ? "opacity-50 pointer-events-none" : ""
+        }`}
+      >
+        <h2 className="text-xl font-semibold text-gray-700 mb-4">
+          Available Papers
+        </h2>
+        <FileList
+          files={files}
           onFileSelect={setSelectedFile}
           selectedFile={selectedFile}
           onRefresh={fetchFiles}
@@ -235,10 +251,14 @@ const QuizManagement = () => {
 
       {/* Quiz Generation Section */}
       {selectedFile && (
-        <div className={`bg-white p-6 rounded-lg shadow-md transition-opacity ${
-          loading ? 'opacity-50 pointer-events-none' : ''
-        }`}>
-          <h2 className="text-xl font-semibold text-gray-700 mb-4">Generate Quiz</h2>
+        <div
+          className={`bg-white p-6 rounded-lg shadow-md transition-opacity ${
+            loading ? "opacity-50 pointer-events-none" : ""
+          }`}
+        >
+          <h2 className="text-xl font-semibold text-gray-700 mb-4">
+            Generate Quiz
+          </h2>
           <QuizGenerator
             selectedFile={selectedFile}
             onGenerateQuiz={handleQuizGenerate}
@@ -249,12 +269,16 @@ const QuizManagement = () => {
 
       {/* Quiz Preview Section */}
       {generatedQuiz && (
-        <div className={`bg-white p-6 rounded-lg shadow-md transition-opacity ${
-          loading ? 'opacity-50 pointer-events-none' : ''
-        }`}>
-          <h2 className="text-xl font-semibold text-gray-700 mb-4">Generated Quiz Preview</h2>
-          <QuizPreview 
-            quiz={generatedQuiz} 
+        <div
+          className={`bg-white p-6 rounded-lg shadow-md transition-opacity ${
+            loading ? "opacity-50 pointer-events-none" : ""
+          }`}
+        >
+          <h2 className="text-xl font-semibold text-gray-700 mb-4">
+            Generated Quiz Preview
+          </h2>
+          <QuizPreview
+            quiz={generatedQuiz}
             onSaveQuiz={handleSaveQuiz}
             loading={loading}
           />
@@ -280,24 +304,38 @@ const QuizManagement = () => {
                 />
               </svg>
             </div>
-            <h2 className="text-xl font-semibold text-green-800">Quiz Saved Successfully!</h2>
+            <h2 className="text-xl font-semibold text-green-800">
+              Quiz Saved Successfully!
+            </h2>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <div className="bg-white p-4 rounded-lg border border-green-200">
-              <h3 className="text-sm font-medium text-gray-600 mb-1">Quiz Code</h3>
-              <p className="text-lg font-bold text-green-700">{savedQuiz.quizCode}</p>
+              <h3 className="text-sm font-medium text-gray-600 mb-1">
+                Quiz Code
+              </h3>
+              <p className="text-lg font-bold text-green-700">
+                {savedQuiz.quizCode}
+              </p>
             </div>
             <div className="bg-white p-4 rounded-lg border border-green-200">
-              <h3 className="text-sm font-medium text-gray-600 mb-1">File ID</h3>
-              <p className="text-lg font-bold text-green-700">{savedQuiz.file_id}</p>
+              <h3 className="text-sm font-medium text-gray-600 mb-1">
+                File ID
+              </h3>
+              <p className="text-lg font-bold text-green-700">
+                {savedQuiz.file_id}
+              </p>
             </div>
             <div className="bg-white p-4 rounded-lg border border-green-200">
-              <h3 className="text-sm font-medium text-gray-600 mb-1">Total Questions</h3>
-              <p className="text-lg font-bold text-green-700">{savedQuiz.totalQuestions}</p>
+              <h3 className="text-sm font-medium text-gray-600 mb-1">
+                Total Questions
+              </h3>
+              <p className="text-lg font-bold text-green-700">
+                {savedQuiz.totalQuestions}
+              </p>
             </div>
           </div>
-          
+
           <div className="flex items-center justify-between">
             <p className="text-sm text-green-700">
               Your quiz has been created and is ready to be shared with users.
@@ -306,7 +344,7 @@ const QuizManagement = () => {
               <button
                 onClick={() => {
                   navigator.clipboard.writeText(savedQuiz.quizCode);
-                  successToast('Quiz code copied to clipboard!');
+                  successToast("Quiz code copied to clipboard!");
                 }}
                 className="flex items-center space-x-2 px-3 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition"
               >
@@ -346,7 +384,9 @@ const QuizManagement = () => {
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600"></div>
             <div>
               <p className="text-sm font-medium text-gray-900">Processing...</p>
-              <p className="text-xs text-gray-500">Please wait while we handle your request</p>
+              <p className="text-xs text-gray-500">
+                Please wait while we handle your request
+              </p>
             </div>
           </div>
         </div>

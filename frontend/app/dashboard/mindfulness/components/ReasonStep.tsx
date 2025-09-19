@@ -1,4 +1,4 @@
-import { Reason } from "../dataTypes";
+import { Reason } from "@/app/dashboard/mindfulness/dataTypes";
 
 interface Props {
   reasons: Reason[];

@@ -1,6 +1,6 @@
-import { EventBus } from "../EventBus";
+import { EventBus } from "@/app/dashboard/games/alto-go/components/EventBus";
 import { Scene } from "phaser";
-import { musicService } from "../../services/musicService";
+import { musicService } from "@/app/dashboard/games/alto-go/services/musicService";
 
 export class TestScene extends Scene {
   private snowybg!: Phaser.GameObjects.TileSprite;
@@ -38,7 +38,7 @@ export class TestScene extends Scene {
   private magnetActive: boolean = false;
   private powerUpTimers: { [key: string]: Phaser.Time.TimerEvent } = {};
   private trail!: Phaser.GameObjects.Graphics;
-  private trailPoints: { x: number, y: number, alpha: number }[] = [];
+  private trailPoints: { x: number; y: number; alpha: number }[] = [];
   private screenShake: boolean = false;
   private isPerformingTrick: boolean = false;
 
@@ -49,10 +49,10 @@ export class TestScene extends Scene {
   create() {
     // --- Fix 1: Set the camera size ---
     musicService.setScene(this);
-  
+
     // Continue background music from menu (it should already be playing)
     if (musicService.getMusicEnabled() && !musicService.isMusicPlaying()) {
-      musicService.playBackgroundMusic('backgroundMusic');
+      musicService.playBackgroundMusic("backgroundMusic");
     }
 
     this.cameras.main.setSize(this.scale.width, this.scale.height);
@@ -68,7 +68,6 @@ export class TestScene extends Scene {
     border.strokeRect(0, 0, this.cameras.main.width, this.cameras.main.height);
     // Pin the border to the screen so it doesn't scroll
     border.setScrollFactor(0);
-
 
     // Add parallax backgrounds
     this.createParallaxBackground();
@@ -131,7 +130,7 @@ export class TestScene extends Scene {
 
   private createParallaxBackground() {
     const { width, height } = this.scale;
-    
+
     // Multiple background layers for depth
     this.snowybg = this.add
       .tileSprite(0, 0, width, height, "snowybg")
@@ -152,7 +151,7 @@ export class TestScene extends Scene {
       .sprite(150, 300, "snowboarder")
       .setScale(0.06)
       .setTint(0xffffff);
-    
+
     this.player.setCollideWorldBounds(true);
     this.player.body.setAllowGravity(false);
     this.player.body.setImmovable(true); // Keep this for correct collisions
@@ -189,15 +188,15 @@ export class TestScene extends Scene {
 
   private createParticleSystems() {
     // Snow trail particles
-    const snowTrail = this.add.particles(0, 0, 'snowboarder', {
+    const snowTrail = this.add.particles(0, 0, "snowboarder", {
       scale: { start: 0.02, end: 0.001 },
       alpha: { start: 0.8, end: 0 },
       lifespan: 300,
       speed: { min: 20, max: 40 },
       tint: 0xffffff,
-      blendMode: 'ADD'
+      blendMode: "ADD",
     });
-    
+
     this.particleEmitters.push(snowTrail);
     snowTrail.startFollow(this.player, 0, 10);
   }
@@ -211,7 +210,7 @@ export class TestScene extends Scene {
     this.trailPoints.push({
       x: this.player.x,
       y: this.player.y,
-      alpha: 1
+      alpha: 1,
     });
 
     // Limit trail length and fade points
@@ -224,17 +223,17 @@ export class TestScene extends Scene {
     if (this.trailPoints.length > 1) {
       this.trail.lineStyle(3, 0x00ffff, 0.5);
       this.trail.beginPath();
-      
+
       for (let i = 0; i < this.trailPoints.length - 1; i++) {
         const point = this.trailPoints[i];
         const nextPoint = this.trailPoints[i + 1];
         const alpha = (i / this.trailPoints.length) * 0.5;
-        
+
         this.trail.lineStyle(3 * alpha, 0x00ffff, alpha);
         this.trail.moveTo(point.x, point.y);
         this.trail.lineTo(nextPoint.x, nextPoint.y);
       }
-      
+
       this.trail.strokePath();
     }
   }
@@ -245,15 +244,27 @@ export class TestScene extends Scene {
       this.input.keyboard.on("keydown-SPACE", this.jump, this);
       this.input.keyboard.on("keydown-UP", this.jump, this);
       this.input.keyboard.on("keydown-F", this.jump, this);
-      
+
       // Trick controls
-      this.input.keyboard.on("keydown-LEFT", () => this.performTrick("left"), this);
-      this.input.keyboard.on("keydown-RIGHT", () => this.performTrick("right"), this);
-      this.input.keyboard.on("keydown-DOWN", () => this.performTrick("spin"), this);
+      this.input.keyboard.on(
+        "keydown-LEFT",
+        () => this.performTrick("left"),
+        this
+      );
+      this.input.keyboard.on(
+        "keydown-RIGHT",
+        () => this.performTrick("right"),
+        this
+      );
+      this.input.keyboard.on(
+        "keydown-DOWN",
+        () => this.performTrick("spin"),
+        this
+      );
     }
 
     // Touch controls for mobile
-    this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+    this.input.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
       if (pointer.y < this.scale.height / 2) {
         this.jump();
       }
@@ -317,39 +328,48 @@ export class TestScene extends Scene {
 
   private createUI() {
     const { width } = this.scale;
-    
+
     // Enhanced score display
-    this.scoreText = this.add.text(20, 20, "Score: 0", {
-      fontSize: "28px",
-      color: "#ffffff",
-      stroke: "#000000",
-      strokeThickness: 3,
-      fontStyle: "bold"
-    }).setScrollFactor(0); // Pin UI to screen
+    this.scoreText = this.add
+      .text(20, 20, "Score: 0", {
+        fontSize: "28px",
+        color: "#ffffff",
+        stroke: "#000000",
+        strokeThickness: 3,
+        fontStyle: "bold",
+      })
+      .setScrollFactor(0); // Pin UI to screen
 
     // Combo counter
-    this.comboText = this.add.text(20, 60, "", {
-      fontSize: "24px",
-      color: "#ffff00",
-      stroke: "#000000",
-      strokeThickness: 2,
-      fontStyle: "bold"
-    }).setScrollFactor(0); // Pin UI to screen
+    this.comboText = this.add
+      .text(20, 60, "", {
+        fontSize: "24px",
+        color: "#ffff00",
+        stroke: "#000000",
+        strokeThickness: 2,
+        fontStyle: "bold",
+      })
+      .setScrollFactor(0); // Pin UI to screen
 
     // Speed indicator
-    this.speedText = this.add.text(20, 100, "Speed: 120", {
-      fontSize: "20px",
-      color: "#00ff00",
-      stroke: "#000000",
-      strokeThickness: 2
-    }).setScrollFactor(0); // Pin UI to screen
+    this.speedText = this.add
+      .text(20, 100, "Speed: 120", {
+        fontSize: "20px",
+        color: "#00ff00",
+        stroke: "#000000",
+        strokeThickness: 2,
+      })
+      .setScrollFactor(0); // Pin UI to screen
 
     // --- FIXED: Set initial button texture from the music service ---
-    const initialTexture = musicService.getMusicEnabled() ? "musicOnButton" : "musicOffButton";
-    this.musicButton = this.add.image(width - 50, 50, initialTexture)
+    const initialTexture = musicService.getMusicEnabled()
+      ? "musicOnButton"
+      : "musicOffButton";
+    this.musicButton = this.add
+      .image(width - 50, 50, initialTexture)
       .setScale(0.1)
       .setInteractive()
-      .on('pointerdown', this.toggleMusic, this)
+      .on("pointerdown", this.toggleMusic, this)
       .setScrollFactor(0); // Pin UI to screen
   }
 
@@ -366,23 +386,27 @@ export class TestScene extends Scene {
     const obstacleTypes = ["bird", "stone"];
     const obstacleType = Phaser.Utils.Array.GetRandom(obstacleTypes);
     const curveY = this.getYForX(this.scale.width + 100);
-    
+
     if (curveY === null) return;
 
     const x = this.scale.width + 100;
     let y = curveY;
-    
+
     if (obstacleType === "bird") {
       y = Phaser.Math.Between(50, curveY - 80);
     } else {
       y = curveY - 15;
     }
 
-    const obstacle = this.obstacles.create(x, y, obstacleType) as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
+    const obstacle = this.obstacles.create(
+      x,
+      y,
+      obstacleType
+    ) as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
     obstacle.setScale(0.05);
     obstacle.setOrigin(0.5, 0.5);
     obstacle.body.setAllowGravity(false);
-    
+
     // --- Make the obstacle hitbox larger than the sprite ---
     const hitboxMultiplier = 6.2; // A uniform, larger multiplier
     const hitboxWidth = obstacle.displayWidth * hitboxMultiplier;
@@ -393,7 +417,6 @@ export class TestScene extends Scene {
     const offsetX = (obstacle.width - hitboxWidth) / 2;
     const offsetY = (obstacle.height - hitboxHeight) / 2;
     obstacle.body.setOffset(offsetX, offsetY);
-
 
     obstacle.setVelocityX(-this.velocity);
 
@@ -406,13 +429,17 @@ export class TestScene extends Scene {
   private addCollectible() {
     const x = this.scale.width + 100;
     const curveY = this.getYForX(x);
-    
+
     if (curveY === null) return;
 
     const y = Phaser.Math.Between(curveY - 120, curveY - 40);
-    
+
     // Use a 'coin' sprite for the collectible
-    const collectible = this.collectibles.create(x, y, "coin") as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
+    const collectible = this.collectibles.create(
+      x,
+      y,
+      "coin"
+    ) as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
     collectible.setScale(1.0); // Make the coin visible
     collectible.body.setAllowGravity(false);
     collectible.setVelocityX(-this.velocity);
@@ -424,7 +451,7 @@ export class TestScene extends Scene {
       duration: 1000,
       yoyo: true,
       repeat: -1,
-      ease: 'Sine.easeInOut'
+      ease: "Sine.easeInOut",
     });
 
     // Add glow effect
@@ -433,35 +460,39 @@ export class TestScene extends Scene {
       alpha: 0.6,
       duration: 500,
       yoyo: true,
-      repeat: -1
+      repeat: -1,
     });
   }
 
   private addPowerUp() {
     const powerUpTypes = ["invulnerability", "speed", "magnet"];
     const powerUpType = Phaser.Utils.Array.GetRandom(powerUpTypes);
-    
+
     const x = this.scale.width + 100;
     const curveY = this.getYForX(x);
-    
+
     if (curveY === null) return;
 
     const y = Phaser.Math.Between(curveY - 100, curveY - 30);
-    
-    let powerUpSpriteKey = '';
+
+    let powerUpSpriteKey = "";
     switch (powerUpType) {
-        case "invulnerability":
-            powerUpSpriteKey = 'invulnerabilityIcon'; // Make sure 'invulnerabilityIcon' is loaded
-            break;
-        case "speed":
-            powerUpSpriteKey = 'speedIcon'; // Make sure 'speedIcon' is loaded
-            break;
-        case "magnet":
-            powerUpSpriteKey = 'magnetIcon'; // Make sure 'magnetIcon' is loaded
-            break;
+      case "invulnerability":
+        powerUpSpriteKey = "invulnerabilityIcon"; // Make sure 'invulnerabilityIcon' is loaded
+        break;
+      case "speed":
+        powerUpSpriteKey = "speedIcon"; // Make sure 'speedIcon' is loaded
+        break;
+      case "magnet":
+        powerUpSpriteKey = "magnetIcon"; // Make sure 'magnetIcon' is loaded
+        break;
     }
 
-    const powerUp = this.powerUps.create(x, y, powerUpSpriteKey) as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
+    const powerUp = this.powerUps.create(
+      x,
+      y,
+      powerUpSpriteKey
+    ) as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
     powerUp.setScale(1.0); // Increase the size of the power-up icons
     powerUp.setData("type", powerUpType);
     powerUp.body.setAllowGravity(false);
@@ -474,7 +505,7 @@ export class TestScene extends Scene {
       scaleY: 1.2, // Adjust pulsing scale
       duration: 800,
       yoyo: true,
-      repeat: -1
+      repeat: -1,
     });
   }
 
@@ -486,19 +517,18 @@ export class TestScene extends Scene {
       return;
     }
 
-    musicService.playSFX('crashSound', { volume: 0.8 });
+    musicService.playSFX("crashSound", { volume: 0.8 });
 
     this.shakeCamera();
     this.resetCombo();
-    this.scene.start("GameOverScene", { 
+    this.scene.start("GameOverScene", {
       score: this.score,
-      maxCombo: this.maxCombo 
+      maxCombo: this.maxCombo,
     });
   }
 
   private handleCollectibleCollection(player: any, collectible: any) {
-
-    musicService.playSFX('coinSound', { volume: 0.6 });
+    musicService.playSFX("coinSound", { volume: 0.6 });
 
     const collectibleX = collectible.x;
     const collectibleY = collectible.y;
@@ -508,28 +538,29 @@ export class TestScene extends Scene {
     this.addCombo();
 
     // Create a floating coin icon instead of text
-    const floatingCoin = this.add.image(collectibleX, collectibleY, 'coin')
-        .setScale(1.0)
-        .setOrigin(0.5);
+    const floatingCoin = this.add
+      .image(collectibleX, collectibleY, "coin")
+      .setScale(1.0)
+      .setOrigin(0.5);
 
     this.tweens.add({
-        targets: floatingCoin,
-        y: collectibleY - 50,
-        alpha: 0,
-        duration: 1000,
-        ease: 'Power2',
-        onComplete: () => floatingCoin.destroy()
+      targets: floatingCoin,
+      y: collectibleY - 50,
+      alpha: 0,
+      duration: 1000,
+      ease: "Power2",
+      onComplete: () => floatingCoin.destroy(),
     });
-    
+
     // Speed boost from collectibles
     this.velocity = Math.min(this.velocity + 2, this.maxVelocity);
   }
 
   private handlePowerUpCollection(player: any, powerUp: any) {
-    musicService.playSFX('powerupSound', { volume: 0.7 });
+    musicService.playSFX("powerupSound", { volume: 0.7 });
     const type = powerUp.getData("type");
     powerUp.destroy();
-    
+
     this.activatePowerUp(type);
     this.showFloatingText(powerUp.x, powerUp.y, type.toUpperCase(), 0x00ffff);
   }
@@ -549,7 +580,7 @@ export class TestScene extends Scene {
           this.player.setTint(0xffffff);
         });
         break;
-      
+
       case "speed":
         this.doubleSpeed = true;
         this.velocity *= 1.5;
@@ -558,7 +589,7 @@ export class TestScene extends Scene {
           this.velocity = Math.max(this.baseVelocity, this.velocity / 1.5);
         });
         break;
-      
+
       case "magnet":
         this.magnetActive = true;
         this.powerUpTimers[type] = this.time.delayedCall(6000, () => {
@@ -570,14 +601,14 @@ export class TestScene extends Scene {
 
   private jump() {
     if (!this.isJumping && this.isGrounded) {
-      musicService.playSFX('jumpSound', { volume: 0.4 });
+      musicService.playSFX("jumpSound", { volume: 0.4 });
       this.player.body.setAllowGravity(true);
       this.isJumping = true;
       this.isGrounded = false;
       this.player.setVelocityY(-this.jumpPower);
       this.player.body.setGravityY(400);
       this.airTime = 0;
-      
+
       // Jump effect
       this.shakeCamera(0.02);
     }
@@ -586,7 +617,7 @@ export class TestScene extends Scene {
   private performTrick(direction: string) {
     if (!this.isJumping || this.isPerformingTrick) return;
 
-    musicService.playSFX('trickSound', { volume: 0.5 });
+    musicService.playSFX("trickSound", { volume: 0.5 });
     this.isPerformingTrick = true;
     let trickScore = 0;
     let trickName = "";
@@ -597,38 +628,38 @@ export class TestScene extends Scene {
           targets: this.player,
           angle: this.player.angle - 360,
           duration: 400,
-          ease: 'Power2',
+          ease: "Power2",
           onComplete: () => {
             this.isPerformingTrick = false;
-          }
+          },
         });
         trickScore = 150;
         trickName = "SPIN LEFT!";
         break;
-      
+
       case "right":
         this.tweens.add({
           targets: this.player,
           angle: this.player.angle + 360,
           duration: 400,
-          ease: 'Power2',
+          ease: "Power2",
           onComplete: () => {
             this.isPerformingTrick = false;
-          }
+          },
         });
         trickScore = 150;
         trickName = "SPIN RIGHT!";
         break;
-      
+
       case "spin":
         this.tweens.add({
           targets: this.player,
           angle: this.player.angle + 720,
           duration: 600,
-          ease: 'Power2',
+          ease: "Power2",
           onComplete: () => {
             this.isPerformingTrick = false;
-          }
+          },
         });
         trickScore = 250;
         trickName = "DOUBLE SPIN!";
@@ -637,7 +668,12 @@ export class TestScene extends Scene {
 
     this.addScore(trickScore);
     this.addCombo();
-    this.showFloatingText(this.player.x, this.player.y - 50, trickName, 0x00ff00);
+    this.showFloatingText(
+      this.player.x,
+      this.player.y - 50,
+      trickName,
+      0x00ff00
+    );
   }
 
   private addScore(points: number) {
@@ -650,14 +686,14 @@ export class TestScene extends Scene {
     this.combo++;
     this.maxCombo = Math.max(this.maxCombo, this.combo);
     this.comboText.setText(`Combo: x${this.combo}`);
-    
+
     // Combo visual effect
     this.tweens.add({
       targets: this.comboText,
       scaleX: 1.2,
       scaleY: 1.2,
       duration: 100,
-      yoyo: true
+      yoyo: true,
     });
   }
 
@@ -667,21 +703,23 @@ export class TestScene extends Scene {
   }
 
   private showFloatingText(x: number, y: number, text: string, color: number) {
-    const floatingText = this.add.text(x, y, text, {
-      fontSize: "20px",
-      color: Phaser.Display.Color.IntegerToColor(color).rgba,
-      fontStyle: "bold",
-      stroke: "#000000",
-      strokeThickness: 2
-    }).setOrigin(0.5);
+    const floatingText = this.add
+      .text(x, y, text, {
+        fontSize: "20px",
+        color: Phaser.Display.Color.IntegerToColor(color).rgba,
+        fontStyle: "bold",
+        stroke: "#000000",
+        strokeThickness: 2,
+      })
+      .setOrigin(0.5);
 
     this.tweens.add({
       targets: floatingText,
       y: y - 50,
       alpha: 0,
       duration: 1000,
-      ease: 'Power2',
-      onComplete: () => floatingText.destroy()
+      ease: "Power2",
+      onComplete: () => floatingText.destroy(),
     });
   }
 
@@ -703,7 +741,7 @@ export class TestScene extends Scene {
     // This is because the service's setMusicEnabled(false) destroys the music instance,
     // and its setMusicEnabled(true) logic doesn't re-create it.
     if (newEnabledState) {
-        musicService.playBackgroundMusic('backgroundMusic');
+      musicService.playBackgroundMusic("backgroundMusic");
     }
 
     // 3. Update the button's texture to reflect the new state.
@@ -713,20 +751,20 @@ export class TestScene extends Scene {
 
   update(time: number, delta: number): void {
     const deltaVelocity = this.velocity * delta * 0.001;
-    
+
     // Parallax background movement
     this.snowybg.tilePositionX += deltaVelocity * 0.3;
-    
+
     // Move and update curve
     this.moveCurve(-deltaVelocity);
 
     // Update player position and physics
     this.updatePlayerPhysics();
-    
+
     // Update visual effects
     this.updateTrail();
     this.updateParticles();
-    
+
     // Update magnet effect
     if (this.magnetActive) {
       this.updateMagnetEffect();
@@ -734,13 +772,13 @@ export class TestScene extends Scene {
 
     // Update curve visuals
     this.fillBelowCurve();
-    
+
     // Update score based on survival
     this.updateScore(delta);
-    
+
     // Update speed display
     this.speedText.setText(`Speed: ${Math.floor(this.velocity)}`);
-    
+
     // Gradually increase base speed
     if (this.velocity < this.maxVelocity) {
       this.velocity += this.acceleration * delta * 0.001;
@@ -757,9 +795,9 @@ export class TestScene extends Scene {
         if (this.isPerformingTrick) {
           this.shakeCamera();
           this.resetCombo();
-          this.scene.start("GameOverScene", { 
+          this.scene.start("GameOverScene", {
             score: this.score,
-            maxCombo: this.maxCombo 
+            maxCombo: this.maxCombo,
           });
           return;
         }
@@ -768,12 +806,17 @@ export class TestScene extends Scene {
         this.isGrounded = true;
         this.player.body.setAllowGravity(false);
         this.player.setVelocityY(0);
-        
+
         // Air time bonus
         if (this.airTime > 60) {
           const bonus = Math.floor(this.airTime / 10) * 10;
           this.addScore(bonus);
-          this.showFloatingText(this.player.x, this.player.y, `Air Time +${bonus}!`, 0x00ffff);
+          this.showFloatingText(
+            this.player.x,
+            this.player.y,
+            `Air Time +${bonus}!`,
+            0x00ffff
+          );
         }
       }
     } else {
@@ -788,17 +831,17 @@ export class TestScene extends Scene {
   private updatePlayerRotation() {
     const leftY = this.getYForX(this.player.x - 30);
     const rightY = this.getYForX(this.player.x + 30);
-    
+
     if (leftY !== null && rightY !== null) {
       const slopeAngle = Phaser.Math.RadToDeg(Math.atan2(rightY - leftY, 60));
       let targetAngle = 0;
-      
+
       if (slopeAngle >= -15 && slopeAngle <= 15) targetAngle = 0;
       else if (slopeAngle >= -45 && slopeAngle <= -15) targetAngle = -25;
       else if (slopeAngle < -45) targetAngle = -45;
       else if (slopeAngle >= 15 && slopeAngle <= 45) targetAngle = 25;
       else if (slopeAngle > 45) targetAngle = 45;
-      
+
       // Smooth rotation
       const currentAngle = this.player.angle;
       const angleDiff = targetAngle - currentAngle;
@@ -808,19 +851,21 @@ export class TestScene extends Scene {
 
   private updateParticles() {
     // Update particle emitters based on speed and conditions
-    this.particleEmitters.forEach(emitter => {
-        const speedFactor = this.velocity / this.baseVelocity;
-        emitter.speed = { min: 20 * speedFactor, max: 40 * speedFactor };
+    this.particleEmitters.forEach((emitter) => {
+      const speedFactor = this.velocity / this.baseVelocity;
+      emitter.speed = { min: 20 * speedFactor, max: 40 * speedFactor };
     });
   }
 
   private updateMagnetEffect() {
     this.collectibles.children.entries.forEach((collectible: any) => {
       const distance = Phaser.Math.Distance.Between(
-        this.player.x, this.player.y,
-        collectible.x, collectible.y
+        this.player.x,
+        this.player.y,
+        collectible.x,
+        collectible.y
       );
-      
+
       if (distance < 150) {
         this.physics.moveToObject(collectible, this.player, 200);
       }
@@ -850,7 +895,16 @@ export class TestScene extends Scene {
     this.graphics.fillPath();
 
     // Add gradient effect
-    this.graphics.fillGradientStyle(0xffffff, 0xffffff, 0xe6f3ff, 0xe6f3ff, 1, 0.8, 0.6, 0.4);
+    this.graphics.fillGradientStyle(
+      0xffffff,
+      0xffffff,
+      0xe6f3ff,
+      0xe6f3ff,
+      1,
+      0.8,
+      0.6,
+      0.4
+    );
     this.graphics.fillPath();
   }
 
@@ -883,8 +937,11 @@ export class TestScene extends Scene {
       this.curvePoints.shift();
       const lastPoint = this.curvePoints[this.curvePoints.length - 1];
       const newX = lastPoint.x + 180;
-      const newY = 250 + Math.sin(newX * 0.01) * 80 + Phaser.Math.Between(-40, 40);
-      this.curvePoints.push(new Phaser.Math.Vector2(newX, Math.max(150, Math.min(400, newY))));
+      const newY =
+        250 + Math.sin(newX * 0.01) * 80 + Phaser.Math.Between(-40, 40);
+      this.curvePoints.push(
+        new Phaser.Math.Vector2(newX, Math.max(150, Math.min(400, newY)))
+      );
     }
 
     this.updateCurve();
@@ -897,4 +954,3 @@ export class TestScene extends Scene {
     this.curve.draw(this.graphics, 128);
   }
 }
-

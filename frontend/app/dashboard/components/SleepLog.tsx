@@ -1,9 +1,15 @@
-'use client';
-import React, { useState, useEffect } from 'react';
-import { Moon, Sun, Clock, X, Trash2, Edit3, Calendar } from 'lucide-react';
-import { sleepApi, SleepResponse, formatDateForApi, formatTimeForDisplay, calculateSleepDuration } from '../sleep/sleepApi';
-import { successToast, errorToast } from '@/util/toastHelper';
-import SleepModal from './SleepModal';
+"use client";
+import React, { useState, useEffect } from "react";
+import { Moon, Sun, Clock, X, Trash2, Edit3, Calendar } from "lucide-react";
+import {
+  sleepApi,
+  SleepResponse,
+  formatDateForApi,
+  formatTimeForDisplay,
+  calculateSleepDuration,
+} from "@/app/dashboard/sleep/sleepApi";
+import { successToast, errorToast } from "@/util/toastHelper";
+import SleepModal from "./SleepModal";
 
 interface SleepLogProps {
   isOpen: boolean;
@@ -11,13 +17,19 @@ interface SleepLogProps {
   onDataChange: () => void;
 }
 
-const SleepLog: React.FC<SleepLogProps> = ({ isOpen, onClose, onDataChange }) => {
+const SleepLog: React.FC<SleepLogProps> = ({
+  isOpen,
+  onClose,
+  onDataChange,
+}) => {
   const [sleepData, setSleepData] = useState<SleepResponse[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [deleteLoading, setDeleteLoading] = useState<string | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
-  const [selectedEntry, setSelectedEntry] = useState<SleepResponse | null>(null);
+  const [selectedEntry, setSelectedEntry] = useState<SleepResponse | null>(
+    null
+  );
 
   const loadSleepData = async () => {
     try {
@@ -27,7 +39,7 @@ const SleepLog: React.FC<SleepLogProps> = ({ isOpen, onClose, onDataChange }) =>
       const data = await sleepApi.getLastNDaysSleep(7, today);
       setSleepData(data);
     } catch (err: any) {
-      const errorMessage = err?.message || 'Failed to load sleep data';
+      const errorMessage = err?.message || "Failed to load sleep data";
       setError(errorMessage);
       errorToast(errorMessage);
     } finally {
@@ -42,18 +54,18 @@ const SleepLog: React.FC<SleepLogProps> = ({ isOpen, onClose, onDataChange }) =>
   }, [isOpen]);
 
   const handleDelete = async (date: string) => {
-    if (!window.confirm('Are you sure you want to delete this sleep record?')) {
+    if (!window.confirm("Are you sure you want to delete this sleep record?")) {
       return;
     }
 
     try {
       setDeleteLoading(date);
       await sleepApi.deleteSleep(date);
-      successToast('Sleep record deleted successfully!');
+      successToast("Sleep record deleted successfully!");
       await loadSleepData();
       onDataChange();
     } catch (err: any) {
-      const errorMessage = err?.message || 'Failed to delete sleep record';
+      const errorMessage = err?.message || "Failed to delete sleep record";
       errorToast(errorMessage);
     } finally {
       setDeleteLoading(null);
@@ -79,31 +91,31 @@ const SleepLog: React.FC<SleepLogProps> = ({ isOpen, onClose, onDataChange }) =>
     yesterday.setDate(yesterday.getDate() - 1);
 
     if (dateString === formatDateForApi(today)) {
-      return 'Today';
+      return "Today";
     } else if (dateString === formatDateForApi(yesterday)) {
-      return 'Yesterday';
+      return "Yesterday";
     } else {
-      return date.toLocaleDateString('en-US', { weekday: 'short' });
+      return date.toLocaleDateString("en-US", { weekday: "short" });
     }
   };
 
   const getDateDisplay = (dateString: string): string => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   };
 
   const getSleepQualityColor = (duration: string): string => {
-    const hours = parseInt(duration.split('h')[0]);
-    if (hours >= 7 && hours <= 9) return 'text-green-600 bg-green-50';
-    if (hours >= 6 && hours <= 10) return 'text-yellow-600 bg-yellow-50';
-    return 'text-red-600 bg-red-50';
+    const hours = parseInt(duration.split("h")[0]);
+    if (hours >= 7 && hours <= 9) return "text-green-600 bg-green-50";
+    if (hours >= 6 && hours <= 10) return "text-yellow-600 bg-yellow-50";
+    return "text-red-600 bg-red-50";
   };
 
   const getSleepQualityText = (duration: string): string => {
-    const hours = parseInt(duration.split('h')[0]);
-    if (hours >= 7 && hours <= 9) return 'Good';
-    if (hours >= 6 && hours <= 10) return 'Fair';
-    return 'Poor';
+    const hours = parseInt(duration.split("h")[0]);
+    if (hours >= 7 && hours <= 9) return "Good";
+    if (hours >= 6 && hours <= 10) return "Fair";
+    return "Poor";
   };
 
   if (!isOpen) return null;
@@ -119,8 +131,12 @@ const SleepLog: React.FC<SleepLogProps> = ({ isOpen, onClose, onDataChange }) =>
                 <Calendar className="w-5 h-5 text-blue-600" />
               </div>
               <div>
-                <h2 className="text-xl font-semibold text-gray-900">Sleep Log</h2>
-                <p className="text-sm text-gray-600">Last 7 days of sleep records</p>
+                <h2 className="text-xl font-semibold text-gray-900">
+                  Sleep Log
+                </h2>
+                <p className="text-sm text-gray-600">
+                  Last 7 days of sleep records
+                </p>
               </div>
             </div>
             <button
@@ -163,15 +179,26 @@ const SleepLog: React.FC<SleepLogProps> = ({ isOpen, onClose, onDataChange }) =>
                 {sleepData.length === 0 ? (
                   <div className="text-center py-12">
                     <Moon className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No sleep records found</h3>
-                    <p className="text-gray-600 mb-4">Start tracking your sleep to see your patterns here</p>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                      No sleep records found
+                    </h3>
+                    <p className="text-gray-600 mb-4">
+                      Start tracking your sleep to see your patterns here
+                    </p>
                   </div>
                 ) : (
                   <div className="space-y-4">
                     {sleepData
-                      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                      .sort(
+                        (a, b) =>
+                          new Date(b.date).getTime() -
+                          new Date(a.date).getTime()
+                      )
                       .map((entry) => {
-                        const duration = calculateSleepDuration(entry.sleepTime, entry.wakeTime);
+                        const duration = calculateSleepDuration(
+                          entry.sleepTime,
+                          entry.wakeTime
+                        );
                         const qualityColor = getSleepQualityColor(duration);
                         const qualityText = getSleepQualityText(duration);
 
@@ -189,7 +216,9 @@ const SleepLog: React.FC<SleepLogProps> = ({ isOpen, onClose, onDataChange }) =>
                                   <div className="text-sm text-gray-500">
                                     {getDateDisplay(entry.date)}
                                   </div>
-                                  <div className={`px-2 py-1 rounded-full text-xs font-medium ${qualityColor}`}>
+                                  <div
+                                    className={`px-2 py-1 rounded-full text-xs font-medium ${qualityColor}`}
+                                  >
                                     {qualityText}
                                   </div>
                                 </div>
@@ -199,21 +228,29 @@ const SleepLog: React.FC<SleepLogProps> = ({ isOpen, onClose, onDataChange }) =>
                                     <Moon className="w-4 h-4 text-blue-500" />
                                     <div>
                                       <div className="text-gray-500">Sleep</div>
-                                      <div className="font-medium">{formatTimeForDisplay(entry.sleepTime)}</div>
+                                      <div className="font-medium">
+                                        {formatTimeForDisplay(entry.sleepTime)}
+                                      </div>
                                     </div>
                                   </div>
                                   <div className="flex items-center gap-2">
                                     <Sun className="w-4 h-4 text-yellow-500" />
                                     <div>
                                       <div className="text-gray-500">Wake</div>
-                                      <div className="font-medium">{formatTimeForDisplay(entry.wakeTime)}</div>
+                                      <div className="font-medium">
+                                        {formatTimeForDisplay(entry.wakeTime)}
+                                      </div>
                                     </div>
                                   </div>
                                   <div className="flex items-center gap-2">
                                     <Clock className="w-4 h-4 text-green-500" />
                                     <div>
-                                      <div className="text-gray-500">Duration</div>
-                                      <div className="font-medium text-green-600">{duration}</div>
+                                      <div className="text-gray-500">
+                                        Duration
+                                      </div>
+                                      <div className="font-medium text-green-600">
+                                        {duration}
+                                      </div>
                                     </div>
                                   </div>
                                 </div>
@@ -271,7 +308,7 @@ const SleepLog: React.FC<SleepLogProps> = ({ isOpen, onClose, onDataChange }) =>
         }}
         onSave={handleEditSave}
         initialData={selectedEntry}
-        selectedDate={selectedEntry?.date || ''}
+        selectedDate={selectedEntry?.date || ""}
       />
     </>
   );

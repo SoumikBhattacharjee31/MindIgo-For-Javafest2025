@@ -1,5 +1,5 @@
 import { Scene } from "phaser";
-import { musicService } from "../../services/musicService";
+import { musicService } from "@/app/dashboard/games/alto-go/services/musicService";
 
 export class Preloader extends Scene {
   constructor() {
@@ -26,21 +26,21 @@ export class Preloader extends Scene {
     this.load.image("speedIcon", "/speed.png");
     this.load.image("invulnerabilityIcon", "/star.png");
     this.load.image("magnetIcon", "/magnet.png");
-    
+
     // Load UI elements
     this.load.image("musicOnButton", "/soundon.png");
     this.load.image("musicOffButton", "/soundoff.png");
 
     // Load audio files
     this.load.audio("backgroundMusic", ["/bgm.mp3", "/bgm.ogg"]);
-    
+
     // Load sound effects (you'll need these files)
     this.load.audio("jumpSound", ["/jump.mp3", "/jump.ogg"]);
     this.load.audio("coinSound", ["/coin-collect.mp3", "/coin-collect.ogg"]);
     this.load.audio("trickSound", ["/trick.mp3", "/trick.ogg"]);
     this.load.audio("crashSound", ["/crash.mp3", "/crash.ogg"]);
     this.load.audio("powerupSound", ["/powerup.mp3", "/powerup.ogg"]);
-    
+
     // Set the music service scene
     musicService.setScene(this);
   }
@@ -48,4 +48,4 @@ export class Preloader extends Scene {
   create() {
     this.scene.start("MainMenuScene");
   }
-};
+}

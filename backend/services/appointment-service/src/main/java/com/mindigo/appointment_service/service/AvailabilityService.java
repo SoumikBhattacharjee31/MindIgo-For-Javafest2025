@@ -177,13 +177,8 @@ public class AvailabilityService {
             if (!request.getStartTime().isBefore(request.getEndTime())) {
                 throw new IllegalArgumentException("Start time must be before end time");
             }
-        } else if (request.getStartTime() == null || request.getEndTime() == null) {
+        } else {
             throw new IllegalArgumentException("Both start time and end time are required for this update.");
-        }
-
-        // Validate time range
-        if (!request.getStartTime().isBefore(request.getEndTime())) {
-            throw new IllegalArgumentException("Start time must be before end time");
         }
 
         // Validate date is not in the past

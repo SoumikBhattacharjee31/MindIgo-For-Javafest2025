@@ -1,7 +1,7 @@
-"use client"
-import React, { useState } from 'react';
-import { RoutineResponse, AssignRoutineRequest } from '../types/routine';
-import { FaUser, FaSearch, FaCheck, FaTimes, FaSpinner } from 'react-icons/fa';
+"use client";
+import React, { useState } from "react";
+import { RoutineResponse, AssignRoutineRequest } from "@/app/routines/types";
+import { FaUser, FaSearch, FaCheck, FaTimes, FaSpinner } from "react-icons/fa";
 
 interface Patient {
   id: number;
@@ -22,23 +22,56 @@ const PatientAssign: React.FC<PatientAssignProps> = ({
   routine,
   onAssign,
   onCancel,
-  isLoading = false
+  isLoading = false,
 }) => {
-  const [selectedPatientId, setSelectedPatientId] = useState<number | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedPatientId, setSelectedPatientId] = useState<number | null>(
+    null
+  );
+  const [searchTerm, setSearchTerm] = useState("");
   const [patients, setPatients] = useState<Patient[]>([
     // Mock data - replace with actual API call
-    { id: 1, name: 'John Smith', email: 'john.smith@email.com', age: 32, phoneNumber: '+1234567890' },
-    { id: 2, name: 'Sarah Johnson', email: 'sarah.j@email.com', age: 28, phoneNumber: '+1234567891' },
-    { id: 3, name: 'Michael Brown', email: 'm.brown@email.com', age: 45, phoneNumber: '+1234567892' },
-    { id: 4, name: 'Emily Davis', email: 'emily.davis@email.com', age: 35, phoneNumber: '+1234567893' },
-    { id: 5, name: 'David Wilson', email: 'd.wilson@email.com', age: 41, phoneNumber: '+1234567894' },
+    {
+      id: 1,
+      name: "John Smith",
+      email: "john.smith@email.com",
+      age: 32,
+      phoneNumber: "+1234567890",
+    },
+    {
+      id: 2,
+      name: "Sarah Johnson",
+      email: "sarah.j@email.com",
+      age: 28,
+      phoneNumber: "+1234567891",
+    },
+    {
+      id: 3,
+      name: "Michael Brown",
+      email: "m.brown@email.com",
+      age: 45,
+      phoneNumber: "+1234567892",
+    },
+    {
+      id: 4,
+      name: "Emily Davis",
+      email: "emily.davis@email.com",
+      age: 35,
+      phoneNumber: "+1234567893",
+    },
+    {
+      id: 5,
+      name: "David Wilson",
+      email: "d.wilson@email.com",
+      age: 41,
+      phoneNumber: "+1234567894",
+    },
   ]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const filteredPatients = patients.filter(patient =>
-    patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    patient.email.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredPatients = patients.filter(
+    (patient) =>
+      patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      patient.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleAssign = async () => {
@@ -48,14 +81,14 @@ const PatientAssign: React.FC<PatientAssignProps> = ({
     try {
       await onAssign({
         patientId: selectedPatientId,
-        routineId: routine.id
+        routineId: routine.id,
       });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const selectedPatient = patients.find(p => p.id === selectedPatientId);
+  const selectedPatient = patients.find((p) => p.id === selectedPatientId);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -103,7 +136,9 @@ const PatientAssign: React.FC<PatientAssignProps> = ({
                     <div
                       key={patient.id}
                       className={`p-4 cursor-pointer hover:bg-gray-50 transition-colors ${
-                        selectedPatientId === patient.id ? 'bg-blue-50 border-l-4 border-blue-500' : ''
+                        selectedPatientId === patient.id
+                          ? "bg-blue-50 border-l-4 border-blue-500"
+                          : ""
                       }`}
                       onClick={() => setSelectedPatientId(patient.id)}
                     >
@@ -111,18 +146,32 @@ const PatientAssign: React.FC<PatientAssignProps> = ({
                         <div className="flex-grow">
                           <div className="flex items-center space-x-3">
                             <div className="flex-shrink-0">
-                              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-medium ${
-                                selectedPatientId === patient.id ? 'bg-blue-500' : 'bg-gray-400'
-                              }`}>
-                                {patient.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                              <div
+                                className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-medium ${
+                                  selectedPatientId === patient.id
+                                    ? "bg-blue-500"
+                                    : "bg-gray-400"
+                                }`}
+                              >
+                                {patient.name
+                                  .split(" ")
+                                  .map((n) => n[0])
+                                  .join("")
+                                  .toUpperCase()}
                               </div>
                             </div>
                             <div className="flex-grow">
-                              <h4 className="font-medium text-gray-900">{patient.name}</h4>
-                              <p className="text-sm text-gray-600">{patient.email}</p>
+                              <h4 className="font-medium text-gray-900">
+                                {patient.name}
+                              </h4>
+                              <p className="text-sm text-gray-600">
+                                {patient.email}
+                              </p>
                               <div className="flex items-center space-x-4 text-xs text-gray-500 mt-1">
                                 {patient.age && <span>Age: {patient.age}</span>}
-                                {patient.phoneNumber && <span>Phone: {patient.phoneNumber}</span>}
+                                {patient.phoneNumber && (
+                                  <span>Phone: {patient.phoneNumber}</span>
+                                )}
                               </div>
                             </div>
                           </div>
@@ -141,12 +190,25 @@ const PatientAssign: React.FC<PatientAssignProps> = ({
           {/* Selected Patient Summary */}
           {selectedPatient && (
             <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <h4 className="font-medium text-blue-900 mb-2">Assignment Summary</h4>
+              <h4 className="font-medium text-blue-900 mb-2">
+                Assignment Summary
+              </h4>
               <div className="text-sm text-blue-800">
-                <p><strong>Patient:</strong> {selectedPatient.name}</p>
-                <p><strong>Routine:</strong> {routine.name}</p>
-                <p><strong>Activities:</strong> {routine.activities.length} activities</p>
-                <p><strong>Type:</strong> {routine.routineType.charAt(0) + routine.routineType.slice(1).toLowerCase()}</p>
+                <p>
+                  <strong>Patient:</strong> {selectedPatient.name}
+                </p>
+                <p>
+                  <strong>Routine:</strong> {routine.name}
+                </p>
+                <p>
+                  <strong>Activities:</strong> {routine.activities.length}{" "}
+                  activities
+                </p>
+                <p>
+                  <strong>Type:</strong>{" "}
+                  {routine.routineType.charAt(0) +
+                    routine.routineType.slice(1).toLowerCase()}
+                </p>
               </div>
             </div>
           )}

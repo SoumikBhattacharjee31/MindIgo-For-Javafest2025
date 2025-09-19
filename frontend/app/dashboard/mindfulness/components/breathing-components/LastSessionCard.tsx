@@ -1,9 +1,9 @@
-import { LastSession } from '../../dataTypes';
-import LastSessionPlaceholder from './LastSessionPlaceHolder';
-import LastSessionBody from './LastSessionBody';
+import { LastSession } from "@/app/dashboard/mindfulness/dataTypes";
+import LastSessionPlaceholder from "./LastSessionPlaceHolder";
+import LastSessionBody from "./LastSessionBody";
 
 const LastSessionCard = ({ session }: { session: LastSession | null }) => {
-  return session? (
+  return session ? (
     <LastSessionBody session={session} />
   ) : (
     <LastSessionPlaceholder />

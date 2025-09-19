@@ -1,4 +1,4 @@
-import { Mood } from "../dataTypes";
+import { Mood } from "@/app/dashboard/mindfulness/dataTypes";
 
 interface Props {
   moods: Mood[];
@@ -7,7 +7,12 @@ interface Props {
   nextStep: () => void;
 }
 
-const MoodStep = ({ moods, selectedMood, setSelectedMood, nextStep }: Props) => (
+const MoodStep = ({
+  moods,
+  selectedMood,
+  setSelectedMood,
+  nextStep,
+}: Props) => (
   <div>
     <h2 className="text-2xl font-bold text-white mb-6 text-center">
       Pick your mood

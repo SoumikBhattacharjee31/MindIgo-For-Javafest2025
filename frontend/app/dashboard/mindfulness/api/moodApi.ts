@@ -1,7 +1,7 @@
 // moodApi.ts
-import axios from 'axios';
+import axios from "axios";
 
-const BASE_URL = 'http://localhost:8080';
+const BASE_URL = "http://localhost:8080";
 
 // Types matching your backend DTOs
 export interface MoodRequest {
@@ -36,7 +36,7 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.data?.message) {
-      console.error('API Error:', error.response.data.message);
+      console.error("API Error:", error.response.data.message);
       throw new Error(error.response.data.message);
     }
     throw error;
@@ -49,24 +49,27 @@ export const moodApi = {
    * @param days - Number of days to retrieve (default: 7)
    * @param today - Today's date in YYYY-MM-DD format
    */
-  getMoods: async (days: number = 7, today: string): Promise<MoodResponse[]> => {
+  getMoods: async (
+    days: number = 7,
+    today: string
+  ): Promise<MoodResponse[]> => {
     try {
-      console.log('Fetching moods:', { days, today });
-      
+      console.log("Fetching moods:", { days, today });
+
       const response = await apiClient.get<ApiResponseClass<MoodResponse[]>>(
         `/api/v1/content/mood/get-mood`,
         {
-          params: { days, today }
+          params: { days, today },
         }
       );
 
       if (!response.data.success) {
-        throw new Error(response.data.message || 'Failed to fetch moods');
+        throw new Error(response.data.message || "Failed to fetch moods");
       }
 
       return response.data.data;
     } catch (error) {
-      console.error('Error fetching moods:', error);
+      console.error("Error fetching moods:", error);
       throw error;
     }
   },
@@ -77,17 +80,24 @@ export const moodApi = {
    */
   setMood: async (moodData: MoodRequest): Promise<MoodResponse> => {
     try {
-      console.log('Setting mood with data:', moodData);
-      
+      console.log("Setting mood with data:", moodData);
+
       // Validate the request data
-      if (!moodData.mood || !moodData.date || !moodData.description || !moodData.reason) {
-        throw new Error('Missing required fields: mood, date, description, or reason');
+      if (
+        !moodData.mood ||
+        !moodData.date ||
+        !moodData.description ||
+        !moodData.reason
+      ) {
+        throw new Error(
+          "Missing required fields: mood, date, description, or reason"
+        );
       }
-      
+
       // Ensure date is in correct format
       const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
       if (!dateRegex.test(moodData.date)) {
-        throw new Error('Invalid date format. Expected YYYY-MM-DD');
+        throw new Error("Invalid date format. Expected YYYY-MM-DD");
       }
 
       const response = await apiClient.post<ApiResponseClass<MoodResponse>>(
@@ -96,16 +106,16 @@ export const moodApi = {
       );
 
       if (!response.data.success) {
-        throw new Error(response.data.message || 'Failed to set mood');
+        throw new Error(response.data.message || "Failed to set mood");
       }
 
       return response.data.data;
     } catch (error) {
-      console.error('Error setting mood:', error);
+      console.error("Error setting mood:", error);
       if (axios.isAxiosError(error)) {
         if (error.response?.status === 400) {
-          console.error('400 Bad Request - Request data:', moodData);
-          console.error('400 Bad Request - Response:', error.response.data);
+          console.error("400 Bad Request - Request data:", moodData);
+          console.error("400 Bad Request - Response:", error.response.data);
         }
       }
       throw error;
@@ -117,8 +127,8 @@ export const moodApi = {
 export const formatDateForApi = (date: Date): string => {
   // Use local date formatting to avoid timezone conversion issues
   const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 };
 

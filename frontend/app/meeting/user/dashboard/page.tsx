@@ -1,8 +1,8 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import UserMeetingRequest from "../../../components/UserMeetingRequest";
-import UserRequestsList from "../../../components/UserRequestsList";
-import { authApi } from "../../../api/authService";
+import UserMeetingRequest from "@/app/meeting/components/UserMeetingRequest";
+import UserRequestsList from "@/app/meeting/components/UserRequestsList";
+import { authApi } from "@/app/api/authService";
 
 const UserMeetingDashboard = () => {
   const [activeTab, setActiveTab] = useState("request");

@@ -1,8 +1,13 @@
-'use client';
-import React, { useState, useEffect } from 'react';
-import { X, Clock, Moon, Sun, Save } from 'lucide-react';
-import { sleepApi, SleepRequest, formatTimeForApi, formatTimeForDisplay } from '../sleep/sleepApi';
-import { successToast, errorToast } from '@/util/toastHelper';
+"use client";
+import React, { useState, useEffect } from "react";
+import { X, Clock, Moon, Sun, Save } from "lucide-react";
+import {
+  sleepApi,
+  SleepRequest,
+  formatTimeForApi,
+  formatTimeForDisplay,
+} from "@/app/dashboard/sleep/sleepApi";
+import { successToast, errorToast } from "@/util/toastHelper";
 
 interface SleepModalProps {
   isOpen: boolean;
@@ -21,12 +26,15 @@ const SleepModal: React.FC<SleepModalProps> = ({
   onClose,
   onSave,
   initialData,
-  selectedDate
+  selectedDate,
 }) => {
-  const [sleepTime, setSleepTime] = useState('');
-  const [wakeTime, setWakeTime] = useState('');
+  const [sleepTime, setSleepTime] = useState("");
+  const [wakeTime, setWakeTime] = useState("");
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState<{ sleepTime?: string; wakeTime?: string }>({});
+  const [errors, setErrors] = useState<{
+    sleepTime?: string;
+    wakeTime?: string;
+  }>({});
 
   // Initialize form data when modal opens or initialData changes
   useEffect(() => {
@@ -36,8 +44,8 @@ const SleepModal: React.FC<SleepModalProps> = ({
         setWakeTime(formatTimeForDisplay(initialData.wakeTime));
       } else {
         // Set default values for new entry
-        setSleepTime('23:00');
-        setWakeTime('07:00');
+        setSleepTime("23:00");
+        setWakeTime("07:00");
       }
       setErrors({});
     }
@@ -48,17 +56,17 @@ const SleepModal: React.FC<SleepModalProps> = ({
 
     // Validate time format
     const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
-    
+
     if (!sleepTime) {
-      newErrors.sleepTime = 'Sleep time is required';
+      newErrors.sleepTime = "Sleep time is required";
     } else if (!timeRegex.test(sleepTime)) {
-      newErrors.sleepTime = 'Invalid time format (HH:MM)';
+      newErrors.sleepTime = "Invalid time format (HH:MM)";
     }
 
     if (!wakeTime) {
-      newErrors.wakeTime = 'Wake time is required';
+      newErrors.wakeTime = "Wake time is required";
     } else if (!timeRegex.test(wakeTime)) {
-      newErrors.wakeTime = 'Invalid time format (HH:MM)';
+      newErrors.wakeTime = "Invalid time format (HH:MM)";
     }
 
     setErrors(newErrors);
@@ -78,14 +86,18 @@ const SleepModal: React.FC<SleepModalProps> = ({
       };
 
       await sleepApi.saveSleep(sleepData);
-      
-      successToast(initialData ? 'Sleep data updated successfully!' : 'Sleep data saved successfully!');
+
+      successToast(
+        initialData
+          ? "Sleep data updated successfully!"
+          : "Sleep data saved successfully!"
+      );
       onSave();
       onClose();
     } catch (error: any) {
-      const errorMessage = error?.message || 'Failed to save sleep data';
+      const errorMessage = error?.message || "Failed to save sleep data";
       errorToast(errorMessage);
-      console.error('Error saving sleep data:', error);
+      console.error("Error saving sleep data:", error);
     } finally {
       setLoading(false);
     }
@@ -93,20 +105,20 @@ const SleepModal: React.FC<SleepModalProps> = ({
 
   const calculateDuration = () => {
     if (!sleepTime || !wakeTime) return null;
-    
+
     try {
       const sleep = new Date(`2000-01-01T${sleepTime}:00`);
       let wake = new Date(`2000-01-01T${wakeTime}:00`);
-      
+
       // If wake time is earlier than sleep time, assume it's next day
       if (wake < sleep) {
         wake = new Date(`2000-01-02T${wakeTime}:00`);
       }
-      
+
       const diffMs = wake.getTime() - sleep.getTime();
       const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
       const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-      
+
       return `${diffHours}h ${diffMinutes}m`;
     } catch {
       return null;
@@ -128,14 +140,14 @@ const SleepModal: React.FC<SleepModalProps> = ({
             </div>
             <div>
               <h2 className="text-xl font-semibold text-gray-900">
-                {initialData ? 'Edit Sleep Data' : 'Add Sleep Data'}
+                {initialData ? "Edit Sleep Data" : "Add Sleep Data"}
               </h2>
               <p className="text-sm text-gray-600">
-                {new Date(selectedDate).toLocaleDateString('en-US', { 
-                  weekday: 'long', 
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric' 
+                {new Date(selectedDate).toLocaleDateString("en-US", {
+                  weekday: "long",
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
                 })}
               </p>
             </div>
@@ -162,7 +174,9 @@ const SleepModal: React.FC<SleepModalProps> = ({
               value={sleepTime}
               onChange={(e) => setSleepTime(e.target.value)}
               className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
-                errors.sleepTime ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                errors.sleepTime
+                  ? "border-red-300 bg-red-50"
+                  : "border-gray-200"
               }`}
               disabled={loading}
             />
@@ -185,7 +199,7 @@ const SleepModal: React.FC<SleepModalProps> = ({
               value={wakeTime}
               onChange={(e) => setWakeTime(e.target.value)}
               className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
-                errors.wakeTime ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                errors.wakeTime ? "border-red-300 bg-red-50" : "border-gray-200"
               }`}
               disabled={loading}
             />
@@ -203,9 +217,13 @@ const SleepModal: React.FC<SleepModalProps> = ({
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Clock className="w-4 h-4 text-blue-500" />
-                  <span className="text-sm font-medium text-gray-700">Sleep Duration</span>
+                  <span className="text-sm font-medium text-gray-700">
+                    Sleep Duration
+                  </span>
                 </div>
-                <span className="text-lg font-bold text-blue-600">{duration}</span>
+                <span className="text-lg font-bold text-blue-600">
+                  {duration}
+                </span>
               </div>
             </div>
           )}
@@ -233,7 +251,7 @@ const SleepModal: React.FC<SleepModalProps> = ({
             ) : (
               <>
                 <Save className="w-4 h-4" />
-                {initialData ? 'Update' : 'Save'}
+                {initialData ? "Update" : "Save"}
               </>
             )}
           </button>

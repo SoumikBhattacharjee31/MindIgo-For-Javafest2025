@@ -1,7 +1,10 @@
 // components/App.tsx
 import { useRef, useState, useEffect } from "react";
 import { IRefPhaserGame, PhaserGame } from "./PhaserGame";
-import { userService, User } from "../services/userService";
+import {
+  userService,
+  User,
+} from "@/app/dashboard/games/alto-go/services/userService";
 import AuthModal from "./AuthModal";
 import * as Phaser from "phaser";
 
@@ -46,18 +49,20 @@ function App() {
 
   if (!isGameReady) {
     return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100vh',
-        background: 'linear-gradient(135deg, #001122, #003366)',
-        color: 'white',
-        fontSize: '24px',
-        fontFamily: 'Arial, sans-serif'
-      }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+          background: "linear-gradient(135deg, #001122, #003366)",
+          color: "white",
+          fontSize: "24px",
+          fontFamily: "Arial, sans-serif",
+        }}
+      >
         Loading Snowboarder Game...
-        <AuthModal 
+        <AuthModal
           isOpen={showAuthModal}
           onClose={handleAuthClose}
           onSuccess={handleAuthSuccess}
@@ -69,7 +74,7 @@ function App() {
   return (
     <div id="app" className="flex">
       <PhaserGame ref={phaserRef} currentActiveScene={currentScene} />
-      <AuthModal 
+      <AuthModal
         isOpen={showAuthModal}
         onClose={handleAuthClose}
         onSuccess={handleAuthSuccess}

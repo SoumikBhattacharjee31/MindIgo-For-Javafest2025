@@ -1,6 +1,6 @@
-'use client'
-import { useState,useEffect } from 'react';
-import { Plus, Minus } from 'lucide-react';
+"use client";
+import { useState, useEffect } from "react";
+import { Plus, Minus } from "lucide-react";
 
 interface NumberPickerProps {
   min: number;
@@ -12,14 +12,14 @@ interface NumberPickerProps {
   unit?: string;
 }
 
-const NumberPicker: React.FC<NumberPickerProps> = ({ 
-  min, 
-  max, 
-  defaultValue, 
-  onChange, 
+const NumberPicker: React.FC<NumberPickerProps> = ({
+  min,
+  max,
+  defaultValue,
+  onChange,
   loop = true,
   label,
-  unit = "sec"
+  unit = "sec",
 }) => {
   const [value, setValue] = useState(defaultValue);
 
@@ -52,7 +52,9 @@ const NumberPicker: React.FC<NumberPickerProps> = ({
   return (
     <div className="flex flex-col items-center">
       {label && (
-        <label className="block text-white/70 text-sm mb-3 font-medium">{label}</label>
+        <label className="block text-white/70 text-sm mb-3 font-medium">
+          {label}
+        </label>
       )}
       <div className="flex flex-col w-20 bg-gradient-to-b from-white/10 to-white/5 rounded-xl shadow-lg border border-white/20 overflow-hidden">
         {/* Plus Button */}
@@ -69,14 +71,14 @@ const NumberPicker: React.FC<NumberPickerProps> = ({
         </button>
 
         {/* Current Value Display */}
-        <div className="h-16 flex flex-col items-center justify-center bg-white/20 backdrop-blur-sm 
-                        border-y border-white/30 relative">
+        <div
+          className="h-16 flex flex-col items-center justify-center bg-white/20 backdrop-blur-sm 
+                        border-y border-white/30 relative"
+        >
           <span className="text-2xl font-bold text-white drop-shadow-md">
             {value}
           </span>
-          <span className="text-xs text-white/70 font-medium">
-            {unit}
-          </span>
+          <span className="text-xs text-white/70 font-medium">{unit}</span>
         </div>
 
         {/* Minus Button */}

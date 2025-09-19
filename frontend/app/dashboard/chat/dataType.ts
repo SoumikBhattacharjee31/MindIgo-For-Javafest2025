@@ -1,9 +1,9 @@
 export interface Message {
   id: string;
-  role: 'user' | 'assistant';
+  role: "user" | "assistant";
   content: string;
   timestamp: string;
-  safety_alert?: 'none' | 'mild' | 'crisis';
+  safety_alert?: "none" | "mild" | "crisis";
   recommendations?: Recommendation[];
 }
 
@@ -16,24 +16,29 @@ export interface ApiMessage {
   ai_response: string;
   timestamp: string;
   metadata: {
-    safety_alert: 'none' | 'mild' | 'crisis';
+    safety_alert: "none" | "mild" | "crisis";
     escalate: boolean;
     recommendations: Recommendation[];
   };
 }
 
 export interface Recommendation {
-  type: 'song' | 'doctor' | 'breathing_exercise' | 'emergency_contact' | 'mood_insight';
+  type:
+    | "song"
+    | "doctor"
+    | "breathing_exercise"
+    | "emergency_contact"
+    | "mood_insight";
   title: string;
   reason: string;
-  urgency: 'low' | 'medium' | 'high' | 'immediate';
+  urgency: "low" | "medium" | "high" | "immediate";
 }
 
 export interface ChatResponse {
   message: string;
   recommendations: Recommendation[];
   escalate: boolean;
-  safety_alert: 'none' | 'mild' | 'crisis';
+  safety_alert: "none" | "mild" | "crisis";
 }
 
 export interface SessionResponse {
@@ -51,7 +56,6 @@ export interface SessionResponse {
   last_response?: string;
   message_count?: number;
 }
-
 
 export interface MessageHistoryResponse {
   messages: ApiMessage[];

@@ -19,6 +19,4 @@ const SignUpLink: React.FC = () => {
   );
 };
 
-
-
 export default SignUpLink;

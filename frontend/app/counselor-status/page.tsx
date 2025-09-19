@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { ToastContainer } from "react-toastify";
-import { successToast, errorToast } from "../../util/toastHelper";
+import { successToast, errorToast } from "@/util/toastHelper";
 
 interface CounselorStatus {
   status: string;

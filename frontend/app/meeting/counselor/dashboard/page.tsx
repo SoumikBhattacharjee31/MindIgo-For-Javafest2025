@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
-import CounselorSettings from "../../../components/CounselorSettings";
-import CounselorRequestsList from "../../../components/CounselorRequestsList";
+import CounselorSettings from "@/app/meeting/components/CounselorSettings";
+import CounselorRequestsList from "@/app/meeting/components/CounselorRequestsList";
 
 const CounselorMeetingDashboard = () => {
   const [activeTab, setActiveTab] = useState("requests");

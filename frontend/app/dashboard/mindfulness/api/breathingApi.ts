@@ -1,9 +1,14 @@
 // breathingApi.ts
-import axios from 'axios';
-import { BreathingExercise, BreathingTask, Cycle, LastSession } from '../dataTypes';
+import axios from "axios";
+import {
+  BreathingExercise,
+  BreathingTask,
+  Cycle,
+  LastSession,
+} from "@/app/dashboard/mindfulness/dataTypes";
 
 // ============ BASE CONFIG ============
-const BASE_URL = 'http://localhost:8080';
+const BASE_URL = "http://localhost:8080";
 
 // Types matching your backend DTOs
 export interface BreathingRequest {
@@ -90,20 +95,23 @@ apiClient.interceptors.response.use(
     return response;
   },
   (error) => {
-    const errorMessage = error.response?.data?.message || error.message || 'Network error occurred';
-    console.error('API Error:', errorMessage);
-    
+    const errorMessage =
+      error.response?.data?.message ||
+      error.message ||
+      "Network error occurred";
+    console.error("API Error:", errorMessage);
+
     // Return a more specific error based on status code
     if (error.response?.status === 404) {
-      throw new Error('Resource not found');
+      throw new Error("Resource not found");
     } else if (error.response?.status === 500) {
-      throw new Error('Server error occurred');
-    } else if (error.code === 'ECONNABORTED') {
-      throw new Error('Request timed out');
+      throw new Error("Server error occurred");
+    } else if (error.code === "ECONNABORTED") {
+      throw new Error("Request timed out");
     } else if (!error.response) {
-      throw new Error('Network connection failed');
+      throw new Error("Network connection failed");
     }
-    
+
     throw new Error(errorMessage);
   }
 );
@@ -111,7 +119,7 @@ apiClient.interceptors.response.use(
 // ============ OFFLINE QUEUE MANAGEMENT ============
 interface QueuedOperation {
   id: string;
-  type: 'UPDATE_EXERCISE' | 'STORE_SESSION';
+  type: "UPDATE_EXERCISE" | "STORE_SESSION";
   data: any;
   timestamp: number;
   retries: number;
@@ -123,56 +131,60 @@ class OfflineQueue {
   private readonly MAX_RETRIES = 3;
   private readonly RETRY_DELAY = 1000; // 1 second
 
-  add(operation: Omit<QueuedOperation, 'id' | 'timestamp' | 'retries'>) {
+  add(operation: Omit<QueuedOperation, "id" | "timestamp" | "retries">) {
     const queuedOp: QueuedOperation = {
       ...operation,
       id: `${operation.type}_${Date.now()}_${Math.random()}`,
       timestamp: Date.now(),
       retries: 0,
     };
-    
+
     this.queue.push(queuedOp);
     this.processQueue();
   }
 
   private async processQueue() {
     if (this.isProcessing || this.queue.length === 0) return;
-    
+
     this.isProcessing = true;
-    
+
     while (this.queue.length > 0) {
       const operation = this.queue[0];
-      
+
       try {
         await this.executeOperation(operation);
         this.queue.shift(); // Remove successful operation
       } catch (error) {
         console.error(`Failed to execute operation ${operation.id}:`, error);
-        
+
         operation.retries++;
         if (operation.retries >= this.MAX_RETRIES) {
-          console.error(`Operation ${operation.id} exceeded max retries, removing from queue`);
+          console.error(
+            `Operation ${operation.id} exceeded max retries, removing from queue`
+          );
           this.queue.shift();
         } else {
           // Move to end of queue for retry
           const failedOp = this.queue.shift()!;
           this.queue.push(failedOp);
-          
+
           // Wait before retrying
-          await new Promise(resolve => setTimeout(resolve, this.RETRY_DELAY * operation.retries));
+          await new Promise((resolve) =>
+            setTimeout(resolve, this.RETRY_DELAY * operation.retries)
+          );
         }
       }
     }
-    
+
     this.isProcessing = false;
   }
 
   private async executeOperation(operation: QueuedOperation): Promise<void> {
     switch (operation.type) {
-      case 'UPDATE_EXERCISE':
+      case "UPDATE_EXERCISE":
         await breathingApi.customizeBreathingExercise(operation.data);
         break;
-      case 'STORE_SESSION':
+      case "STORE_SESSION":
         await breathingApi.storeBreathingSession(operation.data);
         break;
       default:
@@ -199,7 +211,9 @@ export const breathingApi = {
     );
 
     if (!response.data.success) {
-      throw new Error(response.data.message || 'Failed to fetch breathing exercises');
+      throw new Error(
+        response.data.message || "Failed to fetch breathing exercises"
+      );
     }
 
     return response.data.data;
@@ -212,7 +226,7 @@ export const breathingApi = {
     breathingData: BreathingRequest
   ): Promise<BreathingResponse> => {
     if (!breathingData.duration || !breathingData.id) {
-      throw new Error('Missing required fields: id or duration');
+      throw new Error("Missing required fields: id or duration");
     }
 
     const response = await apiClient.put<ApiResponseClass<BreathingResponse>>(
@@ -221,7 +235,9 @@ export const breathingApi = {
     );
 
     if (!response.data.success) {
-      throw new Error(response.data.message || 'Failed to customize breathing exercise');
+      throw new Error(
+        response.data.message || "Failed to customize breathing exercise"
+      );
     }
 
     return response.data.data;
@@ -233,13 +249,14 @@ export const breathingApi = {
   storeBreathingSession: async (
     sessionData: BreathingSessionRequest
   ): Promise<BreathingSessionResponse> => {
-    const response = await apiClient.post<ApiResponseClass<BreathingSessionResponse>>(
-      `/api/v1/content/breathing/session`,
-      sessionData
-    );
+    const response = await apiClient.post<
+      ApiResponseClass<BreathingSessionResponse>
+    >(`/api/v1/content/breathing/session`, sessionData);
 
     if (!response.data.success) {
-      throw new Error(response.data.message || 'Failed to store breathing session');
+      throw new Error(
+        response.data.message || "Failed to store breathing session"
+      );
     }
 
     return response.data.data;
@@ -248,19 +265,25 @@ export const breathingApi = {
   /**
    * Get latest session for a date
    */
-  getLatestSession: async (date: string): Promise<BreathingSessionResponse | null> => {
+  getLatestSession: async (
+    date: string
+  ): Promise<BreathingSessionResponse | null> => {
     try {
-      const response = await apiClient.get<ApiResponseClass<BreathingSessionResponse>>(
-        `/api/v1/content/breathing/session`,
-        { params: { date } }
-      );
+      const response = await apiClient.get<
+        ApiResponseClass<BreathingSessionResponse>
+      >(`/api/v1/content/breathing/session`, { params: { date } });
 
       if (!response.data.success) {
         // If no session found, return null instead of throwing
-        if (response.data.message?.includes('not found') || response.data.message?.includes('No session')) {
+        if (
+          response.data.message?.includes("not found") ||
+          response.data.message?.includes("No session")
+        ) {
           return null;
         }
-        throw new Error(response.data.message || 'Failed to fetch latest session');
+        throw new Error(
+          response.data.message || "Failed to fetch latest session"
+        );
       }
 
       return response.data.data;
@@ -287,13 +310,13 @@ export const optimisticUpdate = {
     onError?: (error: Error, original: BreathingExercise) => void
   ) => {
     const updated = updateFn(exercise);
-    
+
     // Queue the API call for background processing
     offlineQueue.add({
-      type: 'UPDATE_EXERCISE',
+      type: "UPDATE_EXERCISE",
       data: toBreathingRequest(updated),
     });
-    
+
     return updated;
   },
 
@@ -304,17 +327,19 @@ export const optimisticUpdate = {
   ) => {
     // Queue the API call for background processing
     offlineQueue.add({
-      type: 'STORE_SESSION',
+      type: "STORE_SESSION",
       data: toBreathingSessionRequest(session),
     });
-    
+
     return session;
   },
 };
 
 // ============ MAPPERS ============
 
-export const toBreathingExercise = (res: BreathingResponse): BreathingExercise => {
+export const toBreathingExercise = (
+  res: BreathingResponse
+): BreathingExercise => {
   let cycle: Cycle = { duration: 0, task: [] };
 
   if (res.cycle) {
@@ -322,7 +347,7 @@ export const toBreathingExercise = (res: BreathingResponse): BreathingExercise =
       duration: res.cycle.duration,
       task: res.cycle.task.map((t) => ({
         order: t.order,
-        type: t.type as BreathingTask['type'],
+        type: t.type as BreathingTask["type"],
         duration: t.duration,
       })),
     };
@@ -359,14 +384,16 @@ export const toLastSession = (res: BreathingSessionResponse): LastSession => ({
 // Helper function to format date for API (same as moodApi)
 export const formatDateForApi = (date: Date): string => {
   const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 };
 
 // ==================== Frontend → Request ====================
 
-export const toBreathingRequest = (exercise: BreathingExercise): BreathingRequest => ({
+export const toBreathingRequest = (
+  exercise: BreathingExercise
+): BreathingRequest => ({
   id: exercise.id,
   duration: exercise.duration,
   cycle: {
@@ -385,7 +412,9 @@ export const toBreathingSessionRequest = (
   exerciseTitle: session.exerciseTitle,
   completedCycles: session.completedCycles,
   totalCycles: session.totalCycles,
-  date: session.date.includes('T') ? formatDateForApi(new Date(session.date)) : session.date, // Ensure YYYY-MM-DD format
+  date: session.date.includes("T")
+    ? formatDateForApi(new Date(session.date))
+    : session.date, // Ensure YYYY-MM-DD format
   duration: session.duration,
 });
 
@@ -458,11 +487,11 @@ export const cachedBreathingApi = {
    * Get exercises with caching
    */
   getBreathingExercises: async (): Promise<BreathingResponse[]> => {
-    const cacheKey = 'breathing_exercises';
+    const cacheKey = "breathing_exercises";
     const cached = breathingCache.get<BreathingResponse[]>(cacheKey);
-    
+
     if (cached) {
-      console.log('Using cached breathing exercises');
+      console.log("Using cached breathing exercises");
       return cached;
     }
 
@@ -474,12 +503,16 @@ export const cachedBreathingApi = {
   /**
    * Get latest session with caching
    */
-  getLatestSession: async (date: string): Promise<BreathingSessionResponse | null> => {
+  getLatestSession: async (
+    date: string
+  ): Promise<BreathingSessionResponse | null> => {
     const cacheKey = `latest_session_${date}`;
-    const cached = breathingCache.get<BreathingSessionResponse | null>(cacheKey);
-    
+    const cached = breathingCache.get<BreathingSessionResponse | null>(
+      cacheKey
+    );
+
     if (cached !== undefined) {
-      console.log('Using cached latest session');
+      console.log("Using cached latest session");
       return cached;
     }
 
@@ -491,17 +524,21 @@ export const cachedBreathingApi = {
   /**
    * Invalidate cache when updating
    */
-  customizeBreathingExercise: async (breathingData: BreathingRequest): Promise<BreathingResponse> => {
+  customizeBreathingExercise: async (
+    breathingData: BreathingRequest
+  ): Promise<BreathingResponse> => {
     const result = await breathingApi.customizeBreathingExercise(breathingData);
     // Invalidate exercises cache
-    breathingCache.delete('breathing_exercises');
+    breathingCache.delete("breathing_exercises");
     return result;
   },
 
   /**
    * Invalidate session cache when storing new session
    */
-  storeBreathingSession: async (sessionData: BreathingSessionRequest): Promise<BreathingSessionResponse> => {
+  storeBreathingSession: async (
+    sessionData: BreathingSessionRequest
+  ): Promise<BreathingSessionResponse> => {
     const result = await breathingApi.storeBreathingSession(sessionData);
     // Invalidate session cache for this date
     breathingCache.delete(`latest_session_${sessionData.date}`);
@@ -517,45 +554,49 @@ export const withRetry = async <T>(
   delay: number = 1000
 ): Promise<T> => {
   let lastError: Error;
-  
+
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       return await operation();
     } catch (error) {
       lastError = error as Error;
       console.warn(`Attempt ${attempt} failed:`, error);
-      
+
       if (attempt === maxRetries) {
         break;
       }
-      
+
       // Exponential backoff
-      await new Promise(resolve => setTimeout(resolve, delay * Math.pow(2, attempt - 1)));
+      await new Promise((resolve) =>
+        setTimeout(resolve, delay * Math.pow(2, attempt - 1))
+      );
     }
   }
-  
+
   throw lastError!;
 };
 
 // ==================== Validation Helpers ====================
 
-export const validateBreathingExercise = (exercise: BreathingExercise): string[] => {
+export const validateBreathingExercise = (
+  exercise: BreathingExercise
+): string[] => {
   const errors: string[] = [];
-  
+
   if (!exercise.id || exercise.id <= 0) {
-    errors.push('Invalid exercise ID');
+    errors.push("Invalid exercise ID");
   }
-  
+
   if (!exercise.title?.trim()) {
-    errors.push('Exercise title is required');
+    errors.push("Exercise title is required");
   }
-  
+
   if (!exercise.duration || exercise.duration <= 0) {
-    errors.push('Duration must be greater than 0');
+    errors.push("Duration must be greater than 0");
   }
-  
+
   if (!exercise.cycle?.task?.length) {
-    errors.push('Exercise must have at least one task');
+    errors.push("Exercise must have at least one task");
   } else {
     exercise.cycle.task.forEach((task, index) => {
       if (!task.type) {
@@ -566,40 +607,40 @@ export const validateBreathingExercise = (exercise: BreathingExercise): string[]
       }
     });
   }
-  
+
   return errors;
 };
 
 export const validateLastSession = (session: LastSession): string[] => {
   const errors: string[] = [];
-  
+
   if (!session.exerciseId || session.exerciseId <= 0) {
-    errors.push('Invalid exercise ID');
+    errors.push("Invalid exercise ID");
   }
-  
+
   if (!session.exerciseTitle?.trim()) {
-    errors.push('Exercise title is required');
+    errors.push("Exercise title is required");
   }
-  
+
   if (session.completedCycles < 0) {
-    errors.push('Completed cycles cannot be negative');
+    errors.push("Completed cycles cannot be negative");
   }
-  
+
   if (session.totalCycles <= 0) {
-    errors.push('Total cycles must be greater than 0');
+    errors.push("Total cycles must be greater than 0");
   }
-  
+
   if (session.completedCycles > session.totalCycles) {
-    errors.push('Completed cycles cannot exceed total cycles');
+    errors.push("Completed cycles cannot exceed total cycles");
   }
-  
+
   if (!session.date) {
-    errors.push('Session date is required');
+    errors.push("Session date is required");
   }
-  
+
   if (!session.duration || session.duration <= 0) {
-    errors.push('Session duration must be greater than 0');
+    errors.push("Session duration must be greater than 0");
   }
-  
+
   return errors;
 };

@@ -1,8 +1,22 @@
-"use client"
-import React, { useState } from 'react';
-import { RoutineResponse, RoutineType, DayOfWeek } from '../types/routine';
-import { formatTime12Hour, getActivityTypeColor, getActivityTypeDisplayName, getDayDisplayName } from '../utils/routineValidation';
-import { FaClock, FaCalendarAlt, FaUser, FaEdit, FaTrash, FaArrowLeft, FaCheck, FaTimes } from 'react-icons/fa';
+"use client";
+import React, { useState } from "react";
+import { RoutineResponse, RoutineType, DayOfWeek } from "@/app/routines/types";
+import {
+  formatTime12Hour,
+  getActivityTypeColor,
+  getActivityTypeDisplayName,
+  getDayDisplayName,
+} from "@/app/routines/utils";
+import {
+  FaClock,
+  FaCalendarAlt,
+  FaUser,
+  FaEdit,
+  FaTrash,
+  FaArrowLeft,
+  FaCheck,
+  FaTimes,
+} from "react-icons/fa";
 
 interface RoutineDetailProps {
   routine: RoutineResponse;
@@ -21,7 +35,7 @@ const RoutineDetail: React.FC<RoutineDetailProps> = ({
   onAssign,
   onBack,
   showDoctorActions = true,
-  showPatientActions = false
+  showPatientActions = false,
 }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
@@ -35,19 +49,21 @@ const RoutineDetail: React.FC<RoutineDetailProps> = ({
   const groupActivitiesByDay = () => {
     if (routine.routineType === RoutineType.DAILY) {
       return {
-        'Daily': routine.activities.sort((a, b) => a.startTime.localeCompare(b.startTime))
+        Daily: routine.activities.sort((a, b) =>
+          a.startTime.localeCompare(b.startTime)
+        ),
       };
     }
 
     const grouped: Record<string, typeof routine.activities> = {};
-    
+
     // Initialize all days
-    Object.values(DayOfWeek).forEach(day => {
+    Object.values(DayOfWeek).forEach((day) => {
       grouped[getDayDisplayName(day)] = [];
     });
 
     // Group activities by day
-    routine.activities.forEach(activity => {
+    routine.activities.forEach((activity) => {
       if (activity.dayOfWeek) {
         const dayName = getDayDisplayName(activity.dayOfWeek);
         grouped[dayName].push(activity);
@@ -55,7 +71,7 @@ const RoutineDetail: React.FC<RoutineDetailProps> = ({
     });
 
     // Sort activities within each day by start time
-    Object.keys(grouped).forEach(day => {
+    Object.keys(grouped).forEach((day) => {
       grouped[day].sort((a, b) => a.startTime.localeCompare(b.startTime));
     });
 
@@ -65,13 +81,17 @@ const RoutineDetail: React.FC<RoutineDetailProps> = ({
   const calculateTotalDuration = () => {
     const totalMinutes = routine.activities.reduce((sum, activity) => {
       // Parse start time: convert "HH:MM" to total minutes
-      const [startHours, startMins] = activity.startTime.split(':').map(str => parseInt(str));
+      const [startHours, startMins] = activity.startTime
+        .split(":")
+        .map((str) => parseInt(str));
       const startMinutes = startHours * 60 + startMins;
-      
+
       // Parse end time: convert "HH:MM" to total minutes
-      const [endHours, endMins] = activity.endTime.split(':').map(str => parseInt(str));
+      const [endHours, endMins] = activity.endTime
+        .split(":")
+        .map((str) => parseInt(str));
       const endMinutes = endHours * 60 + endMins;
-      
+
       return sum + (endMinutes - startMinutes);
     }, 0);
 
@@ -94,11 +114,11 @@ const RoutineDetail: React.FC<RoutineDetailProps> = ({
   const getRoutineTypeColor = () => {
     switch (routine.routineType) {
       case RoutineType.DAILY:
-        return 'bg-blue-100 text-blue-800';
+        return "bg-blue-100 text-blue-800";
       case RoutineType.WEEKLY:
-        return 'bg-green-100 text-green-800';
+        return "bg-green-100 text-green-800";
       default:
-        return 'bg-purple-100 text-purple-800';
+        return "bg-purple-100 text-purple-800";
     }
   };
 
@@ -117,7 +137,7 @@ const RoutineDetail: React.FC<RoutineDetailProps> = ({
               <FaArrowLeft className="mr-2" />
               Back to Routines
             </button>
-            
+
             <div className="flex space-x-2">
               {showDoctorActions && (
                 <>
@@ -156,10 +176,15 @@ const RoutineDetail: React.FC<RoutineDetailProps> = ({
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
               {getRoutineTypeIcon()}
-              <h1 className="text-3xl font-bold text-gray-900">{routine.name}</h1>
+              <h1 className="text-3xl font-bold text-gray-900">
+                {routine.name}
+              </h1>
             </div>
-            <span className={`px-3 py-1 rounded-full text-sm font-medium ${getRoutineTypeColor()}`}>
-              {routine.routineType.charAt(0) + routine.routineType.slice(1).toLowerCase()}
+            <span
+              className={`px-3 py-1 rounded-full text-sm font-medium ${getRoutineTypeColor()}`}
+            >
+              {routine.routineType.charAt(0) +
+                routine.routineType.slice(1).toLowerCase()}
             </span>
           </div>
         </div>
@@ -180,7 +205,9 @@ const RoutineDetail: React.FC<RoutineDetailProps> = ({
             </div>
             <div className="flex items-center">
               <FaCalendarAlt className="mr-2 text-gray-400" />
-              <span>Created: {new Date(routine.createdAt).toLocaleDateString()}</span>
+              <span>
+                Created: {new Date(routine.createdAt).toLocaleDateString()}
+              </span>
             </div>
           </div>
         </div>
@@ -188,87 +215,119 @@ const RoutineDetail: React.FC<RoutineDetailProps> = ({
 
       {/* Activities */}
       <div className="space-y-6">
-        {Object.entries(groupedActivities).map(([day, activities]) => (
-          activities.length > 0 && (
-            <div key={day} className="bg-white rounded-lg shadow-md">
-              <div className="px-6 py-4 border-b border-gray-200 bg-gray-50 rounded-t-lg">
-                <h2 className="text-xl font-semibold text-gray-900 flex items-center">
-                  <FaCalendarAlt className="mr-2 text-blue-500" />
-                  {day}
-                  <span className="ml-2 text-sm font-normal text-gray-500">
-                    ({activities.length} {activities.length === 1 ? 'activity' : 'activities'})
-                  </span>
-                </h2>
-              </div>
-              
-              <div className="p-6">
-                <div className="space-y-4">
-                  {activities.map((activity, index) => (
-                    <div key={index} className="border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-grow">
-                          <div className="flex items-center space-x-3 mb-2">
-                            <h3 className="text-lg font-medium text-gray-900">{activity.activityName}</h3>
-                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${getActivityTypeColor(activity.activityType)}`}>
-                              {getActivityTypeDisplayName(activity.activityType)}
-                            </span>
-                            {!activity.isActive && (
-                              <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                Inactive
+        {Object.entries(groupedActivities).map(
+          ([day, activities]) =>
+            activities.length > 0 && (
+              <div key={day} className="bg-white rounded-lg shadow-md">
+                <div className="px-6 py-4 border-b border-gray-200 bg-gray-50 rounded-t-lg">
+                  <h2 className="text-xl font-semibold text-gray-900 flex items-center">
+                    <FaCalendarAlt className="mr-2 text-blue-500" />
+                    {day}
+                    <span className="ml-2 text-sm font-normal text-gray-500">
+                      ({activities.length}{" "}
+                      {activities.length === 1 ? "activity" : "activities"})
+                    </span>
+                  </h2>
+                </div>
+
+                <div className="p-6">
+                  <div className="space-y-4">
+                    {activities.map((activity, index) => (
+                      <div
+                        key={index}
+                        className="border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-grow">
+                            <div className="flex items-center space-x-3 mb-2">
+                              <h3 className="text-lg font-medium text-gray-900">
+                                {activity.activityName}
+                              </h3>
+                              <span
+                                className={`px-3 py-1 rounded-full text-xs font-medium ${getActivityTypeColor(
+                                  activity.activityType
+                                )}`}
+                              >
+                                {getActivityTypeDisplayName(
+                                  activity.activityType
+                                )}
                               </span>
+                              {!activity.isActive && (
+                                <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                  Inactive
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="flex items-center text-gray-600 mb-2">
+                              <FaClock className="mr-2" />
+                              <span className="font-medium">
+                                {formatTime12Hour(activity.startTime)} -{" "}
+                                {formatTime12Hour(activity.endTime)}
+                              </span>
+                              <span className="mx-2">•</span>
+                              <span>
+                                Duration:{" "}
+                                {(() => {
+                                  const [startHours, startMins] =
+                                    activity.startTime
+                                      .split(":")
+                                      .map((str) => parseInt(str));
+                                  const startMinutes =
+                                    startHours * 60 + startMins;
+
+                                  const [endHours, endMins] = activity.endTime
+                                    .split(":")
+                                    .map((str) => parseInt(str));
+                                  const endMinutes = endHours * 60 + endMins;
+
+                                  const duration = endMinutes - startMinutes;
+                                  const hours = Math.floor(duration / 60);
+                                  const minutes = duration % 60;
+                                  return hours > 0
+                                    ? `${hours}h ${minutes}m`
+                                    : `${minutes}m`;
+                                })()}
+                              </span>
+                            </div>
+
+                            {activity.description && (
+                              <p className="text-gray-600 mb-3">
+                                {activity.description}
+                              </p>
+                            )}
+
+                            {activity.instructions && (
+                              <div className="bg-blue-50 rounded-md p-3">
+                                <h4 className="font-medium text-blue-900 mb-1">
+                                  Instructions:
+                                </h4>
+                                <p className="text-blue-800 text-sm">
+                                  {activity.instructions}
+                                </p>
+                              </div>
                             )}
                           </div>
-                          
-                          <div className="flex items-center text-gray-600 mb-2">
-                            <FaClock className="mr-2" />
-                            <span className="font-medium">
-                              {formatTime12Hour(activity.startTime)} - {formatTime12Hour(activity.endTime)}
-                            </span>
-                            <span className="mx-2">•</span>
-                            <span>
-                              Duration: {(() => {
-                                const [startHours, startMins] = activity.startTime.split(':').map(str => parseInt(str));
-                                const startMinutes = startHours * 60 + startMins;
-                                
-                                const [endHours, endMins] = activity.endTime.split(':').map(str => parseInt(str));
-                                const endMinutes = endHours * 60 + endMins;
-                                
-                                const duration = endMinutes - startMinutes;
-                                const hours = Math.floor(duration / 60);
-                                const minutes = duration % 60;
-                                return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
-                              })()}
-                            </span>
-                          </div>
-
-                          {activity.description && (
-                            <p className="text-gray-600 mb-3">{activity.description}</p>
-                          )}
-
-                          {activity.instructions && (
-                            <div className="bg-blue-50 rounded-md p-3">
-                              <h4 className="font-medium text-blue-900 mb-1">Instructions:</h4>
-                              <p className="text-blue-800 text-sm">{activity.instructions}</p>
-                            </div>
-                          )}
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
-          )
-        ))}
+            )
+        )}
       </div>
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Confirm Delete</h3>
+            <h3 className="text-lg font-bold text-gray-900 mb-4">
+              Confirm Delete
+            </h3>
             <p className="text-gray-600 mb-6">
-              Are you sure you want to delete the routine "{routine.name}"? This action cannot be undone.
+              Are you sure you want to delete the routine "{routine.name}"? This
+              action cannot be undone.
             </p>
             <div className="flex space-x-4 justify-end">
               <button

@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 interface CounselorSpecificFieldsProps {
   licenseNumber: string;
@@ -15,7 +15,7 @@ const CounselorSpecificFields: React.FC<CounselorSpecificFieldsProps> = ({
   specialization,
   setSpecialization,
   verificationDocument,
-  setVerificationDocument
+  setVerificationDocument,
 }) => {
   return (
     <div className="space-y-4">

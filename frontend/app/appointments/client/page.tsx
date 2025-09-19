@@ -15,17 +15,17 @@ import {
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import dayjs from "dayjs";
-import quarterOfYear from 'dayjs/plugin/quarterOfYear';
-import isBetween from 'dayjs/plugin/isBetween';
+import quarterOfYear from "dayjs/plugin/quarterOfYear";
+import isBetween from "dayjs/plugin/isBetween";
 dayjs.extend(isBetween);
 
 import {
   appointmentServiceApi,
   Appointment,
   Counselor,
-} from "@/app/api/appointmentService";
-import AppointmentCard from "@/app/components/appointments/AppointmentCard";
-import BookingModal from "@/app/components/appointments/BookingModal";
+} from "@/app/appointments/api";
+import AppointmentCard from "@/app/appointments/components/AppointmentCard";
+import BookingModal from "@/app/appointments/components/BookingModal";
 
 const ClientAppointmentsPage = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -234,13 +234,7 @@ const ClientAppointmentsPage = () => {
     toast.info("Reschedule feature will be available soon");
   };
 
-  const StatCard = ({
-    title,
-    value,
-    icon: Icon,
-    color,
-    subtitle,
-  }: any) => (
+  const StatCard = ({ title, value, icon: Icon, color, subtitle }: any) => (
     <div
       className={`bg-gradient-to-br ${color} rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300`}
     >

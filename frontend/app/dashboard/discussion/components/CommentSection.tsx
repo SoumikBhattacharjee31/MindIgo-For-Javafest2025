@@ -6,7 +6,7 @@ import {
   CommentResponse,
   discussionApi,
   REACTION_TYPES,
-} from "@/app/api/discussionService";
+} from "@/app/dashboard/discussion/api";
 import CommentForm from "./CommentForm";
 import ReportModal from "./ReportModal";
 import UpdateCommentModal from "./UpdateCommentModal";

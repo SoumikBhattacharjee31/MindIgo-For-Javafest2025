@@ -19,6 +19,4 @@ const SignInLink: React.FC = () => {
   );
 };
 
-
-
 export default SignInLink;

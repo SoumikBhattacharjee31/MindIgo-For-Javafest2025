@@ -341,26 +341,7 @@ public class AppointmentService {
     }
 
     private void sendAppointmentNotification(Appointment appointment, String action) {
-//        try {
-//            String mailServiceUrl = "http://MAIL-SERVICE/api/v1/mail/send-mail";
-//
-//            // Create mail request (you'll need to define this DTO)
-//            Map<String, Object> mailRequest = Map.of(
-//                    "to", List.of(appointment.getClientEmail(), appointment.getCounselorEmail()),
-//                    "subject", "Appointment " + action,
-//                    "body", buildEmailBody(appointment, action)
-//            );
-//
-//            restTemplate.postForEntity(mailServiceUrl, mailRequest, Object.class);
-//        } catch (Exception e) {
-//            log.error("Error sending appointment notification: {}", e.getMessage());
-//        }
         try {
-
-//            MailSendRequest mailRequest = new MailSendRequest(receiver, subject, body);
-//            String mailServiceUrl = "http://MAIL-SERVICE/api/v1/mail/send-mail"; // Adjust to your mail-service URL
-//            ResponseEntity<MailSendResponse> mailResponse = restTemplate.postForEntity(mailServiceUrl, mailRequest, MailSendResponse.class);
-
             MailSendRequest mailRequest = new MailSendRequest(appointment.getClientEmail(), "Appointment " + action, buildEmailBody(appointment, action));
 
             validateRequest(mailRequest);

@@ -1,19 +1,21 @@
-'use client';
-import React, { useEffect, useState } from 'react';
-import AdminSidebar from '../components/admin/AdminSidebar';
-import AdminNavbar from '../components/admin/AdminNavbar';
-import { usePathname, useRouter } from 'next/navigation';
-import axios from 'axios';
+"use client";
+import React, { useEffect, useState } from "react";
+import AdminSidebar from "@/app/admin/components/AdminSidebar";
+import AdminNavbar from "@/app/admin/components/AdminNavbar";
+import { usePathname, useRouter } from "next/navigation";
+import axios from "axios";
 
 export default function AdminLayout({
   children,
-}: { children: React.ReactNode }) {
+}: {
+  children: React.ReactNode;
+}) {
   const pathname = usePathname();
   const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
   // Skip authentication check for login page
-  if (pathname === '/admin/login') {
+  if (pathname === "/admin/login") {
     return <>{children}</>;
   }
 
@@ -21,19 +23,22 @@ export default function AdminLayout({
     const checkAuth = async () => {
       try {
         // Try to make an authenticated request to verify access
-        const response = await axios.get('http://localhost:8080/api/v1/admin/dashboard', {
-          withCredentials: true,
-        });
-        
+        const response = await axios.get(
+          "http://localhost:8080/api/v1/admin/dashboard",
+          {
+            withCredentials: true,
+          }
+        );
+
         if (response.data.success) {
           setIsAuthenticated(true);
         } else {
           setIsAuthenticated(false);
-          router.push('/admin/login');
+          router.push("/admin/login");
         }
       } catch (error) {
         setIsAuthenticated(false);
-        router.push('/admin/login');
+        router.push("/admin/login");
       }
     };
 

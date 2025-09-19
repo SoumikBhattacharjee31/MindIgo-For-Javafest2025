@@ -5,12 +5,14 @@ import { getProviderLoginUrl } from "@/util/providerLogin";
 const SignInWithFacebookButton: React.FC = () => {
   return (
     <div className="w-1/2 pl-2">
-      <Link href={getProviderLoginUrl('facebook')}>
-        <button className="
+      <Link href={getProviderLoginUrl("facebook")}>
+        <button
+          className="
           relative py-3 px-4 rounded-xl font-medium transition-all duration-300 overflow-hidden group
           bg-white border-2 border-blue-200/50 hover:border-blue-300 hover:shadow-md hover:scale-105
           text-gray-700 hover:text-gray-800
-        ">
+        "
+        >
           <div className="relative z-10 flex items-center justify-center">
             <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none">
               <path

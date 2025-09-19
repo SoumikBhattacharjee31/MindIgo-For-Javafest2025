@@ -1,15 +1,15 @@
-import { Bounce, toast, ToastOptions } from 'react-toastify';
+import { Bounce, toast, ToastOptions } from "react-toastify";
 
 // Define the common options in one place
 const toastOptions: ToastOptions = {
-  position: 'bottom-center',
+  position: "bottom-center",
   autoClose: 5000,
   hideProgressBar: false,
   closeOnClick: true,
   pauseOnHover: true,
   draggable: true,
   progress: undefined,
-  theme: 'light',
+  theme: "light",
   transition: Bounce,
 };
 

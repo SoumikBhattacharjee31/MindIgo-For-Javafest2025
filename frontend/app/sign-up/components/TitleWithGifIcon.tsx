@@ -9,7 +9,9 @@ const TitleWithGifIcon = () => {
           className="absolute top-0 left-0 w-full h-full border-none"
         />
       </div> */}
-      <h1 className="font-extrabold text-purple-700 text-2xl animate-pulse">Mindigo</h1>
+      <h1 className="font-extrabold text-purple-700 text-2xl animate-pulse">
+        Mindigo
+      </h1>
     </div>
   );
 };

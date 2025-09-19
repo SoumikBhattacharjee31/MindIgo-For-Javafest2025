@@ -1,12 +1,12 @@
 // app/dashboard/counselor/[id]/page.tsx
 "use client";
 
-export const dynamic = 'force-dynamic';
-import React, { useState, useEffect } from 'react';
-import { getCounselorById } from '../api';
-import { Counselor } from '../types';
-import { Star, Mail, ShieldCheck, Calendar, Info } from 'lucide-react';
-import { useParams } from 'next/navigation';
+export const dynamic = "force-dynamic";
+import React, { useState, useEffect } from "react";
+import { getCounselorById } from "@/app/dashboard/counselor/api";
+import { Counselor } from "@/app/dashboard/counselor/types";
+import { Star, Mail, ShieldCheck, Calendar, Info } from "lucide-react";
+import { useParams } from "next/navigation";
 
 const LoadingProfile = () => (
   <div className="container mx-auto px-4 py-8 animate-pulse">
@@ -55,7 +55,8 @@ const CounselorProfilePage = () => {
   }, [id]);
 
   if (loading) return <LoadingProfile />;
-  if (!counselor) return <div className="text-center py-20">Counselor not found.</div>;
+  if (!counselor)
+    return <div className="text-center py-20">Counselor not found.</div>;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-base-100 to-base-200 py-10">
@@ -68,22 +69,30 @@ const CounselorProfilePage = () => {
               <img
                 src={
                   counselor.profileImageUrl ??
-                  `https://ui-avatars.com/api/?name=${encodeURIComponent(counselor.name)}&background=random&size=512`
+                  `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                    counselor.name
+                  )}&background=random&size=512`
                 }
                 alt={`Profile of ${counselor.name}`}
                 className="rounded-full w-36 h-36 md:w-48 md:h-48 object-cover ring-4 ring-white shadow-xl"
               />
               <div className="text-center md:text-left">
-                <h1 className="text-3xl md:text-4xl font-bold mb-2">{counselor.name}</h1>
-                <p className="text-xl opacity-90 mb-4">{counselor.specialization}</p>
+                <h1 className="text-3xl md:text-4xl font-bold mb-2">
+                  {counselor.name}
+                </h1>
+                <p className="text-xl opacity-90 mb-4">
+                  {counselor.specialization}
+                </p>
                 <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
                   <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full">
                     <Star className="w-5 h-5 fill-current" />
                     <span className="font-bold">
-                      {counselor.ratings != null ? counselor.ratings.toFixed(1) : 'N/A'}
+                      {counselor.ratings != null
+                        ? counselor.ratings.toFixed(1)
+                        : "N/A"}
                     </span>
                     <span className="text-sm opacity-80">
-                      ({counselor.ratings == null ? 'No ratings' : 'Average'})
+                      ({counselor.ratings == null ? "No ratings" : "Average"})
                     </span>
                   </div>
                   {counselor.acceptsInsurance && (
@@ -104,20 +113,28 @@ const CounselorProfilePage = () => {
                   <Info className="w-6 h-6 text-primary" /> About Me
                 </h2>
                 <p className="text-lg leading-relaxed text-base-content/90">
-                  I’m {counselor.name}, a licensed counselor specializing in {counselor.specialization}. 
-                  I believe in creating a safe, non-judgmental space where you can explore your thoughts and feelings. 
-                  My approach is client-centered and tailored to your unique needs.
+                  I’m {counselor.name}, a licensed counselor specializing in{" "}
+                  {counselor.specialization}. I believe in creating a safe,
+                  non-judgmental space where you can explore your thoughts and
+                  feelings. My approach is client-centered and tailored to your
+                  unique needs.
                 </p>
-                
+
                 {counselor.licenseNumber && (
                   <div className="mt-6 p-4 bg-base-200 rounded-xl">
                     <h3 className="font-semibold mb-2 flex items-center gap-2">
-                      <ShieldCheck className="w-5 h-5 text-primary" /> Credentials
+                      <ShieldCheck className="w-5 h-5 text-primary" />{" "}
+                      Credentials
                     </h3>
-                    <p className="text-sm">License #: {counselor.licenseNumber}</p>
+                    <p className="text-sm">
+                      License #: {counselor.licenseNumber}
+                    </p>
                     {counselor.counselorStatus && (
                       <p className="text-sm mt-1">
-                        Status: <span className="badge badge-neutral badge-sm">{counselor.counselorStatus}</span>
+                        Status:{" "}
+                        <span className="badge badge-neutral badge-sm">
+                          {counselor.counselorStatus}
+                        </span>
                       </p>
                     )}
                   </div>
@@ -133,7 +150,10 @@ const CounselorProfilePage = () => {
                     <Mail className="w-6 h-6 text-primary mt-1 flex-shrink-0" />
                     <div>
                       <div className="font-medium">Email</div>
-                      <a href={`mailto:${counselor.email}`} className="link link-primary">
+                      <a
+                        href={`mailto:${counselor.email}`}
+                        className="link link-primary"
+                      >
                         {counselor.email}
                       </a>
                     </div>
@@ -145,12 +165,15 @@ const CounselorProfilePage = () => {
                       <div className="font-medium">Member Since</div>
                       <div>
                         {counselor.createdAt
-                          ? new Date(counselor.createdAt).toLocaleDateString('en-US', {
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric'
-                            })
-                          : 'Unknown'}
+                          ? new Date(counselor.createdAt).toLocaleDateString(
+                              "en-US",
+                              {
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                              }
+                            )
+                          : "Unknown"}
                       </div>
                     </div>
                   </div>

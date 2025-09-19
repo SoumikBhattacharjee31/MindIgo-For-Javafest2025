@@ -1,4 +1,4 @@
-'use client';
+"use client";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import MoodLog from "./MoodLog";
 import ProgressIndicator from "./ProgressIndicator";
@@ -6,17 +6,22 @@ import TodayEntryCard from "./TodayEntryCard";
 import MoodStep from "./MoodStep";
 import DescriptionStep from "./DescriptionStep";
 import ReasonStep from "./ReasonStep";
-import { Mood, Description, Reason, Entry } from "../dataTypes";
-import { moods } from "../moods";
-import { descriptions } from "../description";
-import { reasons } from "../reason";
-import { 
-  moodApi, 
-  formatDateForApi, 
-  convertMoodResponseToEntry, 
-  convertEntryToMoodRequest 
-} from "../api/moodApi";
-import { successToast, errorToast } from '@/util/toastHelper';
+import {
+  Mood,
+  Description,
+  Reason,
+  Entry,
+} from "@/app/dashboard/mindfulness/dataTypes";
+import { moods } from "@/app/dashboard/mindfulness/moods";
+import { descriptions } from "@/app/dashboard/mindfulness/description";
+import { reasons } from "@/app/dashboard/mindfulness/reason";
+import {
+  moodApi,
+  formatDateForApi,
+  convertMoodResponseToEntry,
+  convertEntryToMoodRequest,
+} from "@/app/dashboard/mindfulness/api/moodApi";
+import { successToast, errorToast } from "@/util/toastHelper";
 
 // Constants
 const ANIMATION_DELAY = 300;
@@ -30,7 +35,8 @@ const MoodCheckinCard = () => {
   const [todayEntry, setTodayEntry] = useState<Entry | null>(null);
   const [step, setStep] = useState<number>(INITIAL_STEP);
   const [selectedMood, setSelectedMood] = useState<Mood | null>(null);
-  const [selectedDescription, setSelectedDescription] = useState<Description | null>(null);
+  const [selectedDescription, setSelectedDescription] =
+    useState<Description | null>(null);
   const [selectedReason, setSelectedReason] = useState<Reason | null>(null);
   const [isAnimating, setIsAnimating] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
@@ -40,26 +46,34 @@ const MoodCheckinCard = () => {
   const today = useMemo(() => formatDateForApi(new Date()), []);
 
   // Memoized filtered data to prevent unnecessary re-calculations
-  const filteredDescriptions = useMemo((): Description[] => 
-    selectedMood ? descriptions.filter((d) => d.moods.includes(selectedMood.id)) : [],
+  const filteredDescriptions = useMemo(
+    (): Description[] =>
+      selectedMood
+        ? descriptions.filter((d) => d.moods.includes(selectedMood.id))
+        : [],
     [selectedMood]
   );
 
-  const filteredReasons = useMemo((): Reason[] => 
-    selectedMood ? reasons.filter((r) => r.moods.includes(selectedMood.id)) : [],
+  const filteredReasons = useMemo(
+    (): Reason[] =>
+      selectedMood
+        ? reasons.filter((r) => r.moods.includes(selectedMood.id))
+        : [],
     [selectedMood]
   );
 
   // Memoized helper to find today's entry
-  const findTodayEntry = useCallback((entries: Entry[]): Entry | null => 
-    entries.find((e: Entry) => e.date === today) || null,
+  const findTodayEntry = useCallback(
+    (entries: Entry[]): Entry | null =>
+      entries.find((e: Entry) => e.date === today) || null,
     [today]
   );
 
   // Optimized state restoration function
   const restoreSelectionState = useCallback((entry: Entry) => {
     const mood = moods.find((m) => m.id === entry.mood) || null;
-    const description = descriptions.find((d) => d.text === entry.description) || null;
+    const description =
+      descriptions.find((d) => d.text === entry.description) || null;
     const reason = reasons.find((r) => r.text === entry.reason) || null;
 
     setSelectedMood(mood);
@@ -72,12 +86,12 @@ const MoodCheckinCard = () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const moodResponses = await moodApi.getMoods(MOOD_DATA_DAYS, today);
       const entries = moodResponses.map(convertMoodResponseToEntry);
-      
+
       setMoodData(entries);
-      
+
       const todayEntryData = findTodayEntry(entries);
       setTodayEntry(todayEntryData);
 
@@ -85,12 +99,12 @@ const MoodCheckinCard = () => {
         restoreSelectionState(todayEntryData);
       }
 
-      successToast('Mood data loaded successfully.');
+      successToast("Mood data loaded successfully.");
     } catch (err: any) {
       const errMsg = err?.message || String(err);
       const errorMessage = `Failed to load mood data. ${errMsg}`;
-      
-      console.error('Failed to load mood data:', err);
+
+      console.error("Failed to load mood data:", err);
       errorToast(errorMessage);
       setError(`${errorMessage}. Please try again.`);
       setMoodData([]); // Fallback to empty array
@@ -107,7 +121,7 @@ const MoodCheckinCard = () => {
   // Optimized edit handler with consistent animation timing
   const handleEdit = useCallback(() => {
     setIsAnimating(true);
-    
+
     setTimeout(() => {
       setTodayEntry(null);
       setStep(INITIAL_STEP);
@@ -119,57 +133,60 @@ const MoodCheckinCard = () => {
   }, []);
 
   // Optimized submit handler with better state management
-  const handleSubmit = useCallback(async (reason: Reason) => {
-    if (!selectedMood || !selectedDescription) {
-      console.warn('Cannot submit: missing mood or description');
-      return;
-    }
+  const handleSubmit = useCallback(
+    async (reason: Reason) => {
+      if (!selectedMood || !selectedDescription) {
+        console.warn("Cannot submit: missing mood or description");
+        return;
+      }
 
-    try {
-      setIsAnimating(true);
-      setError(null);
-      
-      const moodRequest = convertEntryToMoodRequest({
-        date: today,
-        mood: selectedMood.id,
-        description: selectedDescription.text,
-        reason: reason.text,
-      });
+      try {
+        setIsAnimating(true);
+        setError(null);
 
-      const moodResponse = await moodApi.setMood(moodRequest);
-      
-      setTimeout(() => {
-        const newEntry = convertMoodResponseToEntry(moodResponse);
-        setTodayEntry(newEntry);
-        
-        // Efficiently update mood data without mutation
-        setMoodData(prevData => [
-          ...prevData.filter((e) => e.date !== today), 
-          newEntry
-        ]);
-        
-        setStep(INITIAL_STEP);
+        const moodRequest = convertEntryToMoodRequest({
+          date: today,
+          mood: selectedMood.id,
+          description: selectedDescription.text,
+          reason: reason.text,
+        });
+
+        const moodResponse = await moodApi.setMood(moodRequest);
+
+        setTimeout(() => {
+          const newEntry = convertMoodResponseToEntry(moodResponse);
+          setTodayEntry(newEntry);
+
+          // Efficiently update mood data without mutation
+          setMoodData((prevData) => [
+            ...prevData.filter((e) => e.date !== today),
+            newEntry,
+          ]);
+
+          setStep(INITIAL_STEP);
+          setIsAnimating(false);
+        }, ANIMATION_DELAY);
+
+        successToast("Mood saved successfully.");
+        console.log("Mood saved successfully:", selectedMood);
+      } catch (err: any) {
+        const errMsg = err?.message || String(err);
+        const errorMessage = `Failed to save mood. ${errMsg}`;
+
+        console.error("Failed to save mood:", err);
+        errorToast(errorMessage);
+        setError(`${errorMessage}. Please try again.`);
         setIsAnimating(false);
-      }, ANIMATION_DELAY);
-
-      successToast('Mood saved successfully.');
-      console.log('Mood saved successfully:', selectedMood);
-    } catch (err: any) {
-      const errMsg = err?.message || String(err);
-      const errorMessage = `Failed to save mood. ${errMsg}`;
-      
-      console.error('Failed to save mood:', err);
-      errorToast(errorMessage);
-      setError(`${errorMessage}. Please try again.`);
-      setIsAnimating(false);
-    }
-  }, [selectedMood, selectedDescription, today]);
+      }
+    },
+    [selectedMood, selectedDescription, today]
+  );
 
   // Optimized step navigation with consistent timing
   const nextStep = useCallback(() => {
     setIsAnimating(true);
     setTimeout(() => {
-      setStep(s => s + 1);
+      setStep((s) => s + 1);
       setIsAnimating(false);
     }, STEP_TRANSITION_DELAY);
   }, []);
@@ -177,7 +194,7 @@ const MoodCheckinCard = () => {
   const prevStep = useCallback(() => {
     setIsAnimating(true);
     setTimeout(() => {
-      setStep(s => s - 1);
+      setStep((s) => s - 1);
       setIsAnimating(false);
     }, STEP_TRANSITION_DELAY);
   }, []);
@@ -212,12 +229,11 @@ const MoodCheckinCard = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-300 via-blue-300 to-indigo-300 p-6 flex items-center justify-center relative rounded-b-2xl">
       <div className="bg-white/10 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-white/2 w-full h-full relative overflow-hidden">
-        
         {/* Error Alert */}
         {error && (
           <div className="mb-4 p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-red-100 text-sm">
             {error}
-            <button 
+            <button
               onClick={dismissError}
               className="float-right text-red-200 hover:text-white transition-colors duration-200"
               aria-label="Dismiss error"
@@ -253,7 +269,7 @@ const MoodCheckinCard = () => {
                   nextStep={nextStep}
                 />
               )}
-              
+
               {step === 2 && selectedMood && (
                 <DescriptionStep
                   descriptions={filteredDescriptions}
@@ -263,7 +279,7 @@ const MoodCheckinCard = () => {
                   prevStep={prevStep}
                 />
               )}
-              
+
               {step === 3 && selectedDescription && (
                 <ReasonStep
                   reasons={filteredReasons}
@@ -273,7 +289,7 @@ const MoodCheckinCard = () => {
                   prevStep={prevStep}
                 />
               )}
-              
+
               <ProgressIndicator step={step} />
             </div>
           )}
@@ -283,4 +299,4 @@ const MoodCheckinCard = () => {
   );
 };
 
- export default MoodCheckinCard;
+export default MoodCheckinCard;

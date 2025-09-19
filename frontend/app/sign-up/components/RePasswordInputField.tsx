@@ -6,9 +6,12 @@ interface PasswordInputFieldProps {
   setRePassword: (password: string) => void;
 }
 
-const RePasswordInputField: React.FC<PasswordInputFieldProps> = ({ rePassword, setRePassword }) => {
+const RePasswordInputField: React.FC<PasswordInputFieldProps> = ({
+  rePassword,
+  setRePassword,
+}) => {
   const [focused, setFocused] = useState(false);
-  const [value, setValue] = useState(rePassword || '');
+  const [value, setValue] = useState(rePassword || "");
   const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -22,13 +25,16 @@ const RePasswordInputField: React.FC<PasswordInputFieldProps> = ({ rePassword, s
 
   return (
     <div className="relative group">
-      <div className={`
+      <div
+        className={`
         relative overflow-hidden rounded-2xl transition-all duration-300
-        ${focused 
-          ? 'bg-gradient-to-r from-blue-50 to-indigo-50 ring-2 ring-blue-400 ring-opacity-50' 
-          : 'bg-gray-50/80 hover:bg-gray-50 border border-gray-200/50'
+        ${
+          focused
+            ? "bg-gradient-to-r from-blue-50 to-indigo-50 ring-2 ring-blue-400 ring-opacity-50"
+            : "bg-gray-50/80 hover:bg-gray-50 border border-gray-200/50"
         }
-      `}>
+      `}
+      >
         <input
           type={showPassword ? "text" : "password"}
           id="password"
@@ -52,15 +58,23 @@ const RePasswordInputField: React.FC<PasswordInputFieldProps> = ({ rePassword, s
             <FaEye className="w-5 h-5" />
           )}
         </button>
-        <div className={`
+        <div
+          className={`
           absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-blue-500 to-indigo-500 transition-all duration-300
-          ${focused ? 'w-full' : 'w-0'}
-        `} />
+          ${focused ? "w-full" : "w-0"}
+        `}
+        />
       </div>
-      <div className={`
+      <div
+        className={`
         absolute left-6 -top-2 px-2 bg-white text-xs font-medium transition-all duration-300
-        ${focused || value ? 'opacity-100 translate-y-0 text-blue-600' : 'opacity-0 translate-y-2 text-gray-400'}
-      `}>
+        ${
+          focused || value
+            ? "opacity-100 translate-y-0 text-blue-600"
+            : "opacity-0 translate-y-2 text-gray-400"
+        }
+      `}
+      >
         Password
       </div>
     </div>

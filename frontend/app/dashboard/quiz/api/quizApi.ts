@@ -1,7 +1,7 @@
-import axios from 'axios';
+import axios from "axios";
 
 // ============ BASE CONFIG ============
-const BASE_URL = 'http://localhost:8080';
+const BASE_URL = "http://localhost:8080";
 
 // ============ TYPE DEFINITIONS ============
 export interface QuizStartRequest {
@@ -20,7 +20,7 @@ export interface Quiz {
   fileId: string;
   question: string;
   sequenceNumber: number;
-  type: 'SCALE' | 'MCQ' | 'DESCRIPTIVE';
+  type: "SCALE" | "MCQ" | "DESCRIPTIVE";
   options?: string[];
   scaleMin?: number;
   scaleMax?: number;
@@ -35,7 +35,7 @@ export interface QuizSessionResponse {
   currentQuestionSequence: number;
   totalQuestions: number;
   progressPercentage: number;
-  status: 'IN_PROGRESS' | 'COMPLETED' | 'ABANDONED';
+  status: "IN_PROGRESS" | "COMPLETED" | "ABANDONED";
   startedAt: string;
   completedAt?: string;
   currentQuestion?: Quiz;
@@ -48,7 +48,7 @@ export interface UserQuizSession {
   quizCode: string;
   currentQuestionSequence: number;
   totalQuestions: number;
-  status: 'IN_PROGRESS' | 'COMPLETED' | 'ABANDONED';
+  status: "IN_PROGRESS" | "COMPLETED" | "ABANDONED";
   startedAt: string;
   completedAt?: string;
 }
@@ -80,7 +80,9 @@ const apiClient = axios.create({
 // Request interceptor for logging
 apiClient.interceptors.request.use(
   (config) => {
-    console.log(`Quiz API Request: ${config.method?.toUpperCase()} ${config.url}`);
+    console.log(
+      `Quiz API Request: ${config.method?.toUpperCase()} ${config.url}`
+    );
     return config;
   },
   (error) => Promise.reject(error)
@@ -93,8 +95,8 @@ apiClient.interceptors.response.use(
     return response;
   },
   (error) => {
-    let errorMessage = 'Network error occurred';
-    
+    let errorMessage = "Network error occurred";
+
     if (error.response?.data?.error) {
       errorMessage = error.response.data.error;
     } else if (error.response?.data?.message) {
@@ -102,26 +104,26 @@ apiClient.interceptors.response.use(
     } else if (error.message) {
       errorMessage = error.message;
     }
-    
-    console.error('Quiz API Error:', errorMessage);
-    
+
+    console.error("Quiz API Error:", errorMessage);
+
     // Return a more specific error based on status code
     if (error.response?.status === 400) {
       throw new Error(errorMessage);
     } else if (error.response?.status === 401) {
-      throw new Error('Authentication required');
+      throw new Error("Authentication required");
     } else if (error.response?.status === 403) {
-      throw new Error('Access denied: Insufficient permissions');
+      throw new Error("Access denied: Insufficient permissions");
     } else if (error.response?.status === 404) {
-      throw new Error('Resource not found');
+      throw new Error("Resource not found");
     } else if (error.response?.status === 500) {
-      throw new Error('Server error occurred');
-    } else if (error.code === 'ECONNABORTED') {
-      throw new Error('Request timed out');
+      throw new Error("Server error occurred");
+    } else if (error.code === "ECONNABORTED") {
+      throw new Error("Request timed out");
     } else if (!error.response) {
-      throw new Error('Network connection failed');
+      throw new Error("Network connection failed");
     }
-    
+
     throw new Error(errorMessage);
   }
 );
@@ -133,11 +135,13 @@ export const quizApi = {
    */
   getAvailableQuizzes: async (): Promise<string[]> => {
     const response = await apiClient.get<ApiResponseClass<string[]>>(
-      '/api/v1/content/quiz/available-quizzes'
+      "/api/v1/content/quiz/available-quizzes"
     );
 
     if (!response.data.success) {
-      throw new Error(response.data.error || 'Failed to fetch available quizzes');
+      throw new Error(
+        response.data.error || "Failed to fetch available quizzes"
+      );
     }
 
     return response.data.data || [];
@@ -146,22 +150,23 @@ export const quizApi = {
   /**
    * Start a new quiz session or resume an in-progress one
    */
-  startQuiz: async (request: QuizStartRequest): Promise<QuizSessionResponse> => {
+  startQuiz: async (
+    request: QuizStartRequest
+  ): Promise<QuizSessionResponse> => {
     if (!request.quizCode?.trim()) {
-      throw new Error('Quiz code is required');
+      throw new Error("Quiz code is required");
     }
 
-    const response = await apiClient.post<ApiResponseClass<QuizSessionResponse>>(
-      '/api/v1/content/quiz/start',
-      request
-    );
+    const response = await apiClient.post<
+      ApiResponseClass<QuizSessionResponse>
+    >("/api/v1/content/quiz/start", request);
 
     if (!response.data.success) {
-      throw new Error(response.data.error || 'Failed to start quiz');
+      throw new Error(response.data.error || "Failed to start quiz");
     }
 
     if (!response.data.data) {
-      throw new Error('Invalid response: missing quiz session data');
+      throw new Error("Invalid response: missing quiz session data");
     }
 
     return response.data.data;
@@ -170,28 +175,29 @@ export const quizApi = {
   /**
    * Submit an answer for the current question
    */
-  submitAnswer: async (request: QuizAnswerRequest): Promise<QuizSessionResponse> => {
+  submitAnswer: async (
+    request: QuizAnswerRequest
+  ): Promise<QuizSessionResponse> => {
     if (!request.sessionId || request.sessionId <= 0) {
-      throw new Error('Valid session ID is required');
+      throw new Error("Valid session ID is required");
     }
     if (!request.quizId || request.quizId <= 0) {
-      throw new Error('Valid quiz ID is required');
+      throw new Error("Valid quiz ID is required");
     }
     if (!request.answer?.trim()) {
-      throw new Error('Answer is required');
+      throw new Error("Answer is required");
     }
 
-    const response = await apiClient.post<ApiResponseClass<QuizSessionResponse>>(
-      '/api/v1/content/quiz/answer',
-      request
-    );
+    const response = await apiClient.post<
+      ApiResponseClass<QuizSessionResponse>
+    >("/api/v1/content/quiz/answer", request);
 
     if (!response.data.success) {
-      throw new Error(response.data.error || 'Failed to submit answer');
+      throw new Error(response.data.error || "Failed to submit answer");
     }
 
     if (!response.data.data) {
-      throw new Error('Invalid response: missing quiz session data');
+      throw new Error("Invalid response: missing quiz session data");
     }
 
     return response.data.data;
@@ -202,7 +208,7 @@ export const quizApi = {
    */
   getSessionStatus: async (sessionId: number): Promise<QuizSessionResponse> => {
     if (!sessionId || sessionId <= 0) {
-      throw new Error('Valid session ID is required');
+      throw new Error("Valid session ID is required");
     }
 
     const response = await apiClient.get<ApiResponseClass<QuizSessionResponse>>(
@@ -210,11 +216,11 @@ export const quizApi = {
     );
 
     if (!response.data.success) {
-      throw new Error(response.data.error || 'Failed to fetch session status');
+      throw new Error(response.data.error || "Failed to fetch session status");
     }
 
     if (!response.data.data) {
-      throw new Error('Invalid response: missing session data');
+      throw new Error("Invalid response: missing session data");
     }
 
     return response.data.data;
@@ -225,11 +231,11 @@ export const quizApi = {
    */
   getUserSessions: async (): Promise<UserQuizSession[]> => {
     const response = await apiClient.get<ApiResponseClass<UserQuizSession[]>>(
-      '/api/v1/content/quiz/sessions'
+      "/api/v1/content/quiz/sessions"
     );
 
     if (!response.data.success) {
-      throw new Error(response.data.error || 'Failed to fetch user sessions');
+      throw new Error(response.data.error || "Failed to fetch user sessions");
     }
 
     return response.data.data || [];
@@ -240,7 +246,7 @@ export const quizApi = {
    */
   getSessionAnswers: async (sessionId: number): Promise<UserQuizAnswer[]> => {
     if (!sessionId || sessionId <= 0) {
-      throw new Error('Valid session ID is required');
+      throw new Error("Valid session ID is required");
     }
 
     const response = await apiClient.get<ApiResponseClass<UserQuizAnswer[]>>(
@@ -248,7 +254,7 @@ export const quizApi = {
     );
 
     if (!response.data.success) {
-      throw new Error(response.data.error || 'Failed to fetch session answers');
+      throw new Error(response.data.error || "Failed to fetch session answers");
     }
 
     return response.data.data || [];
@@ -259,7 +265,7 @@ export const quizApi = {
    */
   getAnalysisLink: async (quizCode: string): Promise<string> => {
     if (!quizCode?.trim()) {
-      throw new Error('Quiz code is required');
+      throw new Error("Quiz code is required");
     }
 
     const response = await apiClient.get<ApiResponseClass<string>>(
@@ -267,10 +273,10 @@ export const quizApi = {
     );
 
     if (!response.data.success) {
-      throw new Error(response.data.error || 'Failed to fetch analysis link');
+      throw new Error(response.data.error || "Failed to fetch analysis link");
     }
 
-    return response.data.data || '';
+    return response.data.data || "";
   },
 
   /**
@@ -278,14 +284,14 @@ export const quizApi = {
    */
   getAnalysisReport: async (analysisUrl: string): Promise<any> => {
     if (!analysisUrl?.trim()) {
-      throw new Error('Analysis URL is required');
+      throw new Error("Analysis URL is required");
     }
 
     try {
       const response = await axios.get(analysisUrl);
       return response.data;
     } catch (error) {
-      throw new Error('Failed to fetch analysis report');
+      throw new Error("Failed to fetch analysis report");
     }
   },
 };
@@ -303,14 +309,14 @@ export const formatProgressPercentage = (percentage: number): string => {
  * Check if a quiz session is completed
  */
 export const isSessionCompleted = (session: QuizSessionResponse): boolean => {
-  return session.status === 'COMPLETED';
+  return session.status === "COMPLETED";
 };
 
 /**
  * Check if a quiz session is in progress
  */
 export const isSessionInProgress = (session: QuizSessionResponse): boolean => {
-  return session.status === 'IN_PROGRESS';
+  return session.status === "IN_PROGRESS";
 };
 
 /**
@@ -318,12 +324,12 @@ export const isSessionInProgress = (session: QuizSessionResponse): boolean => {
  */
 export const getStatusDisplayText = (status: string): string => {
   switch (status) {
-    case 'IN_PROGRESS':
-      return 'In Progress';
-    case 'COMPLETED':
-      return 'Completed';
-    case 'ABANDONED':
-      return 'Abandoned';
+    case "IN_PROGRESS":
+      return "In Progress";
+    case "COMPLETED":
+      return "Completed";
+    case "ABANDONED":
+      return "Abandoned";
     default:
       return status;
   }
@@ -334,44 +340,46 @@ export const getStatusDisplayText = (status: string): string => {
  */
 export const validateAnswer = (quiz: Quiz, answer: string): string[] => {
   const errors: string[] = [];
-  
+
   if (!answer?.trim()) {
-    errors.push('Answer is required');
+    errors.push("Answer is required");
     return errors;
   }
-  
+
   switch (quiz.type) {
-    case 'SCALE':
+    case "SCALE":
       const scaleValue = parseInt(answer);
       if (isNaN(scaleValue)) {
-        errors.push('Please select a valid scale value');
+        errors.push("Please select a valid scale value");
       } else if (quiz.scaleMin && scaleValue < quiz.scaleMin) {
         errors.push(`Value must be at least ${quiz.scaleMin}`);
       } else if (quiz.scaleMax && scaleValue > quiz.scaleMax) {
         errors.push(`Value must be at most ${quiz.scaleMax}`);
       }
       break;
-      
-    case 'MCQ':
+
+    case "MCQ":
       if (quiz.options && !quiz.options.includes(answer)) {
-        errors.push('Please select a valid option');
+        errors.push("Please select a valid option");
       }
       break;
-      
-    case 'DESCRIPTIVE':
+
+    case "DESCRIPTIVE":
       if (answer.trim().length < 5) {
-        errors.push('Please provide a more detailed answer (at least 5 characters)');
+        errors.push(
+          "Please provide a more detailed answer (at least 5 characters)"
+        );
       }
       if (answer.length > 1000) {
-        errors.push('Answer is too long (maximum 1000 characters)');
+        errors.push("Answer is too long (maximum 1000 characters)");
       }
       break;
-      
+
     default:
-      errors.push('Unknown quiz type');
+      errors.push("Unknown quiz type");
       break;
   }
-  
+
   return errors;
 };
 
@@ -381,12 +389,12 @@ export const validateAnswer = (quiz: Quiz, answer: string): string[] => {
 export const formatDate = (dateString: string): string => {
   try {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   } catch (error) {
     return dateString;
@@ -400,9 +408,10 @@ export const estimateTimeRemaining = (
   session: QuizSessionResponse,
   avgTimePerQuestion: number = 30 // seconds
 ): string => {
-  const remainingQuestions = session.totalQuestions - session.currentQuestionSequence + 1;
+  const remainingQuestions =
+    session.totalQuestions - session.currentQuestionSequence + 1;
   const estimatedSeconds = remainingQuestions * avgTimePerQuestion;
-  
+
   if (estimatedSeconds < 60) {
     return `${estimatedSeconds}s`;
   } else if (estimatedSeconds < 3600) {
@@ -424,22 +433,24 @@ export const withRetry = async <T>(
   delay: number = 1000
 ): Promise<T> => {
   let lastError: Error;
-  
+
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       return await operation();
     } catch (error) {
       lastError = error as Error;
       console.warn(`Quiz API attempt ${attempt} failed:`, error);
-      
+
       if (attempt === maxRetries) {
         break;
       }
-      
+
       // Exponential backoff
-      await new Promise(resolve => setTimeout(resolve, delay * Math.pow(2, attempt - 1)));
+      await new Promise((resolve) =>
+        setTimeout(resolve, delay * Math.pow(2, attempt - 1))
+      );
     }
   }
-  
+
   throw lastError!;
 };
