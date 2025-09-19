@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import axios from "axios";
 import { successToast, errorToast } from "@/util/toastHelper";
-import ReviewModal from "@/app/components/components/ReviewModal";
+import ReviewModal from "@/app/admin/components/ReviewModal";
 
 const ApplicationDetail = () => {
   const router = useRouter();
