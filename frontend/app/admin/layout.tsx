@@ -1,7 +1,7 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import AdminSidebar from '../components/admin/AdminSidebar';
-import AdminNavbar from '../components/admin/AdminNavbar';
+import AdminSidebar from '@/app/admin/components/AdminSidebar';
+import AdminNavbar from '@/app/admin/components/AdminNavbar';
 import { usePathname, useRouter } from 'next/navigation';
 import axios from 'axios';
 
