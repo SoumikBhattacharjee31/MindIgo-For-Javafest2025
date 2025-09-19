@@ -6,11 +6,23 @@ const cors = require('cors');
 
 const app = express();
 const frontendDomain = `${process.env.FRONTEND_DOMAIN}`;
+
 console.log(`Allowed CORS origin: ${frontendDomain}`);
 app.use(cors({
   origin: frontendDomain,
   credentials: true
 }));
+
+// Health check endpoint for Docker
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    activeRooms: rooms.size,
+    totalConnections: io.engine.clientsCount
+  });
+});
 
 const server = http.createServer(app);
 const io = socketIo(server, {
@@ -103,7 +115,7 @@ io.on('connection', (socket) => {
   });
 });
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.SIGNALING_SERVER_PORT || 3001;
 server.listen(PORT, () => {
   console.log(`Signaling server running on port ${PORT}`);
 });

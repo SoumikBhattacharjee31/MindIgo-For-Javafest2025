@@ -191,6 +191,7 @@ export const sleepApi = {
    */
   getSleepByDate: async (date: string): Promise<SleepResponse | null> => {
     try {
+      console.log(API_BASE_URL);
       const allSleep = await sleepApi.getAllSleep();
       return allSleep.find((sleep) => sleep.date === date) || null;
     } catch (error) {

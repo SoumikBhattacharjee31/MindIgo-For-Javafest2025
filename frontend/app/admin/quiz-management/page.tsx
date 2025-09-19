@@ -1,10 +1,10 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { successToast, errorToast } from '../../../util/toastHelper';
-import FileUpload from '../../components/admin/FileUpload';
-import FileList from '../../components/admin/FileList';
-import QuizGenerator from '../../components/admin/QuizGenerator';
-import QuizPreview from '../../components/admin/QuizPreview';
+import FileUpload from '../components/FileUpload';
+import FileList from '../components/FileList';
+import QuizGenerator from '../components/QuizGenerator';
+import QuizPreview from '../components/QuizPreview';
 import { quizApi, getQuizApiErrorMessage, type GeneratedQuizData, type QuizQuestion } from '../../api/quizApi';
 
 interface QuizData {

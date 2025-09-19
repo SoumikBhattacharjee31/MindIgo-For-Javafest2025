@@ -21,6 +21,7 @@ class MindIgoDatabase:
             
             # Test the connection
             self.client.server_info()
+            logger.info("MongoDB connection test successful")
             
             self._create_indexes()
             logger.info("MongoDB database initialized successfully")
