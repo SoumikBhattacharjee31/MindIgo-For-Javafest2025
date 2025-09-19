@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { quizApi, UserQuizSession } from '../api/quizApi';
-import { successToast, errorToast, infoToast, warningToast } from '../../../../util/toastHelper';
+import { quizApi, UserQuizSession } from '@/app/dashboard/quiz/api/quizApi';
+import { successToast, errorToast, infoToast, warningToast } from '@/util/toastHelper';
 import UserAnalysisModal from './UserAnalysisModal';
 
 interface QuizListProps {
