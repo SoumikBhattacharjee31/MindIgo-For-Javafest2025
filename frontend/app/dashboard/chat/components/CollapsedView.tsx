@@ -1,9 +1,5 @@
-const CollapsedView = () =>{
-    return(
-        <div>
-            
-        </div>
-    );
-}
+const CollapsedView = () => {
+  return <div></div>;
+};
 
 export default CollapsedView;

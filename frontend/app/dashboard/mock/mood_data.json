@@ -1,86 +1,86 @@
 [
-    {
-        "mood": "happy",
-        "date": "2025-08-10",
-        "description": "Feeling great!",
-        "reason": "Had a productive day."
-    },
-    {
-        "mood": "sad",
-        "date": "2025-08-11",
-        "description": "Feeling down.",
-        "reason": "Had a rough night."
-    },
-    {
-        "mood": "terrible",
-        "date": "2025-08-12",
-        "description": "Feeling awful.",
-        "reason": "Everything went wrong."
-    },
-    {
-        "mood": "sad",
-        "date": "2025-08-13",
-        "description": "Feeling down.",
-        "reason": "Had a rough night."
-    },
-    {
-        "mood": "sad",
-        "date": "2025-08-14",
-        "description": "Feeling down.",
-        "reason": "Had a rough night."
-    },
-    {
-        "mood": "terrible",
-        "date": "2025-08-15",
-        "description": "Feeling awful.",
-        "reason": "Everything went wrong."
-    },
-    {
-        "mood": "sad",
-        "date": "2025-08-16",
-        "description": "Feeling down.",
-        "reason": "Had a rough night."
-    },
-    {
-        "mood": "sad",
-        "date": "2025-08-17",
-        "description": "Feeling down.",
-        "reason": "Had a rough night."
-    },
-    {
-        "mood": "terrible",
-        "date": "2025-08-18",
-        "description": "Feeling awful.",
-        "reason": "Everything went wrong."
-    },
-    {
-        "mood": "sad",
-        "date": "2025-08-19",
-        "description": "Feeling down.",
-        "reason": "Had a rough night."
-    },
-    {
-        "mood": "happy",
-        "date": "2025-08-20",
-        "description": "Feeling great!",
-        "reason": "Had a productive day."
-    },
-    {
-        "mood": "amazing",
-        "date": "2025-08-21",
-        "description": "Feeling awesome!",
-        "reason": "Had an amazing day."
-    },
-    {
-        "mood": "happy",
-        "date": "2025-08-22",
-        "description": "Feeling great!",
-        "reason": "Had a productive day."
-    },
-    {
-        "mood": "happy",
-        "date": "2025-08-23",
-        "description": "Feeling great!",
-        "reason": "Had a productive day."
-    }
+  {
+    "mood": "happy",
+    "date": "2025-08-10",
+    "description": "Feeling great!",
+    "reason": "Had a productive day."
+  },
+  {
+    "mood": "sad",
+    "date": "2025-08-11",
+    "description": "Feeling down.",
+    "reason": "Had a rough night."
+  },
+  {
+    "mood": "terrible",
+    "date": "2025-08-12",
+    "description": "Feeling awful.",
+    "reason": "Everything went wrong."
+  },
+  {
+    "mood": "sad",
+    "date": "2025-08-13",
+    "description": "Feeling down.",
+    "reason": "Had a rough night."
+  },
+  {
+    "mood": "sad",
+    "date": "2025-08-14",
+    "description": "Feeling down.",
+    "reason": "Had a rough night."
+  },
+  {
+    "mood": "terrible",
+    "date": "2025-08-15",
+    "description": "Feeling awful.",
+    "reason": "Everything went wrong."
+  },
+  {
+    "mood": "sad",
+    "date": "2025-08-16",
+    "description": "Feeling down.",
+    "reason": "Had a rough night."
+  },
+  {
+    "mood": "sad",
+    "date": "2025-08-17",
+    "description": "Feeling down.",
+    "reason": "Had a rough night."
+  },
+  {
+    "mood": "terrible",
+    "date": "2025-08-18",
+    "description": "Feeling awful.",
+    "reason": "Everything went wrong."
+  },
+  {
+    "mood": "sad",
+    "date": "2025-08-19",
+    "description": "Feeling down.",
+    "reason": "Had a rough night."
+  },
+  {
+    "mood": "happy",
+    "date": "2025-08-20",
+    "description": "Feeling great!",
+    "reason": "Had a productive day."
+  },
+  {
+    "mood": "amazing",
+    "date": "2025-08-21",
+    "description": "Feeling awesome!",
+    "reason": "Had an amazing day."
+  },
+  {
+    "mood": "happy",
+    "date": "2025-08-22",
+    "description": "Feeling great!",
+    "reason": "Had a productive day."
+  },
+  {
+    "mood": "happy",
+    "date": "2025-08-23",
+    "description": "Feeling great!",
+    "reason": "Had a productive day."
+  }
 ]

@@ -22,16 +22,15 @@ import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
 dayjs.extend(isBetween);
 
-
 import {
   appointmentServiceApi,
   Appointment,
   Availability,
   CounselorSettings,
   DateSpecificAvailability,
-  UpdateDateSpecificAvailability
-} from "@/app/api/appointmentService";
-import AppointmentCard from "@/app/components/appointments/AppointmentCard";
+  UpdateDateSpecificAvailability,
+} from "@/app/appointments/api";
+import AppointmentCard from "@/app/appointments/components/AppointmentCard";
 
 type TabType = "dashboard" | "appointments" | "availability" | "settings";
 
@@ -46,9 +45,13 @@ const formatTimeForApi = (time: string): string => {
 const CounselorDashboardPage = () => {
   const [activeTab, setActiveTab] = useState<TabType>("dashboard");
   const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [filteredAppointments, setFilteredAppointments] = useState<Appointment[]>([]);
+  const [filteredAppointments, setFilteredAppointments] = useState<
+    Appointment[]
+  >([]);
   const [availability, setAvailability] = useState<Availability[]>([]);
-  const [dateSpecificAvailability, setDateSpecificAvailability] = useState<DateSpecificAvailability[]>([]);
+  const [dateSpecificAvailability, setDateSpecificAvailability] = useState<
+    DateSpecificAvailability[]
+  >([]);
   const [settings, setSettings] = useState<CounselorSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -63,14 +66,15 @@ const CounselorDashboardPage = () => {
     endTime: "17:00",
     slotDurationMinutes: 60,
   });
-  const [newDateSpecificAvailability, setNewDateSpecificAvailability] = useState({
-    specificDate: dayjs().format("YYYY-MM-DD"),
-    startTime: "09:00",
-    endTime: "17:00",
-    slotDurationMinutes: 60,
-    type: "AVAILABLE",
-    reason: "",
-  });
+  const [newDateSpecificAvailability, setNewDateSpecificAvailability] =
+    useState({
+      specificDate: dayjs().format("YYYY-MM-DD"),
+      startTime: "09:00",
+      endTime: "17:00",
+      slotDurationMinutes: 60,
+      type: "AVAILABLE",
+      reason: "",
+    });
 
   // Form state for settings
   const [settingsForm, setSettingsForm] = useState({
@@ -141,7 +145,8 @@ const CounselorDashboardPage = () => {
 
   const fetchDateSpecificAvailability = async () => {
     try {
-      const response = await appointmentServiceApi.getMyDateSpecificAvailability();
+      const response =
+        await appointmentServiceApi.getMyDateSpecificAvailability();
       if (response.data.success) {
         setDateSpecificAvailability(response.data.data || []);
       }
@@ -157,8 +162,10 @@ const CounselorDashboardPage = () => {
         setSettings(response.data.data);
         setSettingsForm({
           maxBookingDays: response.data.data.maxBookingDays || 30,
-          defaultSlotDurationMinutes: response.data.data.defaultSlotDurationMinutes || 60,
-          autoAcceptAppointments: response.data.data.autoAcceptAppointments || false,
+          defaultSlotDurationMinutes:
+            response.data.data.defaultSlotDurationMinutes || 60,
+          autoAcceptAppointments:
+            response.data.data.autoAcceptAppointments || false,
           requireApproval: response.data.data.requireApproval || true,
           bufferTimeMinutes: response.data.data.bufferTimeMinutes || 15,
         });
@@ -175,11 +182,13 @@ const CounselorDashboardPage = () => {
     const todayStart = now.startOf("day");
     const todayEnd = now.endOf("day");
 
-    const uniqueClients = new Set(appointmentData.map((apt) => apt.clientEmail)).size;
+    const uniqueClients = new Set(appointmentData.map((apt) => apt.clientEmail))
+      .size;
 
     const stats = {
       totalAppointments: appointmentData.length,
-      pendingApproval: appointmentData.filter((apt) => apt.status === "PENDING").length,
+      pendingApproval: appointmentData.filter((apt) => apt.status === "PENDING")
+        .length,
       todayAppointments: appointmentData.filter((apt) => {
         const appointmentDate = dayjs(apt.startTime);
         return (
@@ -203,7 +212,9 @@ const CounselorDashboardPage = () => {
 
     if (activeFilter !== "all") {
       if (activeFilter === "today") {
-        filtered = filtered.filter((apt) => dayjs(apt.startTime).isSame(dayjs(), "day"));
+        filtered = filtered.filter((apt) =>
+          dayjs(apt.startTime).isSame(dayjs(), "day")
+        );
       } else if (activeFilter === "upcoming") {
         filtered = filtered.filter(
           (apt) =>
@@ -211,16 +222,20 @@ const CounselorDashboardPage = () => {
             ["CONFIRMED", "PENDING"].includes(apt.status)
         );
       } else {
-        filtered = filtered.filter((apt) => apt.status === activeFilter.toUpperCase());
+        filtered = filtered.filter(
+          (apt) => apt.status === activeFilter.toUpperCase()
+        );
       }
     }
 
     if (searchTerm) {
       filtered = filtered.filter(
         (apt) =>
-          (apt.clientName && apt.clientName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (apt.clientName &&
+            apt.clientName.toLowerCase().includes(searchTerm.toLowerCase())) ||
           apt.clientEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (apt.clientNotes && apt.clientNotes.toLowerCase().includes(searchTerm.toLowerCase()))
+          (apt.clientNotes &&
+            apt.clientNotes.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     }
 
@@ -245,7 +260,11 @@ const CounselorDashboardPage = () => {
     }
   };
 
-  const handleStatusUpdate = async (appointmentId: number, status: string, notes?: string) => {
+  const handleStatusUpdate = async (
+    appointmentId: number,
+    status: string,
+    notes?: string
+  ) => {
     try {
       await appointmentServiceApi.updateAppointmentStatus({
         appointmentId,
@@ -256,7 +275,9 @@ const CounselorDashboardPage = () => {
       toast.success(`Appointment ${status.toLowerCase()} successfully`);
       fetchAppointments();
     } catch (error: any) {
-      toast.error(error.response?.data?.message || "Failed to update appointment");
+      toast.error(
+        error.response?.data?.message || "Failed to update appointment"
+      );
     }
   };
 
@@ -271,20 +292,35 @@ const CounselorDashboardPage = () => {
       await appointmentServiceApi.createAvailability(formattedAvailability);
       toast.success("Availability created successfully");
       fetchAvailability();
-      setNewAvailability({ dayOfWeek: "MONDAY", startTime: "09:00", endTime: "17:00", slotDurationMinutes: 60 });
+      setNewAvailability({
+        dayOfWeek: "MONDAY",
+        startTime: "09:00",
+        endTime: "17:00",
+        slotDurationMinutes: 60,
+      });
     } catch (error) {
       toast.error("Failed to create availability");
     }
   };
 
-  const handleUpdateAvailability = async (availabilityId: number, updates: Partial<Availability>) => {
+  const handleUpdateAvailability = async (
+    availabilityId: number,
+    updates: Partial<Availability>
+  ) => {
     try {
       const formattedUpdates = {
         ...updates,
-        startTime: updates.startTime ? formatTimeForApi(updates.startTime) : undefined,
-        endTime: updates.endTime ? formatTimeForApi(updates.endTime) : undefined,
+        startTime: updates.startTime
+          ? formatTimeForApi(updates.startTime)
+          : undefined,
+        endTime: updates.endTime
+          ? formatTimeForApi(updates.endTime)
+          : undefined,
       };
-      await appointmentServiceApi.updateAvailability(availabilityId, formattedUpdates);
+      await appointmentServiceApi.updateAvailability(
+        availabilityId,
+        formattedUpdates
+      );
       toast.success("Availability updated successfully");
       fetchAvailability();
     } catch (error) {
@@ -317,8 +353,13 @@ const CounselorDashboardPage = () => {
   const handleCreateDateSpecificAvailability = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      if (newDateSpecificAvailability.type === "UNAVAILABLE" && !newDateSpecificAvailability.reason.trim()) {
-        toast.error("Reason is required when setting availability to Unavailable");
+      if (
+        newDateSpecificAvailability.type === "UNAVAILABLE" &&
+        !newDateSpecificAvailability.reason.trim()
+      ) {
+        toast.error(
+          "Reason is required when setting availability to Unavailable"
+        );
         return;
       }
       const formattedAvailability = {
@@ -329,7 +370,9 @@ const CounselorDashboardPage = () => {
         type: newDateSpecificAvailability.type,
         reason: newDateSpecificAvailability.reason,
       };
-      await appointmentServiceApi.createDateSpecificAvailability(formattedAvailability);
+      await appointmentServiceApi.createDateSpecificAvailability(
+        formattedAvailability
+      );
       toast.success("Date-specific availability created successfully");
       fetchDateSpecificAvailability();
       setNewDateSpecificAvailability({
@@ -341,7 +384,10 @@ const CounselorDashboardPage = () => {
         reason: "",
       });
     } catch (error: any) {
-        toast.error(error.response?.data?.message || "Failed to create date-specific availability");
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to create date-specific availability"
+      );
     }
   };
 
@@ -350,30 +396,53 @@ const CounselorDashboardPage = () => {
     updates: Partial<UpdateDateSpecificAvailability>
   ) => {
     try {
-      if (updates.type === "UNAVAILABLE" && (!updates.reason || !updates.reason.trim())) {
-        toast.error("Reason is required when setting availability to Unavailable");
+      if (
+        updates.type === "UNAVAILABLE" &&
+        (!updates.reason || !updates.reason.trim())
+      ) {
+        toast.error(
+          "Reason is required when setting availability to Unavailable"
+        );
         return;
       }
       const formattedUpdates = {
         ...updates,
         specificDate: updates.specificDate ? updates.specificDate : undefined,
-        startTime: updates.startTime ? formatTimeForApi(updates.startTime) : undefined,
-        endTime: updates.endTime ? formatTimeForApi(updates.endTime) : undefined,
+        startTime: updates.startTime
+          ? formatTimeForApi(updates.startTime)
+          : undefined,
+        endTime: updates.endTime
+          ? formatTimeForApi(updates.endTime)
+          : undefined,
         type: updates.type,
         reason: updates.reason,
       };
-      await appointmentServiceApi.updateDateSpecificAvailability(availabilityId, formattedUpdates);
+      await appointmentServiceApi.updateDateSpecificAvailability(
+        availabilityId,
+        formattedUpdates
+      );
       toast.success("Date-specific availability updated successfully");
       fetchDateSpecificAvailability();
     } catch (error: any) {
-      toast.error(error.response?.data?.message || "Failed to update date-specific availability");
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to update date-specific availability"
+      );
     }
   };
 
-  const handleDeleteDateSpecificAvailability = async (availabilityId: number) => {
-    if (confirm("Are you sure you want to delete this date-specific availability?")) {
+  const handleDeleteDateSpecificAvailability = async (
+    availabilityId: number
+  ) => {
+    if (
+      confirm(
+        "Are you sure you want to delete this date-specific availability?"
+      )
+    ) {
       try {
-        await appointmentServiceApi.deleteDateSpecificAvailability(availabilityId);
+        await appointmentServiceApi.deleteDateSpecificAvailability(
+          availabilityId
+        );
         toast.success("Date-specific availability deleted successfully");
         fetchDateSpecificAvailability();
       } catch (error) {
@@ -393,9 +462,18 @@ const CounselorDashboardPage = () => {
     }
   };
 
-  const StatCard = ({ title, value, icon: Icon, color, subtitle, onClick }: any) => (
+  const StatCard = ({
+    title,
+    value,
+    icon: Icon,
+    color,
+    subtitle,
+    onClick,
+  }: any) => (
     <div
-      className={`bg-gradient-to-br ${color} rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 ${onClick ? 'cursor-pointer' : ''}`}
+      className={`bg-gradient-to-br ${color} rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 ${
+        onClick ? "cursor-pointer" : ""
+      }`}
       onClick={onClick}
     >
       <div className="flex items-start justify-between">
@@ -501,7 +579,9 @@ const CounselorDashboardPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-semibold text-gray-900">Today's Schedule</h3>
+              <h3 className="text-xl font-semibold text-gray-900">
+                Today's Schedule
+              </h3>
               <span className="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full">
                 {getTodayAppointments().length} sessions
               </span>
@@ -510,8 +590,12 @@ const CounselorDashboardPage = () => {
               {getTodayAppointments().length === 0 ? (
                 <div className="text-center py-8">
                   <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500">No appointments scheduled for today</p>
-                  <p className="text-sm text-gray-400 mt-1">Enjoy your day off!</p>
+                  <p className="text-gray-500">
+                    No appointments scheduled for today
+                  </p>
+                  <p className="text-sm text-gray-400 mt-1">
+                    Enjoy your day off!
+                  </p>
                 </div>
               ) : (
                 getTodayAppointments().map((appointment) => (
@@ -528,7 +612,9 @@ const CounselorDashboardPage = () => {
 
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-semibold text-gray-900">Pending Approvals</h3>
+              <h3 className="text-xl font-semibold text-gray-900">
+                Pending Approvals
+              </h3>
               <span className="bg-amber-100 text-amber-800 text-sm font-medium px-3 py-1 rounded-full">
                 {getPendingAppointments().length} pending
               </span>
@@ -559,50 +645,95 @@ const CounselorDashboardPage = () => {
 
   const AvailabilityTab = () => (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-      <h3 className="text-xl font-semibold text-gray-900 mb-6">Manage Availability</h3>
-      
+      <h3 className="text-xl font-semibold text-gray-900 mb-6">
+        Manage Availability
+      </h3>
+
       {/* Weekly Availability */}
       <div className="mb-8">
-        <h4 className="text-lg font-semibold text-gray-900 mb-4">Weekly Availability</h4>
-        <form onSubmit={handleCreateAvailability} className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 items-end">
+        <h4 className="text-lg font-semibold text-gray-900 mb-4">
+          Weekly Availability
+        </h4>
+        <form
+          onSubmit={handleCreateAvailability}
+          className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 items-end"
+        >
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Day of Week</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Day of Week
+            </label>
             <select
               value={newAvailability.dayOfWeek}
-              onChange={(e) => setNewAvailability({ ...newAvailability, dayOfWeek: e.target.value })}
+              onChange={(e) =>
+                setNewAvailability({
+                  ...newAvailability,
+                  dayOfWeek: e.target.value,
+                })
+              }
               className="w-full border border-gray-300 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              {["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"].map((day) => (
-                <option key={day} value={day}>{day}</option>
+              {[
+                "MONDAY",
+                "TUESDAY",
+                "WEDNESDAY",
+                "THURSDAY",
+                "FRIDAY",
+                "SATURDAY",
+                "SUNDAY",
+              ].map((day) => (
+                <option key={day} value={day}>
+                  {day}
+                </option>
               ))}
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Start Time</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Start Time
+            </label>
             <input
               type="time"
               value={newAvailability.startTime}
-              onChange={(e) => setNewAvailability({ ...newAvailability, startTime: e.target.value })}
+              onChange={(e) =>
+                setNewAvailability({
+                  ...newAvailability,
+                  startTime: e.target.value,
+                })
+              }
               className="w-full border border-gray-300 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">End Time</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              End Time
+            </label>
             <input
               type="time"
               value={newAvailability.endTime}
-              onChange={(e) => setNewAvailability({ ...newAvailability, endTime: e.target.value })}
+              onChange={(e) =>
+                setNewAvailability({
+                  ...newAvailability,
+                  endTime: e.target.value,
+                })
+              }
               className="w-full border border-gray-300 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Slot Duration (min)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Slot Duration (min)
+            </label>
             <input
               type="number"
               value={newAvailability.slotDurationMinutes}
-              onChange={(e) => setNewAvailability({ ...newAvailability, slotDurationMinutes: parseInt(e.target.value) })}
+              onChange={(e) =>
+                setNewAvailability({
+                  ...newAvailability,
+                  slotDurationMinutes: parseInt(e.target.value),
+                })
+              }
               className="w-full border border-gray-300 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               min="15"
               step="15"
@@ -614,20 +745,29 @@ const CounselorDashboardPage = () => {
               type="submit"
               className="w-full md:w-auto bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-all duration-200 flex items-center justify-center space-x-2"
             >
-             <Plus className="w-5 h-5"/> <span>Add Weekly Rule</span>
+              <Plus className="w-5 h-5" /> <span>Add Weekly Rule</span>
             </button>
           </div>
         </form>
 
         <div className="space-y-4">
           {availability.map((avail) => (
-            <div key={avail.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200">
+            <div
+              key={avail.id}
+              className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200"
+            >
               <div>
                 <p className="font-medium text-gray-900">{avail.dayOfWeek}</p>
                 <p className="text-sm text-gray-600">
-                  {dayjs(avail.startTime, "HH:mm:ss").format("h:mm A")} - {dayjs(avail.endTime, "HH:mm:ss").format("h:mm A")} ({avail.slotDurationMinutes} min slots)
+                  {dayjs(avail.startTime, "HH:mm:ss").format("h:mm A")} -{" "}
+                  {dayjs(avail.endTime, "HH:mm:ss").format("h:mm A")} (
+                  {avail.slotDurationMinutes} min slots)
                 </p>
-                <p className={`text-sm font-semibold ${avail.isActive ? "text-green-600" : "text-red-600"}`}>
+                <p
+                  className={`text-sm font-semibold ${
+                    avail.isActive ? "text-green-600" : "text-red-600"
+                  }`}
+                >
                   {avail.isActive ? "Active" : "Inactive"}
                 </p>
               </div>
@@ -637,14 +777,27 @@ const CounselorDashboardPage = () => {
                   title={avail.isActive ? "Deactivate" : "Activate"}
                   className="p-2 text-gray-600 hover:bg-white rounded-lg transition-colors"
                 >
-                  {avail.isActive ? <XCircle className="w-5 h-5 text-red-600" /> : <CheckCircle className="w-5 h-5 text-green-600" />}
+                  {avail.isActive ? (
+                    <XCircle className="w-5 h-5 text-red-600" />
+                  ) : (
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                  )}
                 </button>
                 <button
                   onClick={() => {
-                    const newStartTime = prompt("Enter new start time (HH:mm):", avail.startTime.split(':').slice(0, 2).join(':'));
-                    const newEndTime = prompt("Enter new end time (HH:mm):", avail.endTime.split(':').slice(0, 2).join(':'));
+                    const newStartTime = prompt(
+                      "Enter new start time (HH:mm):",
+                      avail.startTime.split(":").slice(0, 2).join(":")
+                    );
+                    const newEndTime = prompt(
+                      "Enter new end time (HH:mm):",
+                      avail.endTime.split(":").slice(0, 2).join(":")
+                    );
                     if (newStartTime && newEndTime) {
-                      handleUpdateAvailability(avail.id, { startTime: newStartTime, endTime: newEndTime });
+                      handleUpdateAvailability(avail.id, {
+                        startTime: newStartTime,
+                        endTime: newEndTime,
+                      });
                     }
                   }}
                   title="Edit Time"
@@ -667,45 +820,78 @@ const CounselorDashboardPage = () => {
 
       {/* Date-Specific Availability */}
       <div>
-        <h4 className="text-lg font-semibold text-gray-900 mb-4">Date-Specific Exceptions</h4>
-        <form onSubmit={handleCreateDateSpecificAvailability} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6 items-end">
+        <h4 className="text-lg font-semibold text-gray-900 mb-4">
+          Date-Specific Exceptions
+        </h4>
+        <form
+          onSubmit={handleCreateDateSpecificAvailability}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6 items-end"
+        >
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Date</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Date
+            </label>
             <input
               type="date"
               value={newDateSpecificAvailability.specificDate}
-              onChange={(e) => setNewDateSpecificAvailability({ ...newDateSpecificAvailability, specificDate: e.target.value })}
+              onChange={(e) =>
+                setNewDateSpecificAvailability({
+                  ...newDateSpecificAvailability,
+                  specificDate: e.target.value,
+                })
+              }
               className="w-full border border-gray-300 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               min={dayjs().format("YYYY-MM-DD")}
               required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Start Time</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Start Time
+            </label>
             <input
               type="time"
               value={newDateSpecificAvailability.startTime}
-              onChange={(e) => setNewDateSpecificAvailability({ ...newDateSpecificAvailability, startTime: e.target.value })}
+              onChange={(e) =>
+                setNewDateSpecificAvailability({
+                  ...newDateSpecificAvailability,
+                  startTime: e.target.value,
+                })
+              }
               className="w-full border border-gray-300 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">End Time</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              End Time
+            </label>
             <input
               type="time"
               value={newDateSpecificAvailability.endTime}
-              onChange={(e) => setNewDateSpecificAvailability({ ...newDateSpecificAvailability, endTime: e.target.value })}
+              onChange={(e) =>
+                setNewDateSpecificAvailability({
+                  ...newDateSpecificAvailability,
+                  endTime: e.target.value,
+                })
+              }
               className="w-full border border-gray-300 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Slot Duration</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Slot Duration
+            </label>
             <input
               type="number"
               value={newDateSpecificAvailability.slotDurationMinutes}
-              onChange={(e) => setNewDateSpecificAvailability({ ...newDateSpecificAvailability, slotDurationMinutes: parseInt(e.target.value) })}
+              onChange={(e) =>
+                setNewDateSpecificAvailability({
+                  ...newDateSpecificAvailability,
+                  slotDurationMinutes: parseInt(e.target.value),
+                })
+              }
               className="w-full border border-gray-300 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               min="15"
               step="15"
@@ -713,10 +899,21 @@ const CounselorDashboardPage = () => {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Type</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Type
+            </label>
             <select
               value={newDateSpecificAvailability.type}
-              onChange={(e) => setNewDateSpecificAvailability({ ...newDateSpecificAvailability, type: e.target.value, reason: e.target.value === "UNAVAILABLE" ? newDateSpecificAvailability.reason : "" })}
+              onChange={(e) =>
+                setNewDateSpecificAvailability({
+                  ...newDateSpecificAvailability,
+                  type: e.target.value,
+                  reason:
+                    e.target.value === "UNAVAILABLE"
+                      ? newDateSpecificAvailability.reason
+                      : "",
+                })
+              }
               className="w-full border border-gray-300 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
             >
@@ -726,11 +923,18 @@ const CounselorDashboardPage = () => {
           </div>
           {newDateSpecificAvailability.type === "UNAVAILABLE" && (
             <div className="lg:col-span-5 md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Reason for Unavailability</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Reason for Unavailability
+              </label>
               <input
                 type="text"
                 value={newDateSpecificAvailability.reason}
-                onChange={(e) => setNewDateSpecificAvailability({ ...newDateSpecificAvailability, reason: e.target.value })}
+                onChange={(e) =>
+                  setNewDateSpecificAvailability({
+                    ...newDateSpecificAvailability,
+                    reason: e.target.value,
+                  })
+                }
                 className="w-full border border-gray-300 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="e.g., Doctor's Appointment"
                 required
@@ -742,58 +946,96 @@ const CounselorDashboardPage = () => {
               type="submit"
               className="w-full md:w-auto bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-all duration-200 flex items-center justify-center space-x-2"
             >
-              <Plus className="w-5 h-5"/> <span>Add Exception</span>
+              <Plus className="w-5 h-5" /> <span>Add Exception</span>
             </button>
           </div>
         </form>
 
         <div className="space-y-4">
           {dateSpecificAvailability.map((avail) => (
-            <div key={avail.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200">
+            <div
+              key={avail.id}
+              className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200"
+            >
               <div>
-                <p className="font-medium text-gray-900">{dayjs(avail.specificDate).format("MMMM D, YYYY")}</p>
-                <p className="text-sm text-gray-600">
-                   {dayjs(avail.startTime, "HH:mm:ss").format("h:mm A")} - {dayjs(avail.endTime, "HH:mm:ss").format("h:mm A")} ({avail.slotDurationMinutes} min slots)
+                <p className="font-medium text-gray-900">
+                  {dayjs(avail.specificDate).format("MMMM D, YYYY")}
                 </p>
-                <p className={`text-sm font-semibold ${avail.type === "AVAILABLE" ? "text-green-600" : "text-red-600"}`}>
-                  {avail.type === "AVAILABLE" ? "Available" : `Unavailable${avail.reason ? `: ${avail.reason}` : ""}`}
+                <p className="text-sm text-gray-600">
+                  {dayjs(avail.startTime, "HH:mm:ss").format("h:mm A")} -{" "}
+                  {dayjs(avail.endTime, "HH:mm:ss").format("h:mm A")} (
+                  {avail.slotDurationMinutes} min slots)
+                </p>
+                <p
+                  className={`text-sm font-semibold ${
+                    avail.type === "AVAILABLE"
+                      ? "text-green-600"
+                      : "text-red-600"
+                  }`}
+                >
+                  {avail.type === "AVAILABLE"
+                    ? "Available"
+                    : `Unavailable${avail.reason ? `: ${avail.reason}` : ""}`}
                 </p>
               </div>
               <div className="flex space-x-2">
                 <button
                   onClick={() => {
-                    const newType: "AVAILABLE" | "UNAVAILABLE" = avail.type === "AVAILABLE" ? "UNAVAILABLE" : "AVAILABLE";
-                    const reason = newType === "UNAVAILABLE" ? prompt("Enter reason for unavailability:") : null;
+                    const newType: "AVAILABLE" | "UNAVAILABLE" =
+                      avail.type === "AVAILABLE" ? "UNAVAILABLE" : "AVAILABLE";
+                    const reason =
+                      newType === "UNAVAILABLE"
+                        ? prompt("Enter reason for unavailability:")
+                        : null;
 
                     if (newType === "UNAVAILABLE" && reason === null) {
-                        return; // User cancelled prompt
+                      return; // User cancelled prompt
                     }
 
-                    if (newType === "UNAVAILABLE" && (!reason || !reason.trim())) {
-                      toast.error("Reason is required when setting availability to Unavailable");
+                    if (
+                      newType === "UNAVAILABLE" &&
+                      (!reason || !reason.trim())
+                    ) {
+                      toast.error(
+                        "Reason is required when setting availability to Unavailable"
+                      );
                       return;
                     }
-                    
+
                     const updatePayload = {
-                        specificDate: avail.specificDate,
-                        startTime: avail.startTime,
-                        endTime: avail.endTime,
-                        slotDurationMinutes: avail.slotDurationMinutes,
-                        type: newType,
-                        reason: reason,
+                      specificDate: avail.specificDate,
+                      startTime: avail.startTime,
+                      endTime: avail.endTime,
+                      slotDurationMinutes: avail.slotDurationMinutes,
+                      type: newType,
+                      reason: reason,
                     };
 
-                    handleUpdateDateSpecificAvailability(avail.id, updatePayload);
+                    handleUpdateDateSpecificAvailability(
+                      avail.id,
+                      updatePayload
+                    );
                   }}
-                  title={avail.type === "AVAILABLE" ? "Set to Unavailable" : "Set to Available"}
+                  title={
+                    avail.type === "AVAILABLE"
+                      ? "Set to Unavailable"
+                      : "Set to Available"
+                  }
                   className="p-2 text-gray-600 hover:bg-white rounded-lg transition-colors"
                 >
-                  {avail.type === "AVAILABLE" ? <XCircle className="w-5 h-5 text-red-600" /> : <CheckCircle className="w-5 h-5 text-green-600" />}
+                  {avail.type === "AVAILABLE" ? (
+                    <XCircle className="w-5 h-5 text-red-600" />
+                  ) : (
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                  )}
                 </button>
                 <button
                   onClick={() => {
-                    const newStartTime = prompt("Enter new start time (HH:mm):", avail.startTime.split(':').slice(0, 2).join(':'));
-                    
+                    const newStartTime = prompt(
+                      "Enter new start time (HH:mm):",
+                      avail.startTime.split(":").slice(0, 2).join(":")
+                    );
+
                     if (newStartTime) {
                       const updatePayload = {
                         specificDate: avail.specificDate,
@@ -804,7 +1046,10 @@ const CounselorDashboardPage = () => {
                         reason: avail.reason,
                       };
 
-                      handleUpdateDateSpecificAvailability(avail.id, updatePayload);
+                      handleUpdateDateSpecificAvailability(
+                        avail.id,
+                        updatePayload
+                      );
                     }
                   }}
                   title="Edit Start Time"
@@ -829,36 +1074,62 @@ const CounselorDashboardPage = () => {
 
   const SettingsTab = () => (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-      <h3 className="text-xl font-semibold text-gray-900 mb-6">Counselor Settings</h3>
-      <form onSubmit={handleUpdateSettings} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <h3 className="text-xl font-semibold text-gray-900 mb-6">
+        Counselor Settings
+      </h3>
+      <form
+        onSubmit={handleUpdateSettings}
+        className="grid grid-cols-1 md:grid-cols-2 gap-6"
+      >
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Max Booking Days</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Max Booking Days
+          </label>
           <input
             type="number"
             value={settingsForm.maxBookingDays}
-            onChange={(e) => setSettingsForm({ ...settingsForm, maxBookingDays: parseInt(e.target.value) })}
+            onChange={(e) =>
+              setSettingsForm({
+                ...settingsForm,
+                maxBookingDays: parseInt(e.target.value),
+              })
+            }
             className="w-full border border-gray-300 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             min="1"
             max="365"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Default Slot Duration (min)</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Default Slot Duration (min)
+          </label>
           <input
             type="number"
             value={settingsForm.defaultSlotDurationMinutes}
-            onChange={(e) => setSettingsForm({ ...settingsForm, defaultSlotDurationMinutes: parseInt(e.target.value) })}
+            onChange={(e) =>
+              setSettingsForm({
+                ...settingsForm,
+                defaultSlotDurationMinutes: parseInt(e.target.value),
+              })
+            }
             className="w-full border border-gray-300 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             min="15"
             step="15"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Buffer Time (min)</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Buffer Time (min)
+          </label>
           <input
             type="number"
             value={settingsForm.bufferTimeMinutes}
-            onChange={(e) => setSettingsForm({ ...settingsForm, bufferTimeMinutes: parseInt(e.target.value) })}
+            onChange={(e) =>
+              setSettingsForm({
+                ...settingsForm,
+                bufferTimeMinutes: parseInt(e.target.value),
+              })
+            }
             className="w-full border border-gray-300 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             min="0"
             step="5"
@@ -868,21 +1139,41 @@ const CounselorDashboardPage = () => {
           <input
             type="checkbox"
             checked={settingsForm.autoAcceptAppointments}
-            onChange={(e) => setSettingsForm({ ...settingsForm, autoAcceptAppointments: e.target.checked })}
+            onChange={(e) =>
+              setSettingsForm({
+                ...settingsForm,
+                autoAcceptAppointments: e.target.checked,
+              })
+            }
             id="autoAccept"
             className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
           />
-          <label htmlFor="autoAccept" className="text-sm font-medium text-gray-700">Auto-Accept Appointments</label>
+          <label
+            htmlFor="autoAccept"
+            className="text-sm font-medium text-gray-700"
+          >
+            Auto-Accept Appointments
+          </label>
         </div>
         <div className="flex items-center space-x-3">
           <input
             type="checkbox"
             checked={settingsForm.requireApproval}
-            onChange={(e) => setSettingsForm({ ...settingsForm, requireApproval: e.target.checked })}
+            onChange={(e) =>
+              setSettingsForm({
+                ...settingsForm,
+                requireApproval: e.target.checked,
+              })
+            }
             id="requireApproval"
             className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
           />
-          <label htmlFor="requireApproval" className="text-sm font-medium text-gray-700">Require Approval</label>
+          <label
+            htmlFor="requireApproval"
+            className="text-sm font-medium text-gray-700"
+          >
+            Require Approval
+          </label>
         </div>
         <div className="md:col-span-2">
           <button
@@ -937,7 +1228,9 @@ const CounselorDashboardPage = () => {
                 disabled={refreshing}
                 className="flex items-center space-x-2 px-4 py-2.5 text-gray-600 hover:text-gray-900 hover:bg-white rounded-xl transition-all duration-200 border border-gray-200"
               >
-                <RefreshCw className={`w-5 h-5 ${refreshing ? "animate-spin" : ""}`} />
+                <RefreshCw
+                  className={`w-5 h-5 ${refreshing ? "animate-spin" : ""}`}
+                />
                 <span className="hidden sm:inline">Refresh</span>
               </button>
             </div>
@@ -948,7 +1241,12 @@ const CounselorDashboardPage = () => {
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-2">
             <div className="flex flex-wrap gap-2">
               <TabButton tab="dashboard" label="Dashboard" icon={Calendar} />
-              <TabButton tab="appointments" label="Appointments" icon={Calendar} count={stats.pendingApproval} />
+              <TabButton
+                tab="appointments"
+                label="Appointments"
+                icon={Calendar}
+                count={stats.pendingApproval}
+              />
               <TabButton tab="availability" label="Availability" icon={Clock} />
               <TabButton tab="settings" label="Settings" icon={Settings} />
             </div>
@@ -958,7 +1256,9 @@ const CounselorDashboardPage = () => {
         {activeTab === "dashboard" && <DashboardOverview />}
         {activeTab === "appointments" && (
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-8">
-            <h3 className="text-xl font-semibold text-gray-900 mb-6">Appointments</h3>
+            <h3 className="text-xl font-semibold text-gray-900 mb-6">
+              Appointments
+            </h3>
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
               <div className="flex flex-wrap gap-3">
                 <button
@@ -1017,7 +1317,9 @@ const CounselorDashboardPage = () => {
               {filteredAppointments.length === 0 ? (
                 <div className="text-center py-8">
                   <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500">No appointments found for this filter</p>
+                  <p className="text-gray-500">
+                    No appointments found for this filter
+                  </p>
                 </div>
               ) : (
                 filteredAppointments.map((appointment) => (

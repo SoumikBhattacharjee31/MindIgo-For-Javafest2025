@@ -1,5 +1,9 @@
-function getProviderLoginUrl(provider: 'google' | 'facebook' | 'github' | 'okta') {
-    return `http://localhost:8080/oauth2/authorization/${provider}`
-};
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-export {getProviderLoginUrl};
+function getProviderLoginUrl(
+  provider: "google" | "facebook" | "github" | "okta"
+) {
+  return `${API_BASE_URL}/oauth2/authorization/${provider}`;
+}
+
+export { getProviderLoginUrl };

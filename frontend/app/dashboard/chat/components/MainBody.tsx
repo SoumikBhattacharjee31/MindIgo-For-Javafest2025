@@ -1,8 +1,16 @@
-'use client';
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Send, Bot, User, ChevronUp, Loader2, AlertTriangle, Sparkles } from 'lucide-react';
-import { Message } from '../dataType';
-import MainBodyHeader from './MainBodyHeader';
+"use client";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import {
+  Send,
+  Bot,
+  User,
+  ChevronUp,
+  Loader2,
+  AlertTriangle,
+  Sparkles,
+} from "lucide-react";
+import { Message } from "@/app/dashboard/chat/dataType";
+import MainBodyHeader from "./MainBodyHeader";
 
 interface MainBodyProps {
   sessionId: string | null;
@@ -18,9 +26,16 @@ interface MainBodyProps {
 }
 
 const MainBody = ({
-  sessionId, messages, isLoading, error, inputMessage,
-  setInputMessage, sendMessage, onLoadMoreMessages,
-  hasMoreMessages = false, isLoadingMessages = false
+  sessionId,
+  messages,
+  isLoading,
+  error,
+  inputMessage,
+  setInputMessage,
+  sendMessage,
+  onLoadMoreMessages,
+  hasMoreMessages = false,
+  isLoadingMessages = false,
 }: MainBodyProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -29,7 +44,7 @@ const MainBody = ({
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
 
   const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, []);
 
   const handleScroll = useCallback(() => {
@@ -42,7 +57,12 @@ const MainBody = ({
 
     setShowScrollToBottom(!isScrolledToBottom);
 
-    if (isNearTop && hasMoreMessages && !isLoadingMessages && onLoadMoreMessages) {
+    if (
+      isNearTop &&
+      hasMoreMessages &&
+      !isLoadingMessages &&
+      onLoadMoreMessages
+    ) {
       const nextPage = currentPage + 1;
       setCurrentPage(nextPage);
       onLoadMoreMessages(nextPage);
@@ -51,17 +71,20 @@ const MainBody = ({
 
   const getSafetyAlertColor = useCallback((alert?: string) => {
     switch (alert) {
-      case 'crisis': return 'border-l-4 border-l-red-500 bg-red-50/80';
-      case 'mild': return 'border-l-4 border-l-amber-500 bg-amber-50/80';
-      default: return '';
+      case "crisis":
+        return "border-l-4 border-l-red-500 bg-red-50/80";
+      case "mild":
+        return "border-l-4 border-l-amber-500 bg-amber-50/80";
+      default:
+        return "";
     }
   }, []);
 
   useEffect(() => {
     const container = messagesContainerRef.current;
     if (container) {
-      container.addEventListener('scroll', handleScroll);
-      return () => container.removeEventListener('scroll', handleScroll);
+      container.addEventListener("scroll", handleScroll);
+      return () => container.removeEventListener("scroll", handleScroll);
     }
   }, [handleScroll]);
 
@@ -71,7 +94,6 @@ const MainBody = ({
 
   return (
     <div className="flex-1 flex flex-col bg-gradient-to-br from-white/95 via-blue-50/80 to-indigo-50/60 backdrop-blur-sm relative h-screen">
-
       {/* Header */}
       <div className="flex-shrink-0 bg-white/90 backdrop-blur-md border-b border-indigo-100/50 px-8 py-6 shadow-sm">
         <MainBodyHeader messages={messages} />
@@ -87,14 +109,16 @@ const MainBody = ({
       <div
         ref={messagesContainerRef}
         className="flex-1 overflow-y-auto p-8 space-y-6"
-        style={{ scrollBehavior: 'smooth' }}
+        style={{ scrollBehavior: "smooth" }}
       >
         {/* Load More Indicator */}
         {isLoadingMessages && (
           <div className="text-center py-4">
             <div className="inline-flex items-center px-4 py-2 bg-white/90 backdrop-blur-sm rounded-full shadow-lg border border-indigo-200/50">
               <Loader2 className="w-4 h-4 animate-spin mr-2 text-indigo-600" />
-              <span className="text-sm text-indigo-600 font-medium">Loading more messages...</span>
+              <span className="text-sm text-indigo-600 font-medium">
+                Loading more messages...
+              </span>
             </div>
           </div>
         )}
@@ -103,7 +127,9 @@ const MainBody = ({
         {!hasMoreMessages && messages.length > 10 && (
           <div className="text-center py-4">
             <div className="inline-flex items-center px-4 py-2 bg-slate-100/80 backdrop-blur-sm rounded-full">
-              <span className="text-xs text-slate-500">Beginning of conversation</span>
+              <span className="text-xs text-slate-500">
+                Beginning of conversation
+              </span>
             </div>
           </div>
         )}
@@ -116,9 +142,12 @@ const MainBody = ({
                 <Bot className="w-16 h-16 mx-auto text-indigo-400" />
                 <Sparkles className="w-6 h-6 text-purple-500 absolute -top-2 -right-4 animate-pulse" />
               </div>
-              <p className="text-xl font-semibold text-slate-800 mb-3">Welcome to MindChat</p>
+              <p className="text-xl font-semibold text-slate-800 mb-3">
+                Welcome to MindChat
+              </p>
               <p className="text-slate-600 leading-relaxed">
-                I'm here to listen and support you. Share how you're feeling today, and let's start this conversation together.
+                I'm here to listen and support you. Share how you're feeling
+                today, and let's start this conversation together.
               </p>
             </div>
           </div>
@@ -126,24 +155,43 @@ const MainBody = ({
 
         {/* Messages */}
         {messages.map((message, index) => (
-          <div key={index} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`flex max-w-[75%] ${message.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg ${message.role === 'user'
-                  ? 'bg-gradient-to-r from-blue-500 to-purple-500 ml-3'
-                  : 'bg-gradient-to-r from-indigo-500 to-purple-500 mr-3'
-                }`}>
-                {message.role === 'user' ? (
+          <div
+            key={index}
+            className={`flex ${
+              message.role === "user" ? "justify-end" : "justify-start"
+            }`}
+          >
+            <div
+              className={`flex max-w-[75%] ${
+                message.role === "user" ? "flex-row-reverse" : "flex-row"
+              }`}
+            >
+              <div
+                className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg ${
+                  message.role === "user"
+                    ? "bg-gradient-to-r from-blue-500 to-purple-500 ml-3"
+                    : "bg-gradient-to-r from-indigo-500 to-purple-500 mr-3"
+                }`}
+              >
+                {message.role === "user" ? (
                   <User className="w-5 h-5 text-white" />
                 ) : (
                   <Bot className="w-5 h-5 text-white" />
                 )}
               </div>
 
-              <div className={`rounded-3xl px-6 py-4 shadow-lg backdrop-blur-sm ${message.role === 'user'
-                  ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white'
-                  : `bg-white/90 text-slate-800 border border-slate-200/50 ${getSafetyAlertColor(message.safety_alert)}`
-                }`}>
-                <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
+              <div
+                className={`rounded-3xl px-6 py-4 shadow-lg backdrop-blur-sm ${
+                  message.role === "user"
+                    ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white"
+                    : `bg-white/90 text-slate-800 border border-slate-200/50 ${getSafetyAlertColor(
+                        message.safety_alert
+                      )}`
+                }`}
+              >
+                <p className="whitespace-pre-wrap leading-relaxed">
+                  {message.content}
+                </p>
               </div>
             </div>
           </div>
@@ -160,8 +208,14 @@ const MainBody = ({
                 <div className="flex items-center space-x-2">
                   <div className="flex space-x-1">
                     <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                    <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                    <div
+                      className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"
+                      style={{ animationDelay: "0.1s" }}
+                    ></div>
+                    <div
+                      className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"
+                      style={{ animationDelay: "0.2s" }}
+                    ></div>
                   </div>
                   <span className="text-slate-500 text-sm">Thinking...</span>
                 </div>
@@ -194,7 +248,7 @@ const MainBody = ({
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
+                if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
                   sendMessage(e);
                 }
@@ -217,7 +271,9 @@ const MainBody = ({
         {messages.length > 0 && (
           <div className="mt-2 text-center">
             <span className="text-xs text-slate-500">
-              {hasMoreMessages ? 'Scroll up for more messages' : 'All messages loaded'}
+              {hasMoreMessages
+                ? "Scroll up for more messages"
+                : "All messages loaded"}
             </span>
           </div>
         )}

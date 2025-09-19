@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 
 export type User = {
   id: number;
@@ -11,7 +11,7 @@ export type User = {
   createdAt: string;
   lastLoginAt: string;
   emailVerified: boolean;
-}
+};
 const useStore = () => {
   const [user, setUser] = useState<User | null>(null);
 

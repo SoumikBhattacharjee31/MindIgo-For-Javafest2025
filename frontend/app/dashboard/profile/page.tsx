@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import useStore from "@/app/store/store";
 import Image from "next/image";
@@ -9,7 +9,7 @@ const Profile = () => {
   const { user, setUser } = useStore();
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
-  
+
   // Local state for editable fields
   const [editableData, setEditableData] = useState({
     name: "",
@@ -61,13 +61,13 @@ const Profile = () => {
 
   const handleLogout = () => {
     setUser(null);
-    router.push('/');
+    router.push("/");
   };
 
   const handleInputChange = (field: string, value: string) => {
-    setEditableData(prev => ({
+    setEditableData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
@@ -124,7 +124,9 @@ const Profile = () => {
                   type="url"
                   placeholder="Profile Image URL"
                   value={editableData.profileImageUrl}
-                  onChange={(e) => handleInputChange('profileImageUrl', e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("profileImageUrl", e.target.value)
+                  }
                   className="w-48 p-2 border border-gray-300 rounded-lg text-sm"
                 />
               )}
@@ -133,56 +135,74 @@ const Profile = () => {
             <div className="flex-1 space-y-4">
               {/* Name */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Name
+                </label>
                 {isEditing ? (
                   <input
                     type="text"
                     value={editableData.name}
-                    onChange={(e) => handleInputChange('name', e.target.value)}
+                    onChange={(e) => handleInputChange("name", e.target.value)}
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 ) : (
-                  <p className="text-lg font-semibold text-gray-800">{user?.name || "N/A"}</p>
+                  <p className="text-lg font-semibold text-gray-800">
+                    {user?.name || "N/A"}
+                  </p>
                 )}
               </div>
 
               {/* Email */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email
+                </label>
                 {isEditing ? (
                   <input
                     type="email"
                     value={editableData.email}
-                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    onChange={(e) => handleInputChange("email", e.target.value)}
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 ) : (
-                  <p className="text-lg text-gray-600">{user?.email || "N/A"}</p>
+                  <p className="text-lg text-gray-600">
+                    {user?.email || "N/A"}
+                  </p>
                 )}
               </div>
 
               {/* Date of Birth */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Date of Birth
+                </label>
                 {isEditing ? (
                   <input
                     type="date"
                     value={editableData.dateOfBirth}
-                    onChange={(e) => handleInputChange('dateOfBirth', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("dateOfBirth", e.target.value)
+                    }
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 ) : (
-                  <p className="text-lg text-gray-600">{user?.dateOfBirth || "N/A"}</p>
+                  <p className="text-lg text-gray-600">
+                    {user?.dateOfBirth || "N/A"}
+                  </p>
                 )}
               </div>
 
               {/* Gender */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Gender</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Gender
+                </label>
                 {isEditing ? (
                   <select
                     value={editableData.gender}
-                    onChange={(e) => handleInputChange('gender', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("gender", e.target.value)
+                    }
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     <option value="">Select Gender</option>
@@ -192,7 +212,9 @@ const Profile = () => {
                     <option value="prefer-not-to-say">Prefer not to say</option>
                   </select>
                 ) : (
-                  <p className="text-lg text-gray-600">{user?.gender || "N/A"}</p>
+                  <p className="text-lg text-gray-600">
+                    {user?.gender || "N/A"}
+                  </p>
                 )}
               </div>
             </div>
@@ -200,24 +222,38 @@ const Profile = () => {
 
           {/* Account Information */}
           <div className="border-t border-gray-200 pt-6 mb-6">
-            <h3 className="text-xl font-semibold text-gray-800 mb-4">Account Information</h3>
+            <h3 className="text-xl font-semibold text-gray-800 mb-4">
+              Account Information
+            </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Role
+                </label>
                 <p className="text-gray-600">{user?.role || "N/A"}</p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email Verified</label>
-                <p className={`font-medium ${user?.emailVerified ? "text-green-600" : "text-red-600"}`}>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email Verified
+                </label>
+                <p
+                  className={`font-medium ${
+                    user?.emailVerified ? "text-green-600" : "text-red-600"
+                  }`}
+                >
                   {user?.emailVerified ? "Yes" : "No"}
                 </p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Member Since</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Member Since
+                </label>
                 <p className="text-gray-600">{user?.createdAt || "N/A"}</p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Last Login</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Last Login
+                </label>
                 <p className="text-gray-600">{user?.lastLoginAt || "N/A"}</p>
               </div>
             </div>

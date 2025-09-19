@@ -2,6 +2,8 @@ import Link from "next/link";
 import React from "react";
 import axios from "axios";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
 interface MainMenuProps {
   setCurPage: (curPage: string) => void;
   sound: boolean;
@@ -14,7 +16,7 @@ const MainMenu: React.FC<MainMenuProps> = ({ setCurPage, sound, setArr }) => {
     e.preventDefault();
     try {
       const response = await axios.get(
-        "http://localhost:8080/api/v1/game/infinity-loop/get-grid",
+        `${API_BASE_URL}/api/v1/game/infinity-loop/get-grid`,
         {
           withCredentials: true,
         }

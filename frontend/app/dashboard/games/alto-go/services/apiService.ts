@@ -25,18 +25,19 @@ class ApiService {
   private timeout: number = 10000; // 10 seconds
 
   constructor() {
-    this.baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080';
+    this.baseUrl =
+      process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
   }
 
   private async makeRequest<T>(
-    endpoint: string, 
+    endpoint: string,
     options: RequestInit = {},
     retryCount: number = 0
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseUrl}${endpoint}`;
-    
+
     const defaultHeaders = {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     };
 
     const controller = new AbortController();
@@ -45,7 +46,7 @@ class ApiService {
     try {
       const response = await fetch(url, {
         ...options,
-        credentials: 'include', // <-- This is the key change
+        credentials: "include", // <-- This is the key change
         headers: {
           ...defaultHeaders,
           ...options.headers,
@@ -59,13 +60,13 @@ class ApiService {
         // Handle different HTTP status codes
         switch (response.status) {
           case 401:
-            throw new Error('Unauthorized - Please login again');
+            throw new Error("Unauthorized - Please login again");
           case 403:
-            throw new Error('Forbidden - Access denied');
+            throw new Error("Forbidden - Access denied");
           case 404:
-            throw new Error('Endpoint not found');
+            throw new Error("Endpoint not found");
           case 500:
-            throw new Error('Server error - Please try again later');
+            throw new Error("Server error - Please try again later");
           default:
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -75,40 +76,52 @@ class ApiService {
       return data;
     } catch (error) {
       clearTimeout(timeoutId);
-      
+
       // Handle different types of errors
       if (error instanceof Error) {
-        if (error.name === 'AbortError') {
-          throw new Error('Request timeout - Please check your connection');
+        if (error.name === "AbortError") {
+          throw new Error("Request timeout - Please check your connection");
         }
-        
+
         // Network errors - retry if attempts remaining
-        if (error.message.includes('fetch') && retryCount < this.retryAttempts) {
-          console.warn(`Request failed, retrying... (${retryCount + 1}/${this.retryAttempts})`);
+        if (
+          error.message.includes("fetch") &&
+          retryCount < this.retryAttempts
+        ) {
+          console.warn(
+            `Request failed, retrying... (${retryCount + 1}/${
+              this.retryAttempts
+            })`
+          );
           await this.delay(1000 * (retryCount + 1)); // Exponential backoff
           return this.makeRequest<T>(endpoint, options, retryCount + 1);
         }
       }
-      
-      console.error('API request failed:', error);
+
+      console.error("API request failed:", error);
       throw error;
     }
   }
 
   private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  async saveScore(scoreRequest: SaveScoreRequest): Promise<ApiResponse<ScoreResponse>> {
+  async saveScore(
+    scoreRequest: SaveScoreRequest
+  ): Promise<ApiResponse<ScoreResponse>> {
     try {
-      const response = await this.makeRequest<ScoreResponse>('/api/v1/game/snowboarder/save', {
-        method: 'POST',
-        body: JSON.stringify(scoreRequest),
-      });
+      const response = await this.makeRequest<ScoreResponse>(
+        "/api/v1/game/snowboarder/save",
+        {
+          method: "POST",
+          body: JSON.stringify(scoreRequest),
+        }
+      );
 
       // Store the score locally as backup
       this.storeScoreLocally(scoreRequest.score, true);
-      
+
       return response;
     } catch (error) {
       // Store score locally if request fails
@@ -119,19 +132,22 @@ class ApiService {
 
   async getTop10Scores(): Promise<ApiResponse<ScoreResponse[]>> {
     try {
-      return await this.makeRequest<ScoreResponse[]>('/api/v1/game/snowboarder/top10', {
-        method: 'GET',
-      });
+      return await this.makeRequest<ScoreResponse[]>(
+        "/api/v1/game/snowboarder/top10",
+        {
+          method: "GET",
+        }
+      );
     } catch (error) {
       // Return offline scores if available
       const offlineScores = this.getOfflineScores();
       if (offlineScores.length > 0) {
-        console.warn('Backend unavailable, returning offline scores');
+        console.warn("Backend unavailable, returning offline scores");
         return {
           success: true,
-          message: 'Offline scores loaded',
+          message: "Offline scores loaded",
           data: offlineScores,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         };
       }
       throw error;
@@ -140,29 +156,32 @@ class ApiService {
 
   async getPersonalBest(): Promise<ApiResponse<ScoreResponse | null>> {
     try {
-      return await this.makeRequest<ScoreResponse | null>('/api/v1/game/snowboarder/personal-best', {
-        method: 'GET',
-      });
+      return await this.makeRequest<ScoreResponse | null>(
+        "/api/v1/game/snowboarder/personal-best",
+        {
+          method: "GET",
+        }
+      );
     } catch (error) {
       // Return offline personal best if available
-      const offlineHighScore = localStorage.getItem('snowboarder_highscore');
+      const offlineHighScore = localStorage.getItem("snowboarder_highscore");
       if (offlineHighScore && parseInt(offlineHighScore) > 0) {
-        const userId = localStorage.getItem('userId') || 'offline';
-        const userName = localStorage.getItem('userName') || 'You';
-        
-        console.warn('Backend unavailable, returning offline personal best');
+        const userId = localStorage.getItem("userId") || "offline";
+        const userName = localStorage.getItem("userName") || "You";
+
+        console.warn("Backend unavailable, returning offline personal best");
         return {
           success: true,
-          message: 'Offline personal best loaded',
+          message: "Offline personal best loaded",
           data: {
             id: 1,
             playerId: userId,
             playerName: userName,
             score: parseInt(offlineHighScore),
             createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
+            updatedAt: new Date().toISOString(),
           },
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         };
       }
       throw error;
@@ -171,38 +190,49 @@ class ApiService {
 
   async getMyScores(): Promise<ApiResponse<ScoreResponse[]>> {
     try {
-      return await this.makeRequest<ScoreResponse[]>('/api/v1/game/snowboarder/my-scores', {
-        method: 'GET',
-      });
+      return await this.makeRequest<ScoreResponse[]>(
+        "/api/v1/game/snowboarder/my-scores",
+        {
+          method: "GET",
+        }
+      );
     } catch (error) {
       // Return offline personal scores if available
       const offlineScores = this.getOfflinePersonalScores();
       if (offlineScores.length > 0) {
-        console.warn('Backend unavailable, returning offline personal scores');
+        console.warn("Backend unavailable, returning offline personal scores");
         return {
           success: true,
-          message: 'Offline personal scores loaded',
+          message: "Offline personal scores loaded",
           data: offlineScores,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         };
       }
       throw error;
     }
   }
 
-  async getPlayerScores(playerId: string): Promise<ApiResponse<ScoreResponse[]>> {
-    return this.makeRequest<ScoreResponse[]>(`/api/v1/game/snowboarder/player/${playerId}`, {
-      method: 'GET',
-    });
+  async getPlayerScores(
+    playerId: string
+  ): Promise<ApiResponse<ScoreResponse[]>> {
+    return this.makeRequest<ScoreResponse[]>(
+      `/api/v1/game/snowboarder/player/${playerId}`,
+      {
+        method: "GET",
+      }
+    );
   }
 
   async checkConnection(): Promise<boolean> {
     try {
-      const response = await fetch(`${this.baseUrl}/api/v1/game/snowboarder/top10`, {
-        method: 'HEAD',
-        credentials: 'include', // <-- Also added here for consistency
-        signal: AbortSignal.timeout(5000)
-      });
+      const response = await fetch(
+        `${this.baseUrl}/api/v1/game/snowboarder/top10`,
+        {
+          method: "HEAD",
+          credentials: "include", // <-- Also added here for consistency
+          signal: AbortSignal.timeout(5000),
+        }
+      );
       return response.ok;
     } catch (error) {
       return false;
@@ -210,13 +240,15 @@ class ApiService {
   }
 
   private storeScoreLocally(score: number, uploaded: boolean): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
 
     try {
-      const localScores = JSON.parse(localStorage.getItem('snowboarder_offline_scores') || '[]');
-      const userId = localStorage.getItem('userId') || 'anonymous';
-      const userName = localStorage.getItem('userName') || 'Anonymous';
-      
+      const localScores = JSON.parse(
+        localStorage.getItem("snowboarder_offline_scores") || "[]"
+      );
+      const userId = localStorage.getItem("userId") || "anonymous";
+      const userName = localStorage.getItem("userName") || "Anonymous";
+
       localScores.push({
         id: Date.now(),
         playerId: userId,
@@ -224,7 +256,7 @@ class ApiService {
         score: score,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        uploaded: uploaded
+        uploaded: uploaded,
       });
 
       // Keep only the last 50 scores to avoid localStorage bloat
@@ -232,27 +264,34 @@ class ApiService {
         localScores.splice(0, localScores.length - 50);
       }
 
-      localStorage.setItem('snowboarder_offline_scores', JSON.stringify(localScores));
+      localStorage.setItem(
+        "snowboarder_offline_scores",
+        JSON.stringify(localScores)
+      );
 
       // Update high score if this is better
-      const currentHighScore = parseInt(localStorage.getItem('snowboarder_highscore') || '0');
+      const currentHighScore = parseInt(
+        localStorage.getItem("snowboarder_highscore") || "0"
+      );
       if (score > currentHighScore) {
-        localStorage.setItem('snowboarder_highscore', score.toString());
+        localStorage.setItem("snowboarder_highscore", score.toString());
       }
     } catch (error) {
-      console.error('Failed to store score locally:', error);
+      console.error("Failed to store score locally:", error);
     }
   }
 
   private getOfflineScores(): ScoreResponse[] {
-    if (typeof window === 'undefined') return [];
+    if (typeof window === "undefined") return [];
 
     try {
-      const localScores = JSON.parse(localStorage.getItem('snowboarder_offline_scores') || '[]');
-      
+      const localScores = JSON.parse(
+        localStorage.getItem("snowboarder_offline_scores") || "[]"
+      );
+
       // Create a map to get the highest score per player
       const playerBestScores = new Map<string, ScoreResponse>();
-      
+
       localScores.forEach((score: any) => {
         const existing = playerBestScores.get(score.playerId);
         if (!existing || score.score > existing.score) {
@@ -267,37 +306,69 @@ class ApiService {
 
       // Add some dummy scores if we don't have enough
       const dummyScores = [
-        { id: 1001, playerId: 'ai_player_1', playerName: 'SnowPro', score: 8500 },
-        { id: 1002, playerId: 'ai_player_2', playerName: 'ChillRider', score: 7200 },
-        { id: 1003, playerId: 'ai_player_3', playerName: 'IceBreaker', score: 6800 },
-        { id: 1004, playerId: 'ai_player_4', playerName: 'SlopeStorm', score: 5900 },
-        { id: 1005, playerId: 'ai_player_5', playerName: 'FrostFlyer', score: 5100 }
+        {
+          id: 1001,
+          playerId: "ai_player_1",
+          playerName: "SnowPro",
+          score: 8500,
+        },
+        {
+          id: 1002,
+          playerId: "ai_player_2",
+          playerName: "ChillRider",
+          score: 7200,
+        },
+        {
+          id: 1003,
+          playerId: "ai_player_3",
+          playerName: "IceBreaker",
+          score: 6800,
+        },
+        {
+          id: 1004,
+          playerId: "ai_player_4",
+          playerName: "SlopeStorm",
+          score: 5900,
+        },
+        {
+          id: 1005,
+          playerId: "ai_player_5",
+          playerName: "FrostFlyer",
+          score: 5100,
+        },
       ];
 
-      dummyScores.forEach(dummy => {
-        if (topScores.length < 10 && !topScores.some(s => s.score >= dummy.score)) {
+      dummyScores.forEach((dummy) => {
+        if (
+          topScores.length < 10 &&
+          !topScores.some((s) => s.score >= dummy.score)
+        ) {
           topScores.push({
             ...dummy,
-            createdAt: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
-            updatedAt: new Date().toISOString()
+            createdAt: new Date(
+              Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000
+            ).toISOString(),
+            updatedAt: new Date().toISOString(),
           });
         }
       });
 
       return topScores.sort((a, b) => b.score - a.score).slice(0, 10);
     } catch (error) {
-      console.error('Failed to get offline scores:', error);
+      console.error("Failed to get offline scores:", error);
       return [];
     }
   }
 
   private getOfflinePersonalScores(): ScoreResponse[] {
-    if (typeof window === 'undefined') return [];
+    if (typeof window === "undefined") return [];
 
     try {
-      const localScores = JSON.parse(localStorage.getItem('snowboarder_offline_scores') || '[]');
-      const userId = localStorage.getItem('userId');
-      
+      const localScores = JSON.parse(
+        localStorage.getItem("snowboarder_offline_scores") || "[]"
+      );
+      const userId = localStorage.getItem("userId");
+
       if (!userId) return [];
 
       return localScores
@@ -305,16 +376,18 @@ class ApiService {
         .sort((a: any, b: any) => b.score - a.score)
         .slice(0, 10);
     } catch (error) {
-      console.error('Failed to get offline personal scores:', error);
+      console.error("Failed to get offline personal scores:", error);
       return [];
     }
   }
 
   async uploadPendingScores(): Promise<void> {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
 
     try {
-      const localScores = JSON.parse(localStorage.getItem('snowboarder_offline_scores') || '[]');
+      const localScores = JSON.parse(
+        localStorage.getItem("snowboarder_offline_scores") || "[]"
+      );
       const pendingScores = localScores.filter((score: any) => !score.uploaded);
 
       for (const score of pendingScores) {
@@ -323,19 +396,26 @@ class ApiService {
           // Mark as uploaded
           score.uploaded = true;
         } catch (error) {
-          console.warn('Failed to upload pending score:', score.score, error);
+          console.warn("Failed to upload pending score:", score.score, error);
           break; // Stop if upload fails
         }
       }
 
       // Update localStorage with upload status
-      localStorage.setItem('snowboarder_offline_scores', JSON.stringify(localScores));
-      
+      localStorage.setItem(
+        "snowboarder_offline_scores",
+        JSON.stringify(localScores)
+      );
+
       if (pendingScores.length > 0) {
-        console.log(`Successfully uploaded ${pendingScores.filter((s: any) => s.uploaded).length} pending scores`);
+        console.log(
+          `Successfully uploaded ${
+            pendingScores.filter((s: any) => s.uploaded).length
+          } pending scores`
+        );
       }
     } catch (error) {
-      console.error('Failed to upload pending scores:', error);
+      console.error("Failed to upload pending scores:", error);
     }
   }
 }

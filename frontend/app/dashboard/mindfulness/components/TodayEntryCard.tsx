@@ -1,6 +1,10 @@
-import {  Mood, Description, Reason } from "../dataTypes";
+import {
+  Mood,
+  Description,
+  Reason,
+  Entry,
+} from "@/app/dashboard/mindfulness/dataTypes";
 // import { Entry } from "./MoodCheckinCard";
-import { Entry } from '../dataTypes';
 
 interface Props {
   entry: Entry;

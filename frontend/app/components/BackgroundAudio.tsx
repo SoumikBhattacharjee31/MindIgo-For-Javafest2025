@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import { useEffect, useRef } from "react";
 
@@ -7,7 +7,7 @@ interface BackgroundAudioProps {
   muted: boolean;
   loop?: boolean;
   reset?: boolean;
-};
+}
 
 const BackgroundAudio = ({
   srcUrl,
@@ -22,9 +22,9 @@ const BackgroundAudio = ({
     if (!audioElement) return;
 
     audioElement.muted = muted;
-    
+
     if (reset) {
-      audioElement.currentTime = 0; 
+      audioElement.currentTime = 0;
     }
 
     if (muted) {
@@ -36,11 +36,7 @@ const BackgroundAudio = ({
     }
   }, [muted, reset]);
 
-  return <audio 
-          ref={audioRef} 
-          src={srcUrl} 
-          loop={loop} 
-          />;
+  return <audio ref={audioRef} src={srcUrl} loop={loop} />;
 };
 
 export default BackgroundAudio;

@@ -1,5 +1,5 @@
-import React, { Suspense } from 'react';
-import ChatContainer from './components/ChatContainer';
+import React, { Suspense } from "react";
+import ChatContainer from "./components/ChatContainer";
 
 // Create a fallback loading component
 const ChatLoading = () => (

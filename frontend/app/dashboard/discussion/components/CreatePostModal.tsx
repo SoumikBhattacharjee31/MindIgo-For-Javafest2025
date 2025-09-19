@@ -7,7 +7,7 @@ import {
   PostResponse,
   POST_CATEGORIES,
   CreatePostRequest,
-} from "@/app/api/discussionService";
+} from "@/app/dashboard/discussion/api";
 
 interface CreatePostModalProps {
   isOpen: boolean;

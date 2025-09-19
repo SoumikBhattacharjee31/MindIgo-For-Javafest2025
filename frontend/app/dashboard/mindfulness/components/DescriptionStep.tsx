@@ -1,4 +1,4 @@
-import { Description } from "../dataTypes";
+import { Description } from "@/app/dashboard/mindfulness/dataTypes";
 
 interface Props {
   descriptions: Description[];
@@ -28,7 +28,9 @@ const DescriptionStep = ({
             nextStep();
           }}
           className={`group relative p-4 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 transition-all duration-300 transform hover:scale-105 ${
-            selectedDescription?.text === desc.text ? "bg-white/30 scale-105" : ""
+            selectedDescription?.text === desc.text
+              ? "bg-white/30 scale-105"
+              : ""
           }`}
         >
           <div className="flex items-center space-x-3">

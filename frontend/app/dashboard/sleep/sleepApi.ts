@@ -1,7 +1,7 @@
 // sleepApi.ts
-import axios from 'axios';
+import axios from "axios";
 
-const BASE_URL = 'http://localhost:8080';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 // Types matching the backend DTOs
 export interface SleepRequest {
@@ -25,7 +25,7 @@ export interface ApiResponseClass<T> {
 
 // Configure axios instance
 const apiClient = axios.create({
-  baseURL: BASE_URL,
+  baseURL: API_BASE_URL,
   withCredentials: true,
 });
 
@@ -33,11 +33,11 @@ const apiClient = axios.create({
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    console.error('Sleep API Error:', error);
+    console.error("Sleep API Error:", error);
     if (error.response?.data?.message) {
       throw new Error(error.response.data.message);
     }
-    throw new Error(error.message || 'An unexpected error occurred');
+    throw new Error(error.message || "An unexpected error occurred");
   }
 );
 
@@ -48,23 +48,28 @@ export const sleepApi = {
    */
   saveSleep: async (sleepData: SleepRequest): Promise<SleepResponse> => {
     try {
-      console.log('Saving sleep data:', sleepData);
-      
+      console.log("Saving sleep data:", sleepData);
+
       // Validate the request data
       if (!sleepData.date || !sleepData.sleepTime || !sleepData.wakeTime) {
-        throw new Error('Missing required fields: date, sleepTime, or wakeTime');
+        throw new Error(
+          "Missing required fields: date, sleepTime, or wakeTime"
+        );
       }
-      
+
       // Validate date format (YYYY-MM-DD)
       const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
       if (!dateRegex.test(sleepData.date)) {
-        throw new Error('Invalid date format. Expected YYYY-MM-DD');
+        throw new Error("Invalid date format. Expected YYYY-MM-DD");
       }
-      
+
       // Validate time format (HH:MM:SS)
       const timeRegex = /^\d{2}:\d{2}:\d{2}$/;
-      if (!timeRegex.test(sleepData.sleepTime) || !timeRegex.test(sleepData.wakeTime)) {
-        throw new Error('Invalid time format. Expected HH:MM:SS');
+      if (
+        !timeRegex.test(sleepData.sleepTime) ||
+        !timeRegex.test(sleepData.wakeTime)
+      ) {
+        throw new Error("Invalid time format. Expected HH:MM:SS");
       }
 
       const response = await apiClient.post<ApiResponseClass<SleepResponse>>(
@@ -73,12 +78,12 @@ export const sleepApi = {
       );
 
       if (response.status !== 200 || !response.data.success) {
-        throw new Error(response.data.message || 'Failed to save sleep data');
+        throw new Error(response.data.message || "Failed to save sleep data");
       }
 
       return response.data.data!;
     } catch (error) {
-      console.error('Error saving sleep data:', error);
+      console.error("Error saving sleep data:", error);
       throw error;
     }
   },
@@ -88,20 +93,22 @@ export const sleepApi = {
    */
   getAllSleep: async (): Promise<SleepResponse[]> => {
     try {
-      console.log('Fetching all sleep records');
-      
+      console.log("Fetching all sleep records");
+
       const response = await apiClient.get<ApiResponseClass<SleepResponse[]>>(
         `/api/v1/content/sleep`
       );
 
-      console.log('Sleep records response:', response.data);
+      console.log("Sleep records response:", response.data);
       if (response.status !== 200 || !response.data.success) {
-        throw new Error(response.data.message || 'Failed to fetch sleep records');
+        throw new Error(
+          response.data.message || "Failed to fetch sleep records"
+        );
       }
 
       return response.data.data || [];
     } catch (error) {
-      console.error('Error fetching sleep records:', error);
+      console.error("Error fetching sleep records:", error);
       throw error;
     }
   },
@@ -112,26 +119,26 @@ export const sleepApi = {
    */
   deleteSleep: async (date: string): Promise<void> => {
     try {
-      console.log('Deleting sleep data for date:', date);
-      
+      console.log("Deleting sleep data for date:", date);
+
       // Validate date format
       const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
       if (!dateRegex.test(date)) {
-        throw new Error('Invalid date format. Expected YYYY-MM-DD');
+        throw new Error("Invalid date format. Expected YYYY-MM-DD");
       }
 
       const response = await apiClient.delete<ApiResponseClass<void>>(
         `/api/v1/content/sleep`,
         {
-          params: { date }
+          params: { date },
         }
       );
 
       if (response.status !== 200 || !response.data.success) {
-        throw new Error(response.data.message || 'Failed to delete sleep data');
+        throw new Error(response.data.message || "Failed to delete sleep data");
       }
     } catch (error) {
-      console.error('Error deleting sleep data:', error);
+      console.error("Error deleting sleep data:", error);
       throw error;
     }
   },
@@ -141,34 +148,39 @@ export const sleepApi = {
    * @param days - Number of days to retrieve (default: 7)
    * @param today - Today's date in YYYY-MM-DD format
    */
-  getLastNDaysSleep: async (days: number = 7, today: string): Promise<SleepResponse[]> => {
+  getLastNDaysSleep: async (
+    days: number = 7,
+    today: string
+  ): Promise<SleepResponse[]> => {
     try {
-      console.log('Fetching last N days sleep:', { days, today });
-      
+      console.log("Fetching last N days sleep:", { days, today });
+
       // Validate date format
       const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
       if (!dateRegex.test(today)) {
-        throw new Error('Invalid date format. Expected YYYY-MM-DD');
+        throw new Error("Invalid date format. Expected YYYY-MM-DD");
       }
-      
+
       if (days < 1 || days > 365) {
-        throw new Error('Days must be between 1 and 365');
+        throw new Error("Days must be between 1 and 365");
       }
 
       const response = await apiClient.get<ApiResponseClass<SleepResponse[]>>(
         `/api/v1/content/sleep/last`,
         {
-          params: { today, days }
+          params: { today, days },
         }
       );
 
       if (response.status !== 200 || !response.data.success) {
-        throw new Error(response.data.message || 'Failed to fetch sleep records');
+        throw new Error(
+          response.data.message || "Failed to fetch sleep records"
+        );
       }
 
       return response.data.data || [];
     } catch (error) {
-      console.error('Error fetching last N days sleep:', error);
+      console.error("Error fetching last N days sleep:", error);
       throw error;
     }
   },
@@ -180,19 +192,19 @@ export const sleepApi = {
   getSleepByDate: async (date: string): Promise<SleepResponse | null> => {
     try {
       const allSleep = await sleepApi.getAllSleep();
-      return allSleep.find(sleep => sleep.date === date) || null;
+      return allSleep.find((sleep) => sleep.date === date) || null;
     } catch (error) {
-      console.error('Error fetching sleep by date:', error);
+      console.error("Error fetching sleep by date:", error);
       throw error;
     }
-  }
+  },
 };
 
 // Helper function to format date for API (reusing from moodApi)
 export const formatDateForApi = (date: Date): string => {
   const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 };
 
@@ -212,18 +224,21 @@ export const formatTimeForDisplay = (time: string): string => {
 };
 
 // Helper function to calculate sleep duration
-export const calculateSleepDuration = (sleepTime: string, wakeTime: string): string => {
+export const calculateSleepDuration = (
+  sleepTime: string,
+  wakeTime: string
+): string => {
   const sleep = new Date(`2000-01-01T${sleepTime}`);
   let wake = new Date(`2000-01-01T${wakeTime}`);
-  
+
   // If wake time is earlier than sleep time, assume it's next day
   if (wake < sleep) {
     wake = new Date(`2000-01-02T${wakeTime}`);
   }
-  
+
   const diffMs = wake.getTime() - sleep.getTime();
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
   const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-  
+
   return `${diffHours}h ${diffMinutes}m`;
 };

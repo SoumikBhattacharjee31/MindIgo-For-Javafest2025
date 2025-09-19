@@ -10,7 +10,7 @@ import {
   Page,
   POST_CATEGORIES,
   USER_ROLES,
-} from "@/app/api/discussionService";
+} from "@/app/dashboard/discussion/api";
 import PostCard from "@/app/dashboard/discussion/components/PostCard";
 import CreatePostModal from "@/app/dashboard/discussion/components/CreatePostModal";
 import FilterSidebar from "@/app/dashboard/discussion/components/FilterSidebar";

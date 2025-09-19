@@ -7,18 +7,18 @@ export interface User {
 }
 
 class UserService {
-  private storageKey = 'snowboarder_user';
-  private sessionKey = 'snowboarder_session';
+  private storageKey = "snowboarder_user";
+  private sessionKey = "snowboarder_session";
 
   // Initialize user - for demo purposes, we'll create a mock user
   // In a real app, this would handle actual authentication
   initializeUser(): User {
-    if (typeof window === 'undefined') {
+    if (typeof window === "undefined") {
       return this.createGuestUser();
     }
 
     let user = this.getCurrentUser();
-    
+
     if (!user) {
       user = this.createGuestUser();
       this.saveUser(user);
@@ -33,7 +33,7 @@ class UserService {
       id: guestId,
       email: `guest_${guestId}@snowboarder.game`,
       name: `Player_${guestId.slice(-6)}`,
-      authToken: `guest_token_${guestId}`
+      authToken: `guest_token_${guestId}`,
     };
   }
 
@@ -42,14 +42,14 @@ class UserService {
   }
 
   getCurrentUser(): User | null {
-    if (typeof window === 'undefined') return null;
-    
+    if (typeof window === "undefined") return null;
+
     const userData = localStorage.getItem(this.storageKey);
     if (userData) {
       try {
         return JSON.parse(userData);
       } catch (error) {
-        console.error('Failed to parse user data:', error);
+        console.error("Failed to parse user data:", error);
         return null;
       }
     }
@@ -57,16 +57,16 @@ class UserService {
   }
 
   saveUser(user: User): void {
-    if (typeof window === 'undefined') return;
-    
+    if (typeof window === "undefined") return;
+
     localStorage.setItem(this.storageKey, JSON.stringify(user));
-    
+
     // Save individual fields for API headers
-    localStorage.setItem('userId', user.id);
-    localStorage.setItem('userEmail', user.email);
-    localStorage.setItem('userName', user.name);
+    localStorage.setItem("userId", user.id);
+    localStorage.setItem("userEmail", user.email);
+    localStorage.setItem("userName", user.name);
     if (user.authToken) {
-      localStorage.setItem('authToken', user.authToken);
+      localStorage.setItem("authToken", user.authToken);
     }
   }
 
@@ -84,13 +84,13 @@ class UserService {
   }
 
   logout(): void {
-    if (typeof window === 'undefined') return;
-    
+    if (typeof window === "undefined") return;
+
     localStorage.removeItem(this.storageKey);
-    localStorage.removeItem('userId');
-    localStorage.removeItem('userEmail');
-    localStorage.removeItem('userName');
-    localStorage.removeItem('authToken');
+    localStorage.removeItem("userId");
+    localStorage.removeItem("userEmail");
+    localStorage.removeItem("userName");
+    localStorage.removeItem("authToken");
     sessionStorage.clear();
   }
 
@@ -102,13 +102,13 @@ class UserService {
           const user: User = {
             id: this.generateGuestId(),
             email: email,
-            name: email.split('@')[0],
-            authToken: `auth_token_${Date.now()}`
+            name: email.split("@")[0],
+            authToken: `auth_token_${Date.now()}`,
           };
           this.saveUser(user);
           resolve(user);
         } else {
-          reject(new Error('Invalid credentials'));
+          reject(new Error("Invalid credentials"));
         }
       }, 1000);
     });
@@ -123,12 +123,12 @@ class UserService {
             id: this.generateGuestId(),
             email: email,
             name: name,
-            authToken: `auth_token_${Date.now()}`
+            authToken: `auth_token_${Date.now()}`,
           };
           this.saveUser(user);
           resolve(user);
         } else {
-          reject(new Error('Invalid registration data'));
+          reject(new Error("Invalid registration data"));
         }
       }, 1000);
     });

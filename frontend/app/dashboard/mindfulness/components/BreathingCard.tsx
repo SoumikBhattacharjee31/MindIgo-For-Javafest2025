@@ -1,15 +1,25 @@
-'use client'
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { BreathingExercise, LastSession } from '../dataTypes';
+"use client";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import {
+  BreathingExercise,
+  LastSession,
+} from "@/app/dashboard/mindfulness/dataTypes";
 
-import BreathingExerciseCard from './breathing-components/BreathingExerciseCard';
-import SettingsModal from './breathing-components/SettingsModal';
-import MindigoRecommendation from './breathing-components/MindigoRecommedation';
-import LastSessionCard from './breathing-components/LastSessionCard';
-import BreathingSession from './breathing-components/BreathingSession';
-import BreathingCardHeader from './breathing-components/BreathingCardHeader';
-import { successToast, errorToast } from '@/util/toastHelper';
-import { breathingApi, toBreathingExercise, toLastSession, toBreathingRequest, toBreathingSessionRequest, formatDateForApi } from '../api/breathingApi';
+import BreathingExerciseCard from "./breathing-components/BreathingExerciseCard";
+import SettingsModal from "./breathing-components/SettingsModal";
+import MindigoRecommendation from "./breathing-components/MindigoRecommedation";
+import LastSessionCard from "./breathing-components/LastSessionCard";
+import BreathingSession from "./breathing-components/BreathingSession";
+import BreathingCardHeader from "./breathing-components/BreathingCardHeader";
+import { successToast, errorToast } from "@/util/toastHelper";
+import {
+  breathingApi,
+  toBreathingExercise,
+  toLastSession,
+  toBreathingRequest,
+  toBreathingSessionRequest,
+  formatDateForApi,
+} from "@/app/dashboard/mindfulness/api/breathingApi";
 
 interface LoadingState {
   exercises: boolean;
@@ -26,8 +36,10 @@ interface ErrorState {
 const BreathingCard = () => {
   // State management
   const [exercises, setExercises] = useState<BreathingExercise[]>([]);
-  const [selectedExercise, setSelectedExercise] = useState<BreathingExercise | null>(null);
-  const [settingsExercise, setSettingsExercise] = useState<BreathingExercise | null>(null);
+  const [selectedExercise, setSelectedExercise] =
+    useState<BreathingExercise | null>(null);
+  const [settingsExercise, setSettingsExercise] =
+    useState<BreathingExercise | null>(null);
   const [showSettings, setShowSettings] = useState<boolean>(false);
   const [showSession, setShowSession] = useState<boolean>(false);
   const [lastSession, setLastSession] = useState<LastSession | null>(null);
@@ -51,54 +63,61 @@ const BreathingCard = () => {
   }, []);
 
   // Update loading state helper
-  const updateLoading = useCallback((key: keyof LoadingState, value: boolean) => {
-    setLoading(prev => ({ ...prev, [key]: value }));
-  }, []);
+  const updateLoading = useCallback(
+    (key: keyof LoadingState, value: boolean) => {
+      setLoading((prev) => ({ ...prev, [key]: value }));
+    },
+    []
+  );
 
   // Update error state helper
-  const updateError = useCallback((key: keyof ErrorState, value: string | null) => {
-    setErrors(prev => ({ ...prev, [key]: value }));
-  }, []);
+  const updateError = useCallback(
+    (key: keyof ErrorState, value: string | null) => {
+      setErrors((prev) => ({ ...prev, [key]: value }));
+    },
+    []
+  );
 
   // Fetch exercises with optimized error handling
   const fetchExercises = useCallback(async () => {
-    updateLoading('exercises', true);
-    updateError('exercises', null);
-    
+    updateLoading("exercises", true);
+    updateError("exercises", null);
+
     try {
       const exercisesResponse = await breathingApi.getBreathingExercises();
       const mappedExercises = exercisesResponse.map(toBreathingExercise);
       setExercises(mappedExercises);
-      successToast('Breathing exercises loaded successfully.');
+      successToast("Breathing exercises loaded successfully.");
     } catch (err) {
-      const errorMessage = 'Failed to load breathing exercises. Please try again.';
-      console.error('Error fetching exercises:', err);
-      updateError('exercises', errorMessage);
+      const errorMessage =
+        "Failed to load breathing exercises. Please try again.";
+      console.error("Error fetching exercises:", err);
+      updateError("exercises", errorMessage);
       errorToast(errorMessage);
     } finally {
-      updateLoading('exercises', false);
+      updateLoading("exercises", false);
     }
   }, [updateLoading, updateError]);
 
   // Fetch last session with optimized error handling
   const fetchLastSession = useCallback(async () => {
-    updateLoading('lastSession', true);
-    updateError('lastSession', null);
-    
+    updateLoading("lastSession", true);
+    updateError("lastSession", null);
+
     try {
       const sessionResponse = await breathingApi.getLatestSession(currentDate);
       if (sessionResponse) {
         const mappedSession = toLastSession(sessionResponse);
         setLastSession(mappedSession);
-        successToast('Last session loaded successfully.');
+        successToast("Last session loaded successfully.");
       }
     } catch (err) {
-      const errorMessage = 'Failed to load last session. Please try again.';
-      console.error('Error fetching last session:', err);
-      updateError('lastSession', errorMessage);
+      const errorMessage = "Failed to load last session. Please try again.";
+      console.error("Error fetching last session:", err);
+      updateError("lastSession", errorMessage);
       errorToast(errorMessage);
     } finally {
-      updateLoading('lastSession', false);
+      updateLoading("lastSession", false);
     }
   }, [currentDate, updateLoading, updateError]);
 
@@ -110,7 +129,7 @@ const BreathingCard = () => {
 
   // Handle exercise card click
   const handleCardClick = useCallback((exercise: BreathingExercise) => {
-    console.log('Selected Exercise:', exercise);
+    console.log("Selected Exercise:", exercise);
     setSelectedExercise(exercise);
     setShowSession(true);
   }, []);
@@ -122,35 +141,38 @@ const BreathingCard = () => {
   }, []);
 
   // Handle settings save - optimistic update pattern
-  const handleSettingsSave = useCallback(async (updatedExercise: BreathingExercise) => {
-    updateLoading('savingSettings', true);
-    
-    // Optimistic update - save locally first
-    const previousExercises = exercises;
-    setExercises(prev =>
-      prev.map(ex => ex.id === updatedExercise.id ? updatedExercise : ex)
-    );
-    
-    try {
-      const request = toBreathingRequest(updatedExercise);
-      const response = await breathingApi.customizeBreathingExercise(request);
-      const mappedUpdated = toBreathingExercise(response);
-      
-      // Update with server response (in case server modified anything)
-      setExercises(prev =>
-        prev.map(ex => ex.id === mappedUpdated.id ? mappedUpdated : ex)
+  const handleSettingsSave = useCallback(
+    async (updatedExercise: BreathingExercise) => {
+      updateLoading("savingSettings", true);
+
+      // Optimistic update - save locally first
+      const previousExercises = exercises;
+      setExercises((prev) =>
+        prev.map((ex) => (ex.id === updatedExercise.id ? updatedExercise : ex))
       );
-      
-      successToast('Breathing exercise updated successfully.');
-    } catch (err) {
-      // Rollback on error
-      setExercises(previousExercises);
-      console.error('Error saving settings:', err);
-      errorToast('Failed to update breathing exercise. Please try again.');
-    } finally {
-      updateLoading('savingSettings', false);
-    }
-  }, [exercises, updateLoading]);
+
+      try {
+        const request = toBreathingRequest(updatedExercise);
+        const response = await breathingApi.customizeBreathingExercise(request);
+        const mappedUpdated = toBreathingExercise(response);
+
+        // Update with server response (in case server modified anything)
+        setExercises((prev) =>
+          prev.map((ex) => (ex.id === mappedUpdated.id ? mappedUpdated : ex))
+        );
+
+        successToast("Breathing exercise updated successfully.");
+      } catch (err) {
+        // Rollback on error
+        setExercises(previousExercises);
+        console.error("Error saving settings:", err);
+        errorToast("Failed to update breathing exercise. Please try again.");
+      } finally {
+        updateLoading("savingSettings", false);
+      }
+    },
+    [exercises, updateLoading]
+  );
 
   // Handle session navigation
   const handleBackFromSession = useCallback(() => {
@@ -159,30 +181,33 @@ const BreathingCard = () => {
   }, []);
 
   // Handle session completion - optimistic update pattern
-  const handleSessionComplete = useCallback(async (session: LastSession) => {
-    updateLoading('savingSession', true);
-    
-    // Optimistic update - save locally first
-    const previousSession = lastSession;
-    setLastSession(session);
-    
-    try {
-      const request = toBreathingSessionRequest(session);
-      const response = await breathingApi.storeBreathingSession(request);
-      const mappedSession = toLastSession(response);
-      
-      // Update with server response
-      setLastSession(mappedSession);
-      successToast('Session completed and stored successfully.');
-    } catch (err) {
-      // Rollback on error
-      setLastSession(previousSession);
-      console.error('Error storing session:', err);
-      errorToast('Failed to store session. Please try again.');
-    } finally {
-      updateLoading('savingSession', false);
-    }
-  }, [lastSession, updateLoading]);
+  const handleSessionComplete = useCallback(
+    async (session: LastSession) => {
+      updateLoading("savingSession", true);
+
+      // Optimistic update - save locally first
+      const previousSession = lastSession;
+      setLastSession(session);
+
+      try {
+        const request = toBreathingSessionRequest(session);
+        const response = await breathingApi.storeBreathingSession(request);
+        const mappedSession = toLastSession(response);
+
+        // Update with server response
+        setLastSession(mappedSession);
+        successToast("Session completed and stored successfully.");
+      } catch (err) {
+        // Rollback on error
+        setLastSession(previousSession);
+        console.error("Error storing session:", err);
+        errorToast("Failed to store session. Please try again.");
+      } finally {
+        updateLoading("savingSession", false);
+      }
+    },
+    [lastSession, updateLoading]
+  );
 
   // Handle modal close
   const handleSettingsClose = useCallback(() => {
@@ -193,25 +218,31 @@ const BreathingCard = () => {
   // Early return for session view
   if (showSession && selectedExercise) {
     return (
-      <BreathingSession 
-        exercise={selectedExercise} 
-        onBack={handleBackFromSession} 
+      <BreathingSession
+        exercise={selectedExercise}
+        onBack={handleBackFromSession}
         onSessionComplete={handleSessionComplete}
       />
     );
   }
 
   // Loading component
-  const LoadingSpinner = ({ size = 'medium' }: { size?: 'small' | 'medium' | 'large' }) => {
+  const LoadingSpinner = ({
+    size = "medium",
+  }: {
+    size?: "small" | "medium" | "large";
+  }) => {
     const sizeClasses = {
-      small: 'h-8 w-8',
-      medium: 'h-12 w-12',
-      large: 'h-16 w-16'
+      small: "h-8 w-8",
+      medium: "h-12 w-12",
+      large: "h-16 w-16",
     };
-    
+
     return (
       <div className="flex justify-center items-center">
-        <div className={`animate-spin rounded-full border-t-2 border-b-2 border-white ${sizeClasses[size]}`} />
+        <div
+          className={`animate-spin rounded-full border-t-2 border-b-2 border-white ${sizeClasses[size]}`}
+        />
       </div>
     );
   };
@@ -232,7 +263,7 @@ const BreathingCard = () => {
         {/* Left Column */}
         <div className="space-y-6">
           <MindigoRecommendation />
-          
+
           {/* Last Session Section */}
           {loading.lastSession ? (
             <div className="h-32 flex items-center justify-center">

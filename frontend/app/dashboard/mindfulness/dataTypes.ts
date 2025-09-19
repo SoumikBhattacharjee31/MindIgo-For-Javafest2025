@@ -26,7 +26,7 @@ export interface Entry {
   reason: string;
 }
 
-export interface Cycle{
+export interface Cycle {
   duration: number; // in seconds
   task: BreathingTask[];
 }
@@ -37,7 +37,7 @@ export interface BreathingTask {
   duration: number; // in seconds
 }
 
-export interface BreathingExercise{
+export interface BreathingExercise {
   id: number;
   title: string;
   description: string;
@@ -54,4 +54,3 @@ export interface LastSession {
   date: string;
   duration: number;
 }
-

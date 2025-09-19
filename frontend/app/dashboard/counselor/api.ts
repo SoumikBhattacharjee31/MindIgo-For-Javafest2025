@@ -1,8 +1,10 @@
-import axios from 'axios';
-import { PaginatedCounselorsResponse, Counselor } from './types';
+import axios from "axios";
+import { PaginatedCounselorsResponse, Counselor } from "./types";
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 const apiClient = axios.create({
-  baseURL: 'http://localhost:8080/api/v1/auth',
+  baseURL: `${API_BASE_URL}/api/v1/auth`,
   withCredentials: true,
 });
 
@@ -17,13 +19,15 @@ interface GetCounselorsParams {
 }
 
 // Fetches the list of counselors with pagination and filtering
-export const getCounselors = async (params: GetCounselorsParams): Promise<PaginatedCounselorsResponse> => {
-  const response = await apiClient.get('/counselor', { params });
+export const getCounselors = async (
+  params: GetCounselorsParams
+): Promise<PaginatedCounselorsResponse> => {
+  const response = await apiClient.get("/counselor", { params });
   return response.data.data; // Backend wraps the response in a "data" object
 };
 
 // Fetches a single counselor by their ID
 export const getCounselorById = async (id: string): Promise<Counselor> => {
-    const response = await apiClient.get(`/counselorprofilebyid/${id}`);
-    return response.data.data; // Backend wraps the response in a "data" object
-}
+  const response = await apiClient.get(`/counselorprofilebyid/${id}`);
+  return response.data.data; // Backend wraps the response in a "data" object
+};

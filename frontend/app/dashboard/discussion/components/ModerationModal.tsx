@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ModerationRequest } from "@/app/api/discussionService";
+import { ModerationRequest } from "@/app/dashboard/discussion/api";
 
 interface ModerationModalProps {
   isOpen: boolean;

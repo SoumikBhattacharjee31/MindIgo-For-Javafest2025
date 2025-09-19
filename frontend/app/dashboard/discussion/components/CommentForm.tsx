@@ -6,7 +6,7 @@ import {
   discussionApi,
   CommentResponse,
   CreateCommentRequest,
-} from "@/app/api/discussionService";
+} from "@/app/dashboard/discussion/api";
 
 interface CommentFormProps {
   postId: number;
