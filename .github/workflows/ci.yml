@@ -59,20 +59,27 @@ jobs:
           for service_dir in backend/services/*; do
             if [ -d "$service_dir" ]; then
               service_name=$(basename "$service_dir")
-              DOCKER_IMAGE="${{ secrets.DOCKER_USERNAME }}/$service_name"
+              LOCAL_IMAGE="$service_name"
               VERSION_TAG="v${{ github.run_number }}"
+              REMOTE_IMAGE="${{ secrets.DOCKER_USERNAME }}/$service_name"
               
-              echo "Building and pushing Docker image for $service_name"
+              echo "Building local image for $service_name"
               cd "$service_dir"
               
-              docker build -t $DOCKER_IMAGE:latest -t $DOCKER_IMAGE:$VERSION_TAG .
+              # Build as service:tag
+              docker build -t $LOCAL_IMAGE:latest -t $LOCAL_IMAGE:$VERSION_TAG .
               
-              docker push $DOCKER_IMAGE:latest
-              docker push $DOCKER_IMAGE:$VERSION_TAG
+              # Tag for Docker Hub
+              docker tag $LOCAL_IMAGE:latest $REMOTE_IMAGE:latest
+              docker tag $LOCAL_IMAGE:$VERSION_TAG $REMOTE_IMAGE:$VERSION_TAG
+              
+              # Push to Docker Hub
+              docker push $REMOTE_IMAGE:latest
+              docker push $REMOTE_IMAGE:$VERSION_TAG
               
               echo "Images pushed to Docker Hub:"
-              echo "- $DOCKER_IMAGE:latest"
-              echo "- $DOCKER_IMAGE:$VERSION_TAG"
+              echo "- $REMOTE_IMAGE:latest"
+              echo "- $REMOTE_IMAGE:$VERSION_TAG"
               
               cd ../../..
             fi
@@ -81,20 +88,27 @@ jobs:
           # Signaling server (outside backend/)
           if [ -d signaling-server ]; then
             service_name="signaling-server"
-            DOCKER_IMAGE="${{ secrets.DOCKER_USERNAME }}/$service_name"
+            LOCAL_IMAGE="$service_name"
             VERSION_TAG="v${{ github.run_number }}"
+            REMOTE_IMAGE="${{ secrets.DOCKER_USERNAME }}/$service_name"
             
-            echo "Building and pushing Docker image for $service_name"
+            echo "Building local image for $service_name"
             cd signaling-server
             
-            docker build -t $DOCKER_IMAGE:latest -t $DOCKER_IMAGE:$VERSION_TAG .
+            # Build as service:tag
+            docker build -t $LOCAL_IMAGE:latest -t $LOCAL_IMAGE:$VERSION_TAG .
             
-            docker push $DOCKER_IMAGE:latest
-            docker push $DOCKER_IMAGE:$VERSION_TAG
+            # Tag for Docker Hub
+            docker tag $LOCAL_IMAGE:latest $REMOTE_IMAGE:latest
+            docker tag $LOCAL_IMAGE:$VERSION_TAG $REMOTE_IMAGE:$VERSION_TAG
+            
+            # Push to Docker Hub
+            docker push $REMOTE_IMAGE:latest
+            docker push $REMOTE_IMAGE:$VERSION_TAG
             
             echo "Images pushed to Docker Hub:"
-            echo "- $DOCKER_IMAGE:latest"
-            echo "- $DOCKER_IMAGE:$VERSION_TAG"
+            echo "- $REMOTE_IMAGE:latest"
+            echo "- $REMOTE_IMAGE:$VERSION_TAG"
             
             cd ..
           fi
