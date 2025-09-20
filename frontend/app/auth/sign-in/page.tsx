@@ -62,7 +62,7 @@ const Login = () => {
         } else if (userRole === "USER") {
           router.push("/dashboard");
         } else {
-          router.push("/home");
+          router.push("/");
         }
       } else {
         errorToast(response.data.message || "Login failed");

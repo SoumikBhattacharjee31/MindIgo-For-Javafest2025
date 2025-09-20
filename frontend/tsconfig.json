@@ -33,7 +33,7 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    "app/password-reset-link"
+    "app/auth/password-reset-link"
   ],
   "exclude": [
     "node_modules"

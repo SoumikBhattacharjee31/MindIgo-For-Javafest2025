@@ -4,7 +4,7 @@ import React from "react";
 const ForgotPasswordLink: React.FC = () => {
   return (
     <Link
-      href="/forgot-password"
+      href="/auth/forgot-password"
       className="
         group relative inline-flex items-center text-sm font-medium text-gray-600 
         hover:text-blue-600 transition-all duration-300
