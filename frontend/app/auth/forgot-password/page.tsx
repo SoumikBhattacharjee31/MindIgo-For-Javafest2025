@@ -36,7 +36,7 @@ const ForgotPassword = () => {
       }
     } catch (error) {
       // Better to show a specific error from the API if available
-      const errorMessage = error.response?.data?.message || 'Something went wrong';
+      const errorMessage = 'Something went wrong';
       errorToast(errorMessage);
       console.error('There was an error:', error);
     }
