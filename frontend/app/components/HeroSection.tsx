@@ -1,4 +1,5 @@
 import { Heart, Sparkles, ChevronRight, Play } from "lucide-react";
+import Link from "next/link";
 
 const HeroSection = () => {
   return (
@@ -18,9 +19,9 @@ const HeroSection = () => {
             guidance.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <button className="bg-indigo-600 text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-indigo-700 transition-all transform hover:scale-105 shadow-lg flex items-center gap-2">
+            <Link href="/auth/sign-in" className="bg-indigo-600 text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-indigo-700 transition-all transform hover:scale-105 shadow-lg flex items-center gap-2">
               Start Your Journey <ChevronRight className="h-5 w-5" />
-            </button>
+            </Link>
             <button className="border-2 border-gray-300 text-gray-700 px-8 py-4 rounded-full text-lg font-semibold hover:border-indigo-600 hover:text-indigo-600 transition-all flex items-center gap-2">
               <Play className="h-5 w-5" /> Watch Demo
             </button>
