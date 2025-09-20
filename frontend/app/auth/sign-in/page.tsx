@@ -58,7 +58,7 @@ const Login = () => {
         // dispatch(login_user(userData));
 
         if (userRole === "COUNSELOR") {
-          router.push("/dashboard");
+          router.push("/counselor");
         } else if (userRole === "USER") {
           router.push("/dashboard");
         } else {

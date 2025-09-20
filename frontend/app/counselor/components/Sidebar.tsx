@@ -253,11 +253,11 @@ const Sidebar: React.FC = () => {
       </nav>
 
       {/* Profile Section */}
-      <ProfileButton
+      {/* <ProfileButton
         item={profileItem}
         isActive={activeSection === "profile"}
         onActivate={updateActiveSection}
-      />
+      /> */}
     </div>
   );
 };

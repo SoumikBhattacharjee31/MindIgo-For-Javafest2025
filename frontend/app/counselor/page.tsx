@@ -121,7 +121,7 @@ const CounselorDashboard = () => {
               <Star className="w-8 h-8 text-yellow-500" />
               <h3 className="text-xl font-bold text-gray-800">Average Rating</h3>
             </div>
-            <p className="text-4xl font-bold text-blue-600">{profile.ratings?.toFixed(1) || "N/A"}</p>
+            <p className="text-4xl font-bold text-blue-600">{profile.ratings?.toFixed(1) || "0"}</p>
           </div>
           <div className="bg-white rounded-2xl p-6 shadow-lg border border-green-100">
             <div className="flex items-center gap-4 mb-4">
