@@ -25,6 +25,8 @@ interface MeetingRoomProps {
   onEndMeeting: () => void;
 }
 
+const SIGNALING_SERVER_URL = process.env.SIGNALING_SERVER_URL || "http://localhost:3001";
+
 const MeetingRoom: React.FC<MeetingRoomProps> = ({
   meetingRoomId,
   meetingType,
@@ -168,7 +170,7 @@ const MeetingRoom: React.FC<MeetingRoomProps> = ({
   const initializeSocket = () => {
     console.log("Initializing socket connection...");
 
-    const socketConnection = io("http://localhost:3001", {
+    const socketConnection = io(SIGNALING_SERVER_URL, {
       withCredentials: true,
       forceNew: true,
       timeout: 20000,

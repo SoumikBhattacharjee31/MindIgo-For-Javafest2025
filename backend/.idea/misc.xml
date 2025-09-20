@@ -9,7 +9,6 @@
         <option value="$PROJECT_DIR$/services/gateway-server/pom.xml" />
         <option value="$PROJECT_DIR$/services/file-server/pom.xml" />
         <option value="$PROJECT_DIR$/services/content-service/pom.xml" />
-        <option value="$PROJECT_DIR$/services/routine-service/pom.xml" />
         <option value="$PROJECT_DIR$/services/meeting-service/pom.xml" />
         <option value="$PROJECT_DIR$/services/appointment-service/pom.xml" />
         <option value="$PROJECT_DIR$/services/auth-service/pom.xml" />

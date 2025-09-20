@@ -85,7 +85,7 @@ services:
     networks:
       - microservices-net
     environment:
-      - FRONTEND_DOMAIN=http://localhost:3000
+      - FRONTEND_DOMAIN=${FRONTEND_DOMAIN}
       - SIGNALING_SERVER_PORT=3001
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:3001/health" ]
@@ -125,6 +125,8 @@ services:
     depends_on:
       eureka-server:
         condition: service_healthy
+      postgres:
+        condition: service_healthy
     environment:
       - CONFIG_SERVER_URL=http://config-server:8888
       - EUREKA_SERVER_URL=http://eureka-server:8761/eureka/
@@ -140,7 +142,7 @@ services:
       - SMTP_USER=${SMTP_USER}
       - SMTP_PASSWORD=${SMTP_PASSWORD}
       - APP_COOKIE_SECURE=true
-      - APP_COOKIE_SAME_SITE=None
+      - APP_COOKIE_SAME_SITE=strict
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
       interval: 20s
@@ -157,6 +159,8 @@ services:
       - microservices-net
     depends_on:
       eureka-server:
+        condition: service_healthy
+      postgres:
         condition: service_healthy
     environment:
       - CONFIG_SERVER_URL=http://config-server:8888
@@ -186,6 +190,8 @@ services:
       - microservices-net
     depends_on:
       eureka-server:
+        condition: service_healthy
+      postgres:
         condition: service_healthy
     environment:
       - CONFIG_SERVER_URL=http://config-server:8888
@@ -239,6 +245,8 @@ services:
     depends_on:
       eureka-server:
         condition: service_healthy
+      postgres:
+        condition: service_healthy
     environment:
       - CONFIG_SERVER_URL=http://config-server:8888
       - EUREKA_SERVER_URL=http://eureka-server:8761/eureka/
@@ -266,6 +274,8 @@ services:
     depends_on:
       eureka-server:
         condition: service_healthy
+      postgres:
+        condition: service_healthy
     environment:
       - CONFIG_SERVER_URL=http://config-server:8888
       - EUREKA_SERVER_URL=http://eureka-server:8761/eureka/
@@ -281,33 +291,6 @@ services:
       interval: 20s
       timeout: 10s
       retries: 10
-    restart: unless-stopped
-
-  routine-service:
-    image: somikdasgupta/routine-service:latest
-    container_name: routine-service
-    ports:
-      - "8087:8087"
-    networks:
-      - microservices-net
-    depends_on:
-      eureka-server:
-        condition: service_healthy
-    environment:
-      - CONFIG_SERVER_URL=http://config-server:8888
-      - EUREKA_SERVER_URL=http://eureka-server:8761/eureka/
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_NAME=Mindigo
-      - EUREKA_HOSTNAME=routine-service
-      - DB_USERNAME=${DB_USERNAME}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - ROUTINE_SERVICE_PORT=8087
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8087/actuator/health" ]
-      interval: 20s
-      timeout: 5s
-      retries: 5
     restart: unless-stopped
 
   genai-service:
@@ -365,8 +348,6 @@ services:
         condition: service_healthy
       auth-service:
         condition: service_healthy
-      routine-service:
-        condition: service_healthy
       file-server:
         condition: service_healthy
       content-service:
@@ -387,6 +368,29 @@ services:
       - FRONTEND_DOMAIN=${FRONTEND_DOMAIN}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 20s
+      timeout: 10s
+      retries: 10
+    restart: unless-stopped
+
+  mindigo:
+    image: somikdasgupta/mindigo:latest
+    container_name: mindigo
+    ports:
+      - "3000:3000"
+    networks:
+      - microservices-net
+    depends_on:
+      gateway-server:
+        condition: service_healthy
+      signaling-server:
+        condition: service_healthy
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL}
+      - SIGNALING_SERVER_URL=${SIGNALING_SERVER_URL}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
       interval: 20s
       timeout: 10s
       retries: 10

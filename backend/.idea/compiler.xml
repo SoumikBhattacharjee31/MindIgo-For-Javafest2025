@@ -12,7 +12,7 @@
         <module name="eureka-server" />
         <module name="ai-service" />
       </profile>
-      <profile name="Annotation profile for discussion-service" enabled="true">
+      <profile name="Annotation profile for meeting-service" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
@@ -23,19 +23,9 @@
         <module name="appointment-service" />
         <module name="game-service" />
         <module name="discussion-service" />
-      </profile>
-      <profile name="Annotation profile for routine-service" enabled="true">
-        <sourceOutputDir name="target/generated-sources/annotations" />
-        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
-        <outputRelativeToContentRoot value="true" />
-        <processorPath useClasspath="false">
-          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.38/lombok-1.18.38.jar" />
-          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.38/lombok-1.18.38.jar" />
-        </processorPath>
-        <module name="routine-service" />
+        <module name="content-service" />
         <module name="meeting-service" />
         <module name="file-server" />
-        <module name="content-service" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
@@ -43,6 +33,7 @@
       <module name="assessment-service" target="24" />
       <module name="mail-service" target="24" />
       <module name="mindigo" target="21" />
+      <module name="routine-service" target="24" />
     </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
