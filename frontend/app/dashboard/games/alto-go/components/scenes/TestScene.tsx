@@ -522,7 +522,7 @@ export class TestScene extends Scene {
     this.shakeCamera();
     this.resetCombo();
     this.scene.start("GameOverScene", {
-      score: this.score,
+      score: Math.floor(this.score),
       maxCombo: this.maxCombo,
     });
   }

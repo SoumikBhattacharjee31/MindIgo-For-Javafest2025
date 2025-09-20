@@ -1,5 +1,6 @@
+// app/dashboard/counselor/api/index.ts
 import axios from "axios";
-import { PaginatedCounselorsResponse, Counselor } from "./types";
+import { PaginatedCounselorsResponse, Counselor, PaginatedRatingsResponse, RateCounselorRequest } from "./types";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -23,11 +24,28 @@ export const getCounselors = async (
   params: GetCounselorsParams
 ): Promise<PaginatedCounselorsResponse> => {
   const response = await apiClient.get("/counselor", { params });
-  return response.data.data; // Backend wraps the response in a "data" object
+  return response.data.data;
 };
 
 // Fetches a single counselor by their ID
 export const getCounselorById = async (id: string): Promise<Counselor> => {
   const response = await apiClient.get(`/counselorprofilebyid/${id}`);
-  return response.data.data; // Backend wraps the response in a "data" object
+  return response.data.data;
+};
+
+// Rate a counselor
+export const rateCounselor = async (request: RateCounselorRequest): Promise<void> => {
+  await apiClient.post("/ratings/counselor", request);
+};
+
+// Get ratings for a counselor
+export const getRatingsForCounselor = async (
+  counselorId: string,
+  page: number = 0,
+  size: number = 5
+): Promise<PaginatedRatingsResponse> => {
+  const response = await apiClient.get(`/ratings/counselor/${counselorId}`, {
+    params: { page, size }
+  });
+  return response.data.data;
 };

@@ -128,7 +128,7 @@ export class HighScoresScene extends Scene {
     const { width, height } = this.scale;
 
     const backButton = this.add
-      .text(width / 2, height - 50, "Back to Menu", {
+      .text(width / 2, height - 180, "Back to Menu", {
         fontSize: "28px",
         color: "#ffffff",
         backgroundColor: "#666666",
@@ -136,12 +136,16 @@ export class HighScoresScene extends Scene {
         fontStyle: "bold",
       })
       .setOrigin(0.5)
-      .setInteractive();
+      .setInteractive()
+      .setScrollFactor(0);;
 
     this.setupButtonHover(backButton, "#666666", "#555555");
 
     backButton.on("pointerdown", () => {
-      this.scene.start("MainMenuScene");
+      this.cameras.main.fadeOut(300);
+      this.cameras.main.once("camerafadeoutcomplete", () => {
+        this.scene.start("MainMenuScene");
+      });
     });
   }
 

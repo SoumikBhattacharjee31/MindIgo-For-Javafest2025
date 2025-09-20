@@ -228,7 +228,7 @@ export interface Counselor {
   id: number;
   name: string;
   email: string;
-  profileImageUrl?: string;
+  profileImageUrl?: string | null;
   specializations?: string[];
   bio?: string;
   rating?: number;
