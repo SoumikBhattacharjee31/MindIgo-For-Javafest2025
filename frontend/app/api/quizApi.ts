@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080';
+const API_BASE_URL = `${process.env.NEXT_PUBLIC_API_BASE_URL}`;
 
 // Types for Quiz API requests and responses
 export interface QuizGenerationParams {
@@ -44,7 +44,7 @@ export interface ApiResponse<T> {
 
 // Configure axios instance for quiz APIs
 const quizApiClient = axios.create({
-  baseURL: BASE_URL,
+  baseURL: API_BASE_URL,
   withCredentials: true,
 });
 

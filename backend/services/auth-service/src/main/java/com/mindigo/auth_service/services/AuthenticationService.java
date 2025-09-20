@@ -434,7 +434,7 @@ public class AuthenticationService {
             // Send reset email asynchronously
             CompletableFuture.runAsync(() -> {
                 try {
-                    String resetUrl = String.format("%s/reset-password?token=%s",
+                    String resetUrl = String.format("%s/auth/reset-password?token=%s",
                             frontendDomain, token);
                     emailService.sendPasswordResetEmail(email, user.getName(), resetUrl);
                     log.info("Password reset email sent to: {}", email);

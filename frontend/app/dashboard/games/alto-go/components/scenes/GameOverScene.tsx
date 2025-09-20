@@ -17,18 +17,20 @@ export class GameOverScene extends Scene {
   }
 
   init(data: { score: number; maxCombo?: number }) {
-    this.score = data.score || 0;
+    this.score = data?.score ?? 0;
     this.maxCombo = data.maxCombo || 0;
     this.isSavingScore = false;
     this.scoreSaved = false;
-    this.loadHighScore();
+    // this.loadHighScore();
   }
 
-  create() {
+  async create() {
     const { width, height } = this.scale;
 
     // Initialize user if not already done
     userService.initializeUser();
+
+    await this.loadHighScore();
 
     // Add background gradient
     this.createBackground();
@@ -64,9 +66,8 @@ export class GameOverScene extends Scene {
         this.highScore = response.data.score;
       } else {
         // Fallback to local storage or default
-        this.highScore = parseInt(
-          localStorage.getItem("snowboarder_highscore") || "0"
-        );
+        this.highScore =
+          parseInt(localStorage.getItem("snowboarder_highscore") || "0") || 0; // Add || 0 here
       }
     } catch (error) {
       console.error("Failed to load high score from backend:", error);
@@ -278,13 +279,18 @@ export class GameOverScene extends Scene {
       .setAlpha(0);
 
     const highScoreValue = this.add
-      .text(width / 2 + 150, height / 2 + 50, `${Math.floor(this.highScore)}`, {
-        fontSize: "32px",
-        color: "#ffd700",
-        fontStyle: "bold",
-        stroke: "#000000",
-        strokeThickness: 2,
-      })
+      .text(
+        width / 2 + 150,
+        height / 2 + 50,
+        `${Math.floor(this.highScore || 0)}`,
+        {
+          fontSize: "32px",
+          color: "#ffd700",
+          fontStyle: "bold",
+          stroke: "#000000",
+          strokeThickness: 2,
+        }
+      )
       .setOrigin(0.5)
       .setAlpha(0);
 

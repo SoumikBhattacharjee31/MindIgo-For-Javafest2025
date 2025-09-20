@@ -3,6 +3,8 @@ import React from "react";
 import { Calendar } from "lucide-react";
 import dayjs from "dayjs";
 import { TimeSlot } from "@/app/appointments/api";
+import duration from 'dayjs/plugin/duration';
+dayjs.extend(duration);
 
 interface TimeSlotPickerProps {
   slots: TimeSlot[];

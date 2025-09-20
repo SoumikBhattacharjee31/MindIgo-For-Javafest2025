@@ -20,7 +20,7 @@ const register = async (formData: FormData) => {
     console.log("Response:", response.data);
     if (response.status === 200) {
       console.log(response.data);
-      if (response.data == "User saved") router.push("/password-reset-link");
+      if (response.data == "User saved") router.push("/auth/password-reset-link");
       else warningToast(response.data);
     } else {
       errorToast("Bad Response");

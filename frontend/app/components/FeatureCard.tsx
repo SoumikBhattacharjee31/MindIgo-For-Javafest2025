@@ -67,7 +67,7 @@ const FeatureCard: React.FC<FeatureCardProps> = ({
       </p>
 
       {/* Placeholder with Animation */}
-      <div
+      {/* <div
         className={`${placeholderBg} rounded-lg h-32 flex items-center justify-center transform transition-all duration-500 ${
           isVisible ? "scale-100 opacity-100" : "scale-90 opacity-0"
         }`}
@@ -76,7 +76,7 @@ const FeatureCard: React.FC<FeatureCardProps> = ({
         <span className={`${placeholderText} font-semibold`}>
           {placeholder}
         </span>
-      </div>
+      </div> */}
     </div>
   );
 };

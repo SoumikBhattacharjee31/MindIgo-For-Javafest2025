@@ -715,10 +715,21 @@ class EnhancedRhythmScene extends Phaser.Scene {
     this.notes.forEach((note) => note.destroy());
     this.notes = [];
     this.updateStats();
+    
+    // Simple approach: just stop and reset seek position
     try {
-      if (this.music && this.music.stop) this.music.stop();
-    } catch (e) {}
-    this.createAudioFromLoaded(); // Re-create the sound object for playback
+      if (this.music && this.music.stop) {
+        this.music.stop();
+      }
+      // Add a small delay to ensure the audio system is ready
+      this.time.delayedCall(100, () => {
+        if (this.music) {
+          this.music.seek = 0;
+        }
+      });
+    } catch (e) {
+      console.warn("Error resetting music:", e);
+    }
   }
 }
 

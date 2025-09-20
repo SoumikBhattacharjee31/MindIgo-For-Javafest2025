@@ -5,7 +5,7 @@ const socketIo = require('socket.io');
 const cors = require('cors');
 
 const app = express();
-const frontendDomain = `${process.env.FRONTEND_DOMAIN}`;
+const frontendDomain = `${process.env.FRONTEND_DOMAIN || 'http://localhost:3000'}`;
 
 console.log(`Allowed CORS origin: ${frontendDomain}`);
 app.use(cors({
