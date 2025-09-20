@@ -32,7 +32,6 @@
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.38/lombok-1.18.38.jar" />
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.38/lombok-1.18.38.jar" />
         </processorPath>
-        <module name="routine-service" />
         <module name="meeting-service" />
         <module name="file-server" />
         <module name="content-service" />
@@ -43,6 +42,7 @@
       <module name="assessment-service" target="24" />
       <module name="mail-service" target="24" />
       <module name="mindigo" target="21" />
+      <module name="routine-service" target="24" />
     </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
