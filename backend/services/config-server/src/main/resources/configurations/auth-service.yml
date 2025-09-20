@@ -50,8 +50,8 @@ app:
     access-token-expiry: 2592000
     refresh-token-expiry: 2592000
   cookie:
-    secure: true
-    same-site: strict
+    secure: ${APP_COOKIE_SECURE:true}
+    same-site: ${APP_COOKIE_SAME_SITE:strict}
   otp:
     expiry-minutes: 5
   password-reset:

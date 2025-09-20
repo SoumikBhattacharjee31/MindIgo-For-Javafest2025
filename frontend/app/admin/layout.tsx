@@ -5,6 +5,7 @@ import AdminNavbar from './components/AdminNavbar';
 import { usePathname, useRouter } from 'next/navigation';
 import axios from 'axios';
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080';
 export default function AdminLayout({
   children,
 }: { children: React.ReactNode }) {
@@ -25,7 +26,7 @@ export default function AdminLayout({
     const checkAuth = async () => {
       try {
         // Try to make an authenticated request to verify access
-        const response = await axios.get('http://localhost:8080/api/v1/admin/dashboard', {
+        const response = await axios.get(`${API_BASE_URL}/api/v1/admin/dashboard`, {
           withCredentials: true,
         });
         

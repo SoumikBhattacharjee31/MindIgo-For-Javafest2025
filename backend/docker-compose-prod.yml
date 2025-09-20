@@ -62,7 +62,7 @@ services:
     restart: unless-stopped
 
   config-server:
-    image: config-server:latest
+    image: somikdasgupta/config-server:latest
     container_name: config-server
     ports:
       - "8888:8888"
@@ -78,7 +78,7 @@ services:
     restart: unless-stopped
 
   signaling-server:
-    image: signaling-server:latest
+    image: somikdasgupta/signaling-server:latest
     container_name: signaling-server
     ports:
       - "3001:3001"
@@ -95,7 +95,7 @@ services:
     restart: unless-stopped
 
   eureka-server:
-    image: eureka-server:latest
+    image: somikdasgupta/eureka-server:latest
     container_name: eureka-server
     ports:
       - "8761:8761"
@@ -116,7 +116,7 @@ services:
     restart: unless-stopped
 
   auth-service:
-    image: auth-service:latest
+    image: somikdasgupta/auth-service:latest
     container_name: auth-service
     ports:
       - "8081:8081"
@@ -139,6 +139,8 @@ services:
       - FRONTEND_DOMAIN=${FRONTEND_DOMAIN}
       - SMTP_USER=${SMTP_USER}
       - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - APP_COOKIE_SECURE=true
+      - APP_COOKIE_SAME_SITE=None
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
       interval: 20s
@@ -147,7 +149,7 @@ services:
     restart: unless-stopped
 
   appointment-service:
-    image: appointment-service:latest
+    image: somikdasgupta/appointment-service:latest
     container_name: appointment-service
     ports:
       - "8092:8092"
@@ -176,7 +178,7 @@ services:
     restart: unless-stopped
 
   content-service:
-    image: content-service:latest
+    image: somikdasgupta/content-service:latest
     container_name: content-service
     ports:
       - "8086:8086"
@@ -203,7 +205,7 @@ services:
     restart: unless-stopped
 
   file-server:
-    image: file-server:latest
+    image: somikdasgupta/file-server:latest
     container_name: file-server
     ports:
       - "8085:8085"
@@ -228,7 +230,7 @@ services:
     restart: unless-stopped
 
   meeting-service:
-    image: meeting-service:latest
+    image: somikdasgupta/meeting-service:latest
     container_name: meeting-service
     ports:
       - "8091:8091"
@@ -255,7 +257,7 @@ services:
     restart: unless-stopped
 
   discussion-service:
-    image: discussion-service:latest
+    image: somikdasgupta/discussion-service:latest
     container_name: discussion-service
     ports:
       - "8093:8093"
@@ -282,7 +284,7 @@ services:
     restart: unless-stopped
 
   routine-service:
-    image: routine-service:latest
+    image: somikdasgupta/routine-service:latest
     container_name: routine-service
     ports:
       - "8087:8087"
@@ -309,7 +311,7 @@ services:
     restart: unless-stopped
 
   genai-service:
-    image: genai-service:latest
+    image: somikdasgupta/genai-service:latest
     container_name: genai-service
     ports:
       - "8100:8100"
@@ -350,7 +352,7 @@ services:
     restart: unless-stopped
 
   gateway-server:
-    image: gateway-server:latest
+    image: somikdasgupta/gateway-server:latest
     container_name: gateway-server
     ports:
       - "8080:8080"

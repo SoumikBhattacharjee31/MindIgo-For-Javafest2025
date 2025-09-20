@@ -139,6 +139,8 @@ services:
       - FRONTEND_DOMAIN=${FRONTEND_DOMAIN}
       - SMTP_USER=${SMTP_USER}
       - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - APP_COOKIE_SECURE=true
+      - APP_COOKIE_SAME_SITE=strict
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
       interval: 20s
