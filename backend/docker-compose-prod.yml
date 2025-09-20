@@ -41,26 +41,6 @@ services:
       retries: 5
       start_period: 20s
 
-  mongo-express:
-    image: mongo-express:latest
-    container_name: local-mongo-express
-    ports:
-      - "9090:8081"
-    networks:
-      - microservices-net
-    environment:
-      ME_CONFIG_MONGODB_ADMINUSERNAME: mindigo
-      ME_CONFIG_MONGODB_ADMINPASSWORD: 1234
-      ME_CONFIG_MONGODB_SERVER: mongo
-      ME_CONFIG_MONGODB_PORT: 27017
-      ME_CONFIG_OPTIONS_EDITORTHEME: ambiance
-      ME_CONFIG_BASICAUTH_USERNAME: mindigo
-      ME_CONFIG_BASICAUTH_PASSWORD: 1234
-    depends_on:
-      mongo:
-        condition: service_healthy
-    restart: unless-stopped
-
   config-server:
     image: somikdasgupta/config-server:latest
     container_name: config-server
